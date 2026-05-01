@@ -1,0 +1,3317 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panenka — WK 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Dancing+Script:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --oranje: #FF6B00;
+    --oranje-light: #FF8C33;
+    --oranje-dark: #CC5500;
+    --bg: #0D0D0D;
+    --bg2: #161616;
+    --bg3: #1E1E1E;
+    --bg4: #252525;
+    --text: #F0F0F0;
+    --text-muted: #888;
+    --border: #2A2A2A;
+    --green: #2ECC71;
+    --red: #E74C3C;
+    --gold: #FFB800;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg);
+    background-image: url('Background/1a@4x.png');
+    background-size: contain;
+    background-attachment: fixed;
+    background-position: center top;
+    background-repeat: no-repeat;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ───── SCREENS ───── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: block; }
+
+  /* ───── LANDING ───── */
+  #screen-landing {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+  #screen-landing.active { display: flex; }
+
+  .landing-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(13,13,13,0.65) 0%, rgba(13,13,13,0.88) 60%, #0D0D0D 100%);
+  }
+
+  .landing-content {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 2rem;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .landing-badge {
+    display: inline-block;
+    background: var(--oranje);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.8rem;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+  }
+
+  .landing-logo-img {
+    max-width: 260px;
+    width: 70%;
+    display: block;
+    margin: 0 auto 0.5rem;
+    filter: drop-shadow(0 0 40px rgba(255,107,0,0.25));
+  }
+
+  .landing-sub {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 300;
+  }
+
+  .landing-divider {
+    width: 60px; height: 2px;
+    background: var(--oranje);
+    margin: 2rem auto;
+  }
+
+  .landing-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .name-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .name-btn {
+    background: rgba(22,22,22,0.85);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.7rem;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.01em;
+    backdrop-filter: blur(4px);
+  }
+  .name-btn:hover {
+    border-color: var(--oranje);
+    color: var(--oranje);
+    background: rgba(255,107,0,0.08);
+  }
+  .name-btn.selected {
+    border-color: var(--oranje);
+    background: var(--oranje);
+    color: white;
+  }
+
+  .btn-primary {
+    background: var(--oranje);
+    color: white;
+    border: none;
+    padding: 0.9rem 2rem;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--oranje-light); }
+  .btn-primary:disabled { background: var(--bg4); color: var(--text-muted); cursor: not-allowed; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--oranje);
+    border: 1px solid var(--oranje);
+    padding: 0.7rem 1.5rem;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { background: rgba(255,107,0,0.1); }
+
+  .leaderboard-link {
+    display: block;
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .leaderboard-link:hover { color: var(--oranje); }
+
+  /* ───── APP SHELL ───── */
+  #screen-app {
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+  #screen-app.active { display: block; }
+
+  .app-header {
+    background: rgba(13,13,13,0.92);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+    padding: 0 1rem;
+    backdrop-filter: blur(8px);
+  }
+
+  .app-header-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .app-logo-img {
+    height: 32px;
+    display: block;
+    filter: brightness(1.1);
+  }
+
+  .player-name {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .player-name strong { color: var(--text); font-weight: 600; }
+
+  /* ───── TABS ───── */
+  .tabs {
+    background: rgba(13,13,13,0.92);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 56px; z-index: 99;
+    overflow-x: auto;
+    scrollbar-width: none;
+    backdrop-filter: blur(8px);
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tabs-inner {
+    display: flex;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 0.5rem;
+  }
+
+  .tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .tab.active {
+    color: var(--oranje);
+    border-bottom-color: var(--oranje);
+  }
+  .tab:hover { color: var(--text); }
+  .tab .tab-check { color: var(--green); margin-left: 0.3rem; font-size: 0.7rem; }
+
+  /* ───── TAB CONTENT ───── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .content-wrapper {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+  }
+
+  /* ───── SECTION HEADER ───── */
+  .section-header {
+    margin-bottom: 1.5rem;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: white;
+    letter-spacing: 0.05em;
+  }
+  .section-title span { color: var(--oranje); }
+  .section-desc {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+    line-height: 1.5;
+  }
+
+  /* ───── TOKEN BANNER ───── */
+  .token-banner {
+    background: rgba(30,30,30,0.9);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    backdrop-filter: blur(4px);
+  }
+  .token-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .token-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--oranje);
+    line-height: 1;
+  }
+  .token-value.low { color: var(--red); }
+  .token-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--bg4);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .token-bar {
+    height: 100%;
+    background: var(--oranje);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  /* ───── MATCH CARD ───── */
+  .match-group { margin-bottom: 1.5rem; }
+  .match-group-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .match-group-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .match-card {
+    background: rgba(22,22,22,0.92);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.5rem;
+    transition: border-color 0.15s;
+    backdrop-filter: blur(4px);
+  }
+  .match-card:hover { border-color: #333; }
+  .match-card.filled { border-color: rgba(46,204,113,0.3); }
+
+  .match-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
+  .match-date { font-size: 0.72rem; color: var(--text-muted); }
+  .match-no { font-size: 0.72rem; color: var(--text-muted); font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; }
+
+  .match-teams {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+  }
+  .team-name {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .team-name.right { text-align: right; }
+  .flag-img {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+  }
+  .flag-img-sm {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .match-vs {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .match-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.5rem;
+    align-items: end;
+  }
+
+  .input-group label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .input-group input,
+  .input-group select {
+    width: 100%;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.6rem;
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .input-group input:focus,
+  .input-group select:focus {
+    outline: none;
+    border-color: var(--oranje);
+  }
+  .input-group input::placeholder { color: var(--text-muted); }
+
+  /* toto buttons */
+  .toto-group { display: flex; gap: 0.3rem; }
+  .toto-btn {
+    flex: 1;
+    padding: 0.5rem 0.3rem;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .toto-btn:hover { border-color: var(--oranje); color: var(--oranje); }
+  .toto-btn.selected { background: var(--oranje); border-color: var(--oranje); color: white; }
+  .toto-odds {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: var(--gold);
+    opacity: 0.85;
+    line-height: 1;
+  }
+  .toto-btn.selected .toto-odds { color: rgba(255,255,255,0.75); }
+
+  /* ───── JUISTE UITSLAG ODDS ───── */
+  .odds-toggle {
+    margin-top: 0.8rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 100%;
+    padding: 0.45rem;
+    border-radius: 5px;
+    font-size: 0.68rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .odds-toggle:hover { border-color: var(--oranje); color: var(--oranje); }
+  .odds-toggle.open { border-color: rgba(255,107,0,0.4); color: var(--oranje); }
+  .odds-toggle svg { width: 12px; height: 12px; transition: transform 0.15s; }
+  .odds-toggle.open svg { transform: rotate(180deg); }
+
+  .odds-panel {
+    display: none;
+    margin-top: 0.8rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.9rem;
+  }
+  .odds-panel.open { display: block; }
+
+  .odds-title-bar {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: white;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.6rem;
+  }
+
+  .odds-col-headers {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .odds-col-header {
+    text-align: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .odds-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.4rem;
+    align-items: start;
+  }
+
+  .odds-col { }
+
+  .odds-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.22rem 0.3rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 0.3rem;
+  }
+  .odds-row:hover { background: rgba(255,107,0,0.08); }
+  .odds-row.selected-score { background: rgba(255,107,0,0.15); }
+  .odds-score {
+    font-size: 0.78rem;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .odds-val {
+    font-size: 0.78rem;
+    color: var(--gold);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ───── KNOCK-OUT ───── */
+  .knockout-round { margin-bottom: 2rem; }
+  .round-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+  .round-badge {
+    background: var(--oranje);
+    color: white;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+  .round-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .country-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .country-chip {
+    background: rgba(30,30,30,0.85);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.35rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .country-chip:hover { border-color: var(--oranje); color: var(--oranje); }
+  .country-chip.selected { background: var(--oranje); border-color: var(--oranje); color: white; }
+  .country-chip.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+  .token-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.7rem;
+  }
+  .token-input-row label { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+  .token-input-row input {
+    width: 70px;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.4rem 0.6rem;
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  .token-input-row input:focus { outline: none; border-color: var(--oranje); }
+
+  /* ───── FANTASY XV ───── */
+  .fx-wrap {
+    padding: 0 1rem 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .fx-title-block {
+    text-align: center;
+    padding: 1.5rem 1rem 0.5rem;
+  }
+  .fx-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.12em;
+    color: white;
+    line-height: 1;
+  }
+  .fx-subtitle {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.3rem;
+    line-height: 1.4;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .fx-teamname-wrap {
+    text-align: center;
+    margin: 1rem 0 0.5rem;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+  }
+  .fx-teamname {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.2;
+    cursor: pointer;
+    display: inline-block;
+    transition: color 0.15s;
+  }
+  .fx-teamname:hover { color: var(--oranje); }
+  .fx-teamname-input {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: white;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--oranje);
+    text-align: center;
+    width: 100%;
+    outline: none;
+    padding: 0 0.5rem;
+  }
+
+  /* Player list */
+  .fx-list { margin-top: 0.5rem; }
+  .fx-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s;
+    position: relative;
+  }
+  .fx-row:hover { background: rgba(255,255,255,0.04); }
+  .fx-row.active { background: rgba(255,107,0,0.08); }
+  .fx-row.violation { background: rgba(231,76,60,0.08); }
+  .fx-row-name {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fx-row.active .fx-row-name { color: var(--oranje); }
+  .fx-row.violation .fx-row-name { color: var(--red); }
+  .fx-row-quote {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: white;
+    letter-spacing: 0.05em;
+    min-width: 42px;
+    text-align: right;
+  }
+  .fx-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.8rem;
+    cursor: pointer;
+    opacity: 0.65;
+    transition: opacity 0.15s;
+    gap: 0.5rem;
+  }
+  .fx-empty:hover { opacity: 1; }
+  .fx-empty-plus {
+    font-size: 1.3rem;
+    color: var(--oranje);
+    font-weight: 400;
+    line-height: 1;
+  }
+  .fx-empty-label {
+    font-size: 0.82rem;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  /* Talents section header */
+  .fx-talents-header {
+    text-align: center;
+    margin: 1.5rem 0 0.5rem;
+    position: relative;
+  }
+  .fx-talents-header::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--border);
+  }
+  .fx-talents-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    position: relative;
+    background: transparent;
+    padding: 0 1rem;
+    display: inline-block;
+  }
+
+  /* Inline player info card */
+  .fx-info-card {
+    display: none;
+    margin: 0.2rem 0.5rem 0.5rem;
+    background: rgba(30,25,20,0.92);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    animation: fadeIn 0.15s ease;
+  }
+  .fx-info-card.open { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+  .fx-info-header {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    padding: 0.5rem 0.8rem 0.35rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .fx-info-remove {
+    color: var(--red);
+    cursor: pointer;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+    border: 1px solid rgba(231,76,60,0.3);
+    border-radius: 3px;
+    font-weight: 600;
+    transition: all 0.12s;
+  }
+  .fx-info-remove:hover { background: rgba(231,76,60,0.15); }
+  .fx-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: rgba(255,255,255,0.05);
+  }
+  .fx-info-cell {
+    background: rgba(20,17,14,0.8);
+    padding: 0.45rem 0.6rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .fx-info-cell.muted { color: var(--text-muted); font-weight: 400; }
+
+  /* Coach */
+  .fx-coach {
+    text-align: center;
+    margin-top: 2rem;
+    padding-bottom: 1rem;
+  }
+  .fx-coach-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    font-family: 'Dancing Script', cursive;
+    font-size: 0.9rem;
+  }
+  .fx-coach-name {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: white;
+    margin-top: 0.1rem;
+  }
+
+  /* Violation badge on list row */
+  .fx-violation-tag {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--red);
+    border: 1px solid rgba(231,76,60,0.4);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ───── LEADERBOARD ───── */
+  #screen-leaderboard {
+    min-height: 100vh;
+  }
+  #screen-leaderboard.active { display: block; }
+
+  .lb-header {
+    background: linear-gradient(135deg, rgba(26,10,0,0.92) 0%, rgba(13,13,13,0.95) 100%);
+    padding: 2rem 1rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    backdrop-filter: blur(8px);
+  }
+  .lb-header::before {
+    content: 'PANENKA';
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 8rem;
+    opacity: 0.03;
+    color: white;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+  }
+
+  .lb-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: white;
+    letter-spacing: 0.1em;
+  }
+  .lb-title span { color: var(--oranje); }
+  .lb-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .lb-content { max-width: 600px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+  /* Top 3 podium */
+  .podium {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    align-items: end;
+  }
+  .podium-item {
+    background: rgba(22,22,22,0.9);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 0.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(4px);
+  }
+  .podium-item.first {
+    background: linear-gradient(135deg, rgba(42,26,0,0.95), rgba(26,16,0,0.95));
+    border-color: var(--oranje);
+  }
+  .podium-item.first::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--oranje);
+  }
+  .podium-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--text-muted);
+    line-height: 1;
+  }
+  .podium-item.first .podium-rank { color: var(--oranje); font-size: 2.2rem; }
+  .podium-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-top: 0.3rem;
+    color: white;
+  }
+  .podium-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    color: var(--oranje);
+    margin-top: 0.2rem;
+  }
+  .podium-item.first .podium-score { font-size: 2rem; }
+  .podium-delta {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+  }
+
+  /* Rank list */
+  .rank-list { }
+  .rank-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0.8rem;
+    border-radius: 6px;
+    margin-bottom: 0.3rem;
+    background: rgba(22,22,22,0.9);
+    border: 1px solid var(--border);
+    gap: 0.8rem;
+    transition: border-color 0.15s;
+    backdrop-filter: blur(4px);
+  }
+  .rank-item:hover { border-color: #333; }
+  .rank-item.me {
+    border-color: var(--oranje);
+    background: rgba(255,107,0,0.06);
+  }
+  .rank-pos {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .rank-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--bg4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .rank-item.me .rank-avatar {
+    background: var(--oranje);
+    color: white;
+  }
+  .rank-name {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .rank-item.me .rank-name { color: var(--oranje); font-weight: 600; }
+  .rank-breakdown {
+    display: flex;
+    gap: 0.6rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+  .rank-breakdown span { white-space: nowrap; }
+  .rank-total {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: white;
+    flex-shrink: 0;
+    text-align: right;
+    min-width: 48px;
+  }
+  .rank-item.me .rank-total { color: var(--oranje); }
+
+  /* ───── BOTTOM NAV ───── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(13,13,13,0.95);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom);
+    backdrop-filter: blur(8px);
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 0.5rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.6rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    gap: 0.2rem;
+    transition: color 0.15s;
+  }
+  .nav-btn.active { color: var(--oranje); }
+  .nav-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* ───── MODAL ───── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 300;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px 12px 0 0;
+    width: 100%;
+    max-width: 600px;
+    padding: 1.5rem;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: white;
+  }
+  .player-search {
+    width: 100%;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .player-search:focus { outline: none; border-color: var(--oranje); }
+  .player-option {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.6rem 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .player-option:hover { background: var(--bg3); }
+  .player-flag { font-size: 1.2rem; }
+  .player-info { flex: 1; }
+  .player-info-name { font-size: 0.9rem; font-weight: 500; }
+  .player-info-country { font-size: 0.75rem; color: var(--text-muted); }
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ───── SUBMIT SCREEN ───── */
+  .submit-summary {
+    background: rgba(22,22,22,0.9);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(4px);
+  }
+  .submit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .submit-row:last-child { border-bottom: none; }
+  .submit-row label { color: var(--text-muted); }
+  .submit-row strong { color: white; font-weight: 600; }
+  .submit-row .ok { color: var(--green); }
+  .submit-row .warn { color: var(--red); }
+
+  /* ───── UTIL ───── */
+  .gap-sm { height: 0.5rem; }
+  .gap-md { height: 1rem; }
+  .gap-lg { height: 1.5rem; }
+
+  .info-box {
+    background: rgba(255,107,0,0.08);
+    border: 1px solid rgba(255,107,0,0.2);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+  .info-box strong { color: var(--oranje); }
+
+  .deadline-banner {
+    background: var(--oranje);
+    color: white;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .progress-dots {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .dot.active { background: var(--oranje); }
+  .dot.done { background: var(--green); }
+
+  /* ───── FANTASY RULES PANEL ───── */
+  .fantasy-rules {
+    background: rgba(22,22,22,0.9);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(4px);
+  }
+  .fantasy-rules-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    padding: 0.5rem 0.8rem 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .rule-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.42rem 0.8rem;
+    border-bottom: 1px solid rgba(42,42,42,0.5);
+    font-size: 0.8rem;
+    transition: background 0.15s;
+  }
+  .rule-row:last-child { border-bottom: none; }
+  .rule-icon {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: var(--bg4);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .rule-row.ok .rule-icon {
+    background: rgba(46,204,113,0.15);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .rule-row.error .rule-icon {
+    background: rgba(231,76,60,0.15);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .rule-row.warning .rule-icon {
+    background: rgba(255,184,0,0.15);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .rule-text { flex: 1; color: var(--text); }
+  .rule-row.error .rule-text { color: var(--red); }
+  .rule-detail {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: right;
+  }
+  .rule-row.error .rule-detail { color: rgba(231,76,60,0.7); }
+  .rule-row.ok .rule-detail { color: rgba(46,204,113,0.7); }
+
+  /* ───── PLAYER CIRCLE VALIDATION ───── */
+  .player-circle.violation {
+    border-color: var(--red) !important;
+    background: rgba(231,76,60,0.2) !important;
+    box-shadow: 0 0 12px rgba(231,76,60,0.4);
+    animation: pulse-red 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 8px rgba(231,76,60,0.3); }
+    50% { box-shadow: 0 0 18px rgba(231,76,60,0.6); }
+  }
+  .player-slot { position: relative; }
+  .violation-badge {
+    position: absolute;
+    top: -4px; right: calc(50% - 22px - 4px);
+    background: var(--red);
+    color: white;
+    font-size: 0.5rem;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+    letter-spacing: 0.03em;
+  }
+
+  /* ───── MODAL FILTER BAR ───── */
+  .modal-filters { margin-bottom: 0.8rem; }
+  .filter-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+  }
+  .filter-chip {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.12s;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+  .filter-chip:hover { border-color: var(--oranje); color: var(--oranje); }
+  .filter-chip.active { background: var(--oranje); border-color: var(--oranje); color: white; }
+  .player-count {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .player-count strong { color: var(--oranje); }
+
+  /* ───── PLAYER CARD IN MODAL ───── */
+  .player-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid rgba(42,42,42,0.4);
+  }
+  .player-card:last-child { border-bottom: none; }
+  .player-card:hover { background: var(--bg3); }
+  .player-card.conflict { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+  .player-card.conflict::after {
+    content: attr(data-conflict);
+    font-size: 0.65rem;
+    color: var(--red);
+    margin-left: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .pc-flag { flex-shrink: 0; }
+  .pc-info { flex: 1; min-width: 0; }
+  .pc-name { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc-badges { display: flex; gap: 0.3rem; flex-shrink: 0; align-items: center; }
+  .pc-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .badge-pos { background: rgba(255,107,0,0.15); color: var(--oranje); border: 1px solid rgba(255,107,0,0.3); }
+  .badge-talent { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+  .badge-quote { background: rgba(255,184,0,0.12); color: var(--gold); border: 1px solid rgba(255,184,0,0.3); }
+
+  /* ───── NEW MATCH CARD LAYOUT ───── */
+  .mc-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.75rem;
+  }
+  .mc-no {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.95rem;
+    color: white;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1rem 0.5rem;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .mc-teams-info { flex: 1; }
+  .mc-teams-line {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .mc-dash { color: var(--text-muted); font-size: 0.65rem; margin: 0 0.1rem; }
+  .mc-date-line { font-size: 0.62rem; color: var(--text-muted); margin-top: 0.12rem; }
+
+  .mc-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.3rem;
+    flex-wrap: nowrap;
+  }
+  .mc-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    flex-shrink: 0;
+  }
+  .mc-col-label {
+    font-size: 0.52rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .mc-sep {
+    font-size: 0.7rem;
+    color: var(--border);
+    padding-bottom: 0.55rem;
+    flex-shrink: 0;
+    align-self: flex-end;
+  }
+
+  /* Token chip */
+  .mc-token-chip {
+    min-width: 44px;
+    height: 38px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.12s;
+    padding: 0 0.5rem;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .mc-token-chip:hover { border-color: var(--oranje); color: var(--oranje); }
+  .mc-token-chip.set {
+    background: var(--oranje);
+    border-color: var(--oranje);
+    color: white;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.05em;
+  }
+  .mc-token-chip.picker-open { border-color: var(--oranje); box-shadow: 0 0 0 2px rgba(255,107,0,0.2); }
+
+  /* Token picker bar */
+  .mc-token-picker {
+    display: none;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+    background: rgba(20,20,20,0.98);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 0.55rem 0.65rem;
+    margin-bottom: 0.5rem;
+  }
+  .mc-token-picker.open { display: flex; }
+  .token-opt {
+    width: 34px;
+    height: 34px;
+    border-radius: 5px;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .token-opt:hover { border-color: var(--oranje); color: var(--oranje); }
+  .token-opt.selected { background: var(--oranje); border-color: var(--oranje); color: white; }
+
+  /* Result quote chip */
+  .mc-result-chip {
+    min-width: 56px;
+    height: 38px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.03em;
+    color: var(--gold);
+    background: rgba(255,184,0,0.1);
+    border: 1px solid rgba(255,184,0,0.25);
+    padding: 0 0.4rem;
+    white-space: nowrap;
+  }
+  .mc-result-chip.empty {
+    color: var(--text-muted);
+    background: var(--bg4);
+    border-color: var(--border);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  /* Uitslag chip */
+  .mc-uitslag-chip {
+    min-width: 54px;
+    height: 38px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.12s;
+    padding: 0 0.4rem;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  .mc-uitslag-chip:hover { border-color: var(--oranje); color: var(--oranje); }
+  .mc-uitslag-chip.set {
+    background: rgba(46,204,113,0.1);
+    border-color: rgba(46,204,113,0.5);
+    color: var(--green);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: none;
+  }
+
+  /* ───── POULE STANDINGS ───── */
+  .standings-section { margin-bottom: 1.5rem; }
+  .standings-toggle {
+    width: 100%;
+    background: rgba(22,22,22,0.9);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    transition: all 0.15s;
+    backdrop-filter: blur(4px);
+  }
+  .standings-toggle:hover { border-color: var(--oranje); color: var(--oranje); }
+  .standings-toggle.open { border-color: rgba(46,204,113,0.4); color: var(--green); }
+  .standings-toggle svg { width: 14px; height: 14px; flex-shrink: 0; transition: transform 0.15s; }
+  .standings-toggle.open svg { transform: rotate(180deg); }
+  .standings-badge {
+    background: var(--green);
+    color: white;
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+  }
+  .standings-panel {
+    display: none;
+    margin-top: 0.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .standings-panel.collapsed { display: none; }
+  .group-table {
+    background: rgba(18,18,18,0.92);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    overflow: hidden;
+    backdrop-filter: blur(4px);
+  }
+  .group-table-header {
+    background: rgba(255,107,0,0.12);
+    border-bottom: 1px solid var(--border);
+    padding: 0.3rem 0.6rem;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    color: var(--oranje);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .standing-row {
+    display: flex;
+    align-items: center;
+    padding: 0.28rem 0.6rem;
+    gap: 0.35rem;
+    border-bottom: 1px solid rgba(42,42,42,0.4);
+    font-size: 0.72rem;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .standing-row:last-child { border-bottom: none; }
+  .standing-row.qualifier {
+    border-left-color: var(--green);
+    background: rgba(46,204,113,0.04);
+  }
+  .standing-pos {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    width: 12px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .standing-row.qualifier .standing-pos { color: var(--green); }
+  .standing-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .standing-pts {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: white;
+    min-width: 18px;
+    text-align: right;
+  }
+  .standing-gd {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    min-width: 26px;
+    text-align: right;
+  }
+  .standing-gd.pos { color: var(--green); }
+  .standing-gd.neg { color: var(--red); }
+
+  /* ───── PER-TEAM TOKENS (Knockout) ───── */
+  .tokens-subheader {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-top: 0.9rem;
+    margin-bottom: 0.4rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.7rem;
+  }
+  .per-team-token-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+  }
+  .per-team-name {
+    flex: 1;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .per-team-token-input {
+    width: 62px;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.35rem 0.5rem;
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    text-align: center;
+  }
+  .per-team-token-input:focus { outline: none; border-color: var(--oranje); }
+  .per-team-token-label { font-size: 0.68rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     LANDING SCREEN
+═══════════════════════════════════════ -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-bg"></div>
+  <div class="landing-content">
+    <div class="landing-badge">🏆 WK 2026 · VS / Canada / Mexico</div>
+    <img src="Logo/Artboard 1@4x.png" alt="Panenka" class="landing-logo-img">
+    <div class="landing-sub">Poule — WK 2026</div>
+    <div class="landing-divider"></div>
+    <p class="landing-desc">Vul je voorspellingen in vóór <strong style="color:white">9 juni 2026, 17:00</strong>. Zet tokens in op wedstrijden, kies je knock-out landen en stel je Fantasy XI samen.</p>
+
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.8rem;text-transform:uppercase;letter-spacing:0.1em;">Wie ben jij?</p>
+    <div class="name-grid" id="name-grid">
+      <!-- Filled by JS -->
+    </div>
+
+    <button class="btn-primary" id="start-btn" disabled onclick="startApp()">
+      Invullen →
+    </button>
+
+    <a class="leaderboard-link" onclick="showLeaderboard()">
+      📊 Bekijk tussenstand
+    </a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APP SCREEN
+═══════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+  <div class="deadline-banner">⏰ Deadline: 9 juni 2026 · 17:00</div>
+
+  <div class="app-header">
+    <div class="app-header-inner">
+      <img src="Logo/Artboard 1@4x.png" alt="Panenka" class="app-logo-img">
+      <div class="player-name">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <strong id="active-player-name"></strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tabs-inner">
+      <div class="tab active" onclick="showTab('poulefase')" id="tab-poulefase">Poulefase</div>
+      <div class="tab" onclick="showTab('knockout')" id="tab-knockout">Knock-out</div>
+      <div class="tab" onclick="showTab('fantasy')" id="tab-fantasy">Fantasy XV</div>
+      <div class="tab" onclick="showTab('submit')" id="tab-submit">Overzicht</div>
+    </div>
+  </div>
+
+  <!-- POULEFASE TAB -->
+  <div id="tab-content-poulefase" class="tab-content active">
+    <div class="content-wrapper">
+      <div class="section-header">
+        <div class="section-title">Poulewedstrijden</div>
+        <div class="section-desc">Vul je toto (1/X/2), verwachte uitslag en aantal tokens in per wedstrijd. Je hebt <strong style="color:white" id="total-tokens-display">104</strong> tokens te verdelen.</div>
+      </div>
+
+      <div class="token-banner">
+        <div>
+          <div class="token-label">Tokens over</div>
+          <div class="token-value" id="tokens-left-val">104</div>
+        </div>
+        <div class="token-bar-wrap" style="max-width:200px">
+          <div class="token-bar" id="token-bar" style="width:100%"></div>
+        </div>
+        <div>
+          <div class="token-label">Gebruikt</div>
+          <div class="token-value" id="tokens-used-val" style="color:var(--text-muted)">0</div>
+        </div>
+      </div>
+
+      <!-- Poule standings (updates when uitslag is filled) -->
+      <div class="standings-section" id="standings-section" style="display:none">
+        <button class="standings-toggle" id="standings-toggle" onclick="toggleStandingsPanel()">
+          <span>📊 Poulestanden <span id="standings-filled-label"></span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="standings-panel collapsed" id="standings-panel"></div>
+      </div>
+
+      <div id="matches-container">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- KNOCK-OUT TAB -->
+  <div id="tab-content-knockout" class="tab-content">
+    <div class="content-wrapper">
+      <div class="section-header">
+        <div class="section-title">Knock-out <span>Fase</span></div>
+        <div class="section-desc">Kies voor elke ronde de landen die doorgaan. Je hebt extra tokens te verdelen over de rondes.</div>
+      </div>
+
+      <div class="info-box">
+        <strong>Hoe werkt het?</strong> Selecteer de teams die doorgaan naar elke ronde. Wijs daarna tokens toe per team — hoe verder in het toernooi, hoe hoger de quotering.
+      </div>
+
+      <div id="ko-suggestions" style="display:none;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.2);border-radius:8px;padding:0.8rem 1rem;margin-bottom:1rem;font-size:0.82rem;"></div>
+
+      <div id="knockout-container">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FANTASY XV TAB -->
+  <div id="tab-content-fantasy" class="tab-content">
+
+    <div class="fx-title-block">
+      <div class="fx-title">Fantasy XV</div>
+      <div class="fx-subtitle">Kies 15 spelers die uitkomen op het WK en verdien punten voor elk doelpunt en assist</div>
+    </div>
+
+    <div class="fx-wrap">
+
+      <!-- Team name -->
+      <div class="fx-teamname-wrap">
+        <div class="fx-teamname" id="fx-teamname-display" onclick="editTeamName()" title="Klik om naam te wijzigen">FC Panenka</div>
+        <input class="fx-teamname-input" id="fx-teamname-input" style="display:none"
+          onblur="saveTeamName()" onkeydown="if(event.key==='Enter')saveTeamName()">
+      </div>
+
+      <!-- Rules panel -->
+      <div class="fantasy-rules" id="fantasy-rules-panel" style="margin-bottom:0.8rem">
+        <div class="fantasy-rules-title">Teamregels</div>
+        <div class="rule-row" id="rule-land">
+          <div class="rule-icon">—</div>
+          <div class="rule-text">Max 1 speler per land</div>
+          <div class="rule-detail" id="rule-land-detail"></div>
+        </div>
+        <div class="rule-row" id="rule-confed">
+          <div class="rule-icon">—</div>
+          <div class="rule-text">Max 3 spelers per confederatie</div>
+          <div class="rule-detail" id="rule-confed-detail"></div>
+        </div>
+        <div class="rule-row" id="rule-comp">
+          <div class="rule-icon">—</div>
+          <div class="rule-text">Max 3 spelers per competitie</div>
+          <div class="rule-detail" id="rule-comp-detail"></div>
+        </div>
+        <div class="rule-row" id="rule-club">
+          <div class="rule-icon">—</div>
+          <div class="rule-text">Max 1 speler per club</div>
+          <div class="rule-detail" id="rule-club-detail"></div>
+        </div>
+        <div class="rule-row" id="rule-talent">
+          <div class="rule-icon">—</div>
+          <div class="rule-text">Min 4 spelers jonger dan 22 (talents)</div>
+          <div class="rule-detail" id="rule-talent-detail"></div>
+        </div>
+      </div>
+
+      <!-- Regular player list (11 slots) -->
+      <div class="fx-list" id="fx-regular-list"></div>
+
+      <!-- Talents section -->
+      <div class="fx-talents-header">
+        <span class="fx-talents-title">Talents</span>
+      </div>
+      <div class="fx-list" id="fx-talent-list"></div>
+
+      <!-- Coach -->
+      <div class="fx-coach">
+        <div class="fx-coach-label">Coach</div>
+        <div class="fx-coach-name" id="fx-coach-name">—</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SUBMIT / OVERZICHT TAB -->
+  <div id="tab-content-submit" class="tab-content">
+    <div class="content-wrapper">
+      <div class="section-header">
+        <div class="section-title">Overzicht & <span>Bevestigen</span></div>
+        <div class="section-desc">Check je invulling voordat je instuurt. Na bevestiging kan je niet meer wijzigen.</div>
+      </div>
+
+      <div class="submit-summary" id="submit-summary">
+        <!-- Filled by JS -->
+      </div>
+
+      <button class="btn-primary" id="confirm-btn" onclick="confirmSubmit()" style="margin-bottom:0.8rem">
+        ✓ Bevestigen &amp; Insturen
+      </button>
+      <button class="btn-secondary" onclick="showTab('poulefase')" style="width:100%">← Nog aanpassen</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" onclick="showTab('poulefase')" id="nav-poulefase">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20"/><path d="M12 2c-2.76 4-4 8-4 10s1.24 6 4 10"/><path d="M12 2c2.76 4 4 8 4 10s-1.24 6-4 10"/></svg>
+      Poulefase
+    </button>
+    <button class="nav-btn" onclick="showTab('knockout')" id="nav-knockout">
+      <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+      Knock-out
+    </button>
+    <button class="nav-btn" onclick="showTab('fantasy')" id="nav-fantasy">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Fantasy
+    </button>
+    <button class="nav-btn" onclick="showTab('submit')" id="nav-submit">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Klaar
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     LEADERBOARD SCREEN
+═══════════════════════════════════════ -->
+<div id="screen-leaderboard" class="screen">
+  <div class="lb-header">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--oranje);letter-spacing:0.2em;margin-bottom:0.3rem">TUSSENSTAND</div>
+    <div class="lb-title">Overzicht <span>2026</span></div>
+    <div class="lb-date" id="lb-date"></div>
+  </div>
+
+  <div class="lb-content">
+
+    <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap">
+      <span style="font-size:0.7rem;color:var(--text-muted);background:rgba(30,30,30,0.85);border:1px solid var(--border);padding:0.3rem 0.7rem;border-radius:4px;backdrop-filter:blur(4px)">🏟 Poulefase</span>
+      <span style="font-size:0.7rem;color:var(--text-muted);background:rgba(30,30,30,0.85);border:1px solid var(--border);padding:0.3rem 0.7rem;border-radius:4px;backdrop-filter:blur(4px)">⚡ Knock-out</span>
+      <span style="font-size:0.7rem;color:var(--text-muted);background:rgba(30,30,30,0.85);border:1px solid var(--border);padding:0.3rem 0.7rem;border-radius:4px;backdrop-filter:blur(4px)">🎫 WK Tickets</span>
+    </div>
+
+    <div class="podium" id="podium"></div>
+    <div class="rank-list" id="rank-list"></div>
+
+    <div style="text-align:center;margin-top:1.5rem">
+      <button class="btn-secondary" onclick="showLanding()">← Terug</button>
+    </div>
+    <div style="height:1rem"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PLAYER MODAL
+═══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closePlayerModal()">✕</button>
+    <div class="modal-title" id="modal-title-text">Kies een speler</div>
+    <input type="text" class="player-search" placeholder="Zoeken op naam, land of club..." id="player-search-input" oninput="applyFilters()">
+    <div class="modal-filters">
+      <div class="filter-label">Positie</div>
+      <div class="filter-chips" id="filter-pos">
+        <button class="filter-chip active" onclick="setModalFilter('pos','',this)">Alle</button>
+        <button class="filter-chip" onclick="setModalFilter('pos','GK',this)">GK</button>
+        <button class="filter-chip" onclick="setModalFilter('pos','DEF',this)">DEF</button>
+        <button class="filter-chip" onclick="setModalFilter('pos','MID',this)">MID</button>
+        <button class="filter-chip" onclick="setModalFilter('pos','ATT',this)">ATT</button>
+      </div>
+      <div class="filter-label">Confederatie</div>
+      <div class="filter-chips" id="filter-confed">
+        <button class="filter-chip active" onclick="setModalFilter('confederation','',this)">Alle</button>
+        <button class="filter-chip" onclick="setModalFilter('confederation','UEFA',this)">UEFA</button>
+        <button class="filter-chip" onclick="setModalFilter('confederation','CONMEBOL',this)">CONMEBOL</button>
+        <button class="filter-chip" onclick="setModalFilter('confederation','CONCACAF',this)">CONCACAF</button>
+        <button class="filter-chip" onclick="setModalFilter('confederation','AFC',this)">AFC</button>
+        <button class="filter-chip" onclick="setModalFilter('confederation','CAF',this)">CAF</button>
+      </div>
+      <div class="filter-label">Competitie</div>
+      <div class="filter-chips" id="filter-comp">
+        <button class="filter-chip active" onclick="setModalFilter('competition','',this)">Alle</button>
+        <!-- filled by JS -->
+      </div>
+    </div>
+    <div class="player-count" id="player-count"></div>
+    <div id="player-list"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+
+const PARTICIPANTS = ['Michiel','Bob','Thom','Henk Jan','Rogier','Daan','Barthold','Robert','Tom','Willem','Bert','Wouter','Tim','Timo','Laurens'];
+
+// Flag image paths (relative to HTML file)
+const FLAG_PATHS = {
+  'Mexico':           'Landen/mexico-flag-round-xl.png',
+  'Zuid-Afrika':      'Landen/south-africa-flag-round-xl.png',
+  'Zuid-Korea':       'Landen/south-korea-flag-round-xl.png',
+  'Tsjechië':         'Landen/czech-republic-flag-round-xl.png',
+  'Canada':           'Landen/canada-flag-round-xl.png',
+  'Bosnië':           'Landen/bosnia-and-herzegovina-flag-round-xl.png',
+  'Bosnië en Herzegovina': 'Landen/bosnia-and-herzegovina-flag-round-xl.png',
+  'VS':               'Landen/united-states-of-america-flag-round-xl.png',
+  'Verenigde Staten': 'Landen/united-states-of-america-flag-round-xl.png',
+  'Paraguay':         'Landen/paraguay-flag-round-xl.png',
+  'Qatar':            'Landen/qatar-flag-round-xl.png',
+  'Zwitserland':      'Landen/switzerland-flag-round-xl.png',
+  'Brazilië':         'Landen/brazil-flag-round-xl.png',
+  'Marokko':          'Landen/morocco-flag-round-xl.png',
+  'Haïti':            'Landen/haiti-flag-round-xl.png',
+  'Schotland':        'Landen/scotland-flag-round-xl.png',
+  'Australië':        'Landen/australia-flag-round-xl.png',
+  'Turkije':          'Landen/turkey-flag-round-xl.png',
+  'Duitsland':        'Landen/germany-flag-round-xl.png',
+  'Curaçao':          'Landen/curacao-flag-round-xl.png',
+  'Nederland':        'Landen/netherlands-flag-round-xl.png',
+  'Japan':            'Landen/japan-flag-round-xl.png',
+  'Ivoorkust':        'Landen/cote-d-ivoire-flag-round-xl.png',
+  'Ecuador':          'Landen/ecuador-flag-round-xl.png',
+  'Zweden':           'Landen/sweden-flag-round-xl.png',
+  'Tunesië':          'Landen/tunisia-flag-round-xl.png',
+  'Spanje':           'Landen/spain-flag-round-xl.png',
+  'Kaapverdië':       'Landen/cape-verde-flag-round-xl.png',
+  'België':           'Landen/belgium-flag-round-xl.png',
+  'Egypte':           'Landen/egypt-flag-round-xl.png',
+  'Saoedi-Arabië':    'Landen/saudi-arabia-flag-round-xl.png',
+  'Uruguay':          'Landen/uruguay-flag-round-xl.png',
+  'Iran':             'Landen/iran-flag-round-xl.png',
+  'Nieuw-Zeeland':    'Landen/new-zealand-flag-round-xl.png',
+  'Senegal':          'Landen/senegal-flag-round-xl.png',
+  'Irak':             'Landen/iraq-flag-round-xl.png',
+  'Argentinië':       'Landen/argentina-flag-round-xl.png',
+  'Jordanië':         'Landen/jordan-flag-round-xl.png',
+  'Noorwegen':        'Landen/norway-flag-round-xl.png',
+  'Frankrijk':        'Landen/france-flag-round-xl.png',
+  'Algerije':         'Landen/algeria-flag-round-xl.png',
+  'Oostenrijk':       'Landen/austria-flag-round-xl.png',
+  'Colombia':         'Landen/colombia-flag-round-xl.png',
+  'DR Congo':         'Landen/congo-democratic-republic-of-the-flag-round-xl.png',
+  'Engeland':         'Landen/england-flag-round-xl.png',
+  'Panama':           'Landen/panama-flag-round-xl.png',
+  'Portugal':         'Landen/portugal-flag-round-xl.png',
+  'Oezbekistan':      'Landen/uzbekistan-flag-round-xl.png',
+  'Kroatië':          'Landen/croatia-flag-round-xl.png',
+  'Ghana':            'Landen/ghana-flag-round-xl.png',
+};
+
+function flagImg(country, cls = 'flag-img') {
+  const src = FLAG_PATHS[country];
+  if (src) return `<img src="${src}" alt="${country}" class="${cls}" loading="lazy">`;
+  // Fallback: first letter
+  return `<div class="${cls}" style="background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:var(--text-muted)">${country.slice(0,2).toUpperCase()}</div>`;
+}
+
+const MATCHES = [
+  {id:1, poule:'A', datum:'11 jun', thuis:'Mexico',         uit:'Zuid-Afrika'},
+  {id:2, poule:'A', datum:'12 jun', thuis:'Zuid-Korea',     uit:'Tsjechië'},
+  {id:3, poule:'B', datum:'12 jun', thuis:'Canada',         uit:'Bosnië'},
+  {id:4, poule:'D', datum:'13 jun', thuis:'VS',             uit:'Paraguay'},
+  {id:5, poule:'B', datum:'13 jun', thuis:'Qatar',          uit:'Zwitserland'},
+  {id:6, poule:'C', datum:'14 jun', thuis:'Brazilië',       uit:'Marokko'},
+  {id:7, poule:'C', datum:'14 jun', thuis:'Haïti',          uit:'Schotland'},
+  {id:8, poule:'D', datum:'14 jun', thuis:'Australië',      uit:'Turkije'},
+  {id:9, poule:'E', datum:'14 jun', thuis:'Duitsland',      uit:'Curaçao'},
+  {id:10,poule:'F', datum:'14 jun', thuis:'Nederland',      uit:'Japan'},
+  {id:11,poule:'E', datum:'15 jun', thuis:'Ivoorkust',      uit:'Ecuador'},
+  {id:12,poule:'F', datum:'15 jun', thuis:'Zweden',         uit:'Tunesië'},
+  {id:13,poule:'H', datum:'15 jun', thuis:'Spanje',         uit:'Kaapverdië'},
+  {id:14,poule:'G', datum:'15 jun', thuis:'België',         uit:'Egypte'},
+  {id:15,poule:'H', datum:'16 jun', thuis:'Saoedi-Arabië',  uit:'Uruguay'},
+  {id:16,poule:'G', datum:'16 jun', thuis:'Iran',           uit:'Nieuw-Zeeland'},
+  {id:17,poule:'I', datum:'16 jun', thuis:'Senegal',        uit:'Irak'},
+  {id:18,poule:'J', datum:'16 jun', thuis:'Argentinië',     uit:'Jordanië'},
+  {id:19,poule:'I', datum:'17 jun', thuis:'Noorwegen',      uit:'Frankrijk'},
+  {id:20,poule:'J', datum:'17 jun', thuis:'Algerije',       uit:'Oostenrijk'},
+  {id:21,poule:'K', datum:'17 jun', thuis:'Colombia',       uit:'DR Congo'},
+  {id:22,poule:'L', datum:'18 jun', thuis:'Engeland',       uit:'Panama'},
+  {id:23,poule:'K', datum:'18 jun', thuis:'Portugal',       uit:'Oezbekistan'},
+  {id:24,poule:'L', datum:'18 jun', thuis:'Kroatië',        uit:'Ghana'},
+];
+
+const KNOCKOUT_ROUNDS = [
+  { id: 'r16',    label: '1/16 Finale', badge: '1/16',   slots: 16, desc: '16 landen die doorgaan naar de 1/8 finale' },
+  { id: 'qf',     label: 'Kwartfinale', badge: '1/4',    slots: 8,  desc: '8 landen die de kwartfinale halen' },
+  { id: 'sf',     label: 'Halve Finale',badge: '1/2',    slots: 4,  desc: '4 landen in de halve finale' },
+  { id: 'final',  label: 'Finale',      badge: 'Finale', slots: 2,  desc: '2 finalisten' },
+  { id: 'winner', label: 'Winnaar',     badge: '🏆',     slots: 1,  desc: 'De wereldkampioen 2026' },
+];
+
+const ALL_COUNTRIES = [
+  'Nederland','Argentinië','Brazilië','Duitsland','Frankrijk','Spanje',
+  'België','Portugal','Engeland','Colombia','Uruguay','Mexico',
+  'VS','Canada','Japan','Zuid-Korea','Australië','Marokko',
+  'Senegal','Noorwegen','Turkije','Kroatië','Zweden','Tsjechië',
+  'Zwitserland','Ivoorkust','Ecuador','Egypte','Ghana','Tunesië',
+];
+
+const MOCK_PLAYERS = [
+  // Keepers
+  {name:'Alisson',           country:'Brazilië',    pos:'GK',  club:'Liverpool',         competition:'Premier League', confederation:'CONMEBOL', age:32},
+  {name:'Thibaut Courtois',  country:'België',      pos:'GK',  club:'Real Madrid',       competition:'La Liga',        confederation:'UEFA',     age:32},
+  {name:'Manuel Neuer',      country:'Duitsland',   pos:'GK',  club:'Bayern München',    competition:'Bundesliga',     confederation:'UEFA',     age:38},
+  {name:'Ederson',           country:'Brazilië',    pos:'GK',  club:'Manchester City',   competition:'Premier League', confederation:'CONMEBOL', age:31},
+  {name:'Mike Maignan',      country:'Frankrijk',   pos:'GK',  club:'AC Milan',          competition:'Serie A',        confederation:'UEFA',     age:29},
+  {name:'Andrés Guardado',   country:'Mexico',      pos:'GK',  club:'Club América',      competition:'Liga MX',        confederation:'CONCACAF', age:23},
+  {name:'Bono',              country:'Marokko',     pos:'GK',  club:'Al-Hilal',          competition:'Saudi Pro League',confederation:'CAF',     age:33},
+  // Verdedigers
+  {name:'Virgil van Dijk',   country:'Nederland',   pos:'DEF', club:'Liverpool',         competition:'Premier League', confederation:'UEFA',     age:33},
+  {name:'Rúben Dias',        country:'Portugal',    pos:'DEF', club:'Manchester City',   competition:'Premier League', confederation:'UEFA',     age:27},
+  {name:'Raphaël Varane',    country:'Frankrijk',   pos:'DEF', club:'Como',              competition:'Serie A',        confederation:'UEFA',     age:31},
+  {name:'Achraf Hakimi',     country:'Marokko',     pos:'DEF', club:'PSG',               competition:'Ligue 1',        confederation:'CAF',      age:26},
+  {name:'Theo Hernández',    country:'Frankrijk',   pos:'DEF', club:'AC Milan',          competition:'Serie A',        confederation:'UEFA',     age:27},
+  {name:'Alejandro Grimaldo',country:'Spanje',      pos:'DEF', club:'Bayer Leverkusen',  competition:'Bundesliga',     confederation:'UEFA',     age:29},
+  {name:'Trent Alexander-Arnold',country:'Engeland',pos:'DEF', club:'Real Madrid',       competition:'La Liga',        confederation:'UEFA',     age:26},
+  {name:'Josko Gvardiol',    country:'Kroatië',     pos:'DEF', club:'Manchester City',   competition:'Premier League', confederation:'UEFA',     age:23},
+  {name:'Lisandro Martínez', country:'Argentinië',  pos:'DEF', club:'Manchester United', competition:'Premier League', confederation:'CONMEBOL', age:27},
+  {name:'Eder Militão',      country:'Brazilië',    pos:'DEF', club:'Real Madrid',       competition:'La Liga',        confederation:'CONMEBOL', age:27},
+  {name:'Min-jae Kim',       country:'Zuid-Korea',  pos:'DEF', club:'Bayern München',    competition:'Bundesliga',     confederation:'AFC',      age:28},
+  {name:'Kevin Mbabu',       country:'Zwitserland', pos:'DEF', club:'Fulham',            competition:'Premier League', confederation:'UEFA',     age:29},
+  {name:'Nuno Mendes',       country:'Portugal',    pos:'DEF', club:'PSG',               competition:'Ligue 1',        confederation:'UEFA',     age:22},
+  {name:'Pau Cubarsí',       country:'Spanje',      pos:'DEF', club:'Barcelona',         competition:'La Liga',        confederation:'UEFA',     age:18},
+  {name:'Leny Yoro',         country:'Frankrijk',   pos:'DEF', club:'Manchester United', competition:'Premier League', confederation:'UEFA',     age:19},
+  // Middenvelders
+  {name:'Frenkie de Jong',   country:'Nederland',   pos:'MID', club:'Barcelona',         competition:'La Liga',        confederation:'UEFA',     age:27},
+  {name:'Pedri',             country:'Spanje',      pos:'MID', club:'Barcelona',         competition:'La Liga',        confederation:'UEFA',     age:22},
+  {name:'Toni Kroos',        country:'Duitsland',   pos:'MID', club:'Real Madrid',       competition:'La Liga',        confederation:'UEFA',     age:34},
+  {name:'Rodri',             country:'Spanje',      pos:'MID', club:'Manchester City',   competition:'Premier League', confederation:'UEFA',     age:28},
+  {name:'Jude Bellingham',   country:'Engeland',    pos:'MID', club:'Real Madrid',       competition:'La Liga',        confederation:'UEFA',     age:21},
+  {name:'Bernardo Silva',    country:'Portugal',    pos:'MID', club:'Manchester City',   competition:'Premier League', confederation:'UEFA',     age:30},
+  {name:'Bruno Fernandes',   country:'Portugal',    pos:'MID', club:'Manchester United', competition:'Premier League', confederation:'UEFA',     age:30},
+  {name:'Florian Wirtz',     country:'Duitsland',   pos:'MID', club:'Bayer Leverkusen',  competition:'Bundesliga',     confederation:'UEFA',     age:21},
+  {name:'Gavi',              country:'Spanje',      pos:'MID', club:'Barcelona',         competition:'La Liga',        confederation:'UEFA',     age:20},
+  {name:'Jamal Musiala',     country:'Duitsland',   pos:'MID', club:'Bayern München',    competition:'Bundesliga',     confederation:'UEFA',     age:21},
+  {name:'Enzo Fernández',    country:'Argentinië',  pos:'MID', club:'Chelsea',           competition:'Premier League', confederation:'CONMEBOL', age:24},
+  {name:'Casemiro',          country:'Brazilië',    pos:'MID', club:'Manchester United', competition:'Premier League', confederation:'CONMEBOL', age:33},
+  {name:'Xavi Simons',       country:'Nederland',   pos:'MID', club:'PSG',               competition:'Ligue 1',        confederation:'UEFA',     age:22},
+  {name:'Tijjani Reijnders', country:'Nederland',   pos:'MID', club:'AC Milan',          competition:'Serie A',        confederation:'UEFA',     age:26},
+  {name:'Lucas Paquetá',     country:'Brazilië',    pos:'MID', club:'West Ham',          competition:'Premier League', confederation:'CONMEBOL', age:27},
+  {name:'Sofyan Amrabat',    country:'Marokko',     pos:'MID', club:'Fiorentina',        competition:'Serie A',        confederation:'CAF',      age:28},
+  {name:'Sandro Tonali',     country:'Italië',      pos:'MID', club:'Newcastle',         competition:'Premier League', confederation:'UEFA',     age:24},
+  {name:'Kobbie Mainoo',     country:'Engeland',    pos:'MID', club:'Manchester United', competition:'Premier League', confederation:'UEFA',     age:19},
+  {name:'Warren Zaïre-Emery',country:'Frankrijk',   pos:'MID', club:'PSG',               competition:'Ligue 1',        confederation:'UEFA',     age:18},
+  // Aanvallers
+  {name:'Cody Gakpo',        country:'Nederland',   pos:'ATT', club:'Liverpool',         competition:'Premier League', confederation:'UEFA',     age:25},
+  {name:'Lionel Messi',      country:'Argentinië',  pos:'ATT', club:'Inter Miami',       competition:'MLS',            confederation:'CONMEBOL', age:37},
+  {name:'Vinicius Jr.',      country:'Brazilië',    pos:'ATT', club:'Real Madrid',       competition:'La Liga',        confederation:'CONMEBOL', age:24},
+  {name:'Kylian Mbappé',     country:'Frankrijk',   pos:'ATT', club:'Real Madrid',       competition:'La Liga',        confederation:'UEFA',     age:26},
+  {name:'Erling Haaland',    country:'Noorwegen',   pos:'ATT', club:'Manchester City',   competition:'Premier League', confederation:'UEFA',     age:24},
+  {name:'Lamine Yamal',      country:'Spanje',      pos:'ATT', club:'Barcelona',         competition:'La Liga',        confederation:'UEFA',     age:17},
+  {name:'Bukayo Saka',       country:'Engeland',    pos:'ATT', club:'Arsenal',           competition:'Premier League', confederation:'UEFA',     age:23},
+  {name:'Harry Kane',        country:'Engeland',    pos:'ATT', club:'Bayern München',    competition:'Bundesliga',     confederation:'UEFA',     age:31},
+  {name:'Rafael Leão',       country:'Portugal',    pos:'ATT', club:'AC Milan',          competition:'Serie A',        confederation:'UEFA',     age:25},
+  {name:'Rodrygo',           country:'Brazilië',    pos:'ATT', club:'Real Madrid',       competition:'La Liga',        confederation:'CONMEBOL', age:24},
+  {name:'Phil Foden',        country:'Engeland',    pos:'ATT', club:'Manchester City',   competition:'Premier League', confederation:'UEFA',     age:24},
+  {name:'Julián Álvarez',    country:'Argentinië',  pos:'ATT', club:'Atlético Madrid',   competition:'La Liga',        confederation:'CONMEBOL', age:25},
+  {name:'Dušan Vlahović',    country:'Servië',      pos:'ATT', club:'Juventus',          competition:'Serie A',        confederation:'UEFA',     age:25},
+  {name:'Khvicha Kvaratskhelia',country:'Georgië',  pos:'ATT', club:'PSG',               competition:'Ligue 1',        confederation:'UEFA',     age:23},
+  {name:'Leroy Sané',        country:'Duitsland',   pos:'ATT', club:'Bayern München',    competition:'Bundesliga',     confederation:'UEFA',     age:29},
+  {name:'Memphis Depay',     country:'Nederland',   pos:'ATT', club:'Corinthians',       competition:'Brasileirão',    confederation:'UEFA',     age:30},
+  {name:'Ousmane Dembélé',   country:'Frankrijk',   pos:'ATT', club:'PSG',               competition:'Ligue 1',        confederation:'UEFA',     age:27},
+  {name:'Ferran Torres',     country:'Spanje',      pos:'ATT', club:'Barcelona',         competition:'La Liga',        confederation:'UEFA',     age:25},
+  {name:'Takefusa Kubo',     country:'Japan',       pos:'ATT', club:'Real Sociedad',     competition:'La Liga',        confederation:'AFC',      age:23},
+  {name:'Endrick',           country:'Brazilië',    pos:'ATT', club:'Real Madrid',       competition:'La Liga',        confederation:'CONMEBOL', age:18},
+  {name:'Evan Ferguson',     country:'Ierland',     pos:'ATT', club:'Brighton',          competition:'Premier League', confederation:'UEFA',     age:20},
+];
+
+const MOCK_STANDINGS = [
+  {name:'Timo',     poulefase:22.81, knockout:14.21, tickets:7.40},
+  {name:'Rogier',   poulefase:22.24, knockout:15.05, tickets:4.65},
+  {name:'Michiel',  poulefase:22.81, knockout:16.60, tickets:0.00},
+  {name:'Daan',     poulefase:18.62, knockout:10.60, tickets:7.40},
+  {name:'Bert',     poulefase:17.71, knockout:3.85,  tickets:7.65},
+  {name:'Wouter',   poulefase:11.24, knockout:8.69,  tickets:4.05},
+  {name:'Thom',     poulefase:16.64, knockout:0.00,  tickets:0.00},
+  {name:'Tim',      poulefase:14.34, knockout:4.40,  tickets:1.90},
+  {name:'Bob',      poulefase:16.24, knockout:1.85,  tickets:1.90},
+  {name:'Barthold', poulefase:13.74, knockout:7.35,  tickets:1.90},
+  {name:'Robert',   poulefase:10.14, knockout:0.00,  tickets:2.15},
+  {name:'Willem',   poulefase:6.74,  knockout:5.15,  tickets:4.65},
+  {name:'Laurens',  poulefase:0.00,  knockout:10.65, tickets:0.00},
+  {name:'Henk Jan', poulefase:0.00,  knockout:8.80,  tickets:0.00},
+  {name:'Tom',      poulefase:0.00,  knockout:3.85,  tickets:0.00},
+];
+
+// ═══════════════════════════════════════════════════════
+// ODDS GENERATION (seeded, realistic football odds)
+// ═══════════════════════════════════════════════════════
+
+function sr(seed) {
+  let x = Math.sin(seed * 9301 + 49297) * 233280;
+  return (x - Math.floor(x));
+}
+
+function generateMatchOdds(matchId) {
+  const r = (n) => sr(matchId * 71 + n);
+
+  // 1X2
+  const homeFav = r(1);
+  const baseHome = homeFav > 0.5
+    ? (1.5 + r(2) * 1.8)   // home favourite: 1.5 - 3.3
+    : (2.8 + r(3) * 2.2);  // away favourite: 2.8 - 5.0
+  const baseAway = homeFav > 0.5
+    ? (2.8 + r(4) * 2.2)
+    : (1.5 + r(5) * 1.8);
+  const baseDraw = 2.8 + r(6) * 1.5;
+
+  // Correct score: home wins
+  const home = [
+    ['1-0', 6   + r(10)*8  ],
+    ['2-0', 9   + r(11)*10 ],
+    ['2-1', 8   + r(12)*9  ],
+    ['3-0', 17  + r(13)*16 ],
+    ['3-1', 15  + r(14)*14 ],
+    ['3-2', 19  + r(15)*18 ],
+    ['4-0', 35  + r(16)*28 ],
+    ['4-1', 30  + r(17)*25 ],
+    ['4-2', 38  + r(18)*30 ],
+    ['4-3', 48  + r(19)*38 ],
+    ['5-0', 55  + r(20)*55 ],
+    ['5-1', 50  + r(21)*48 ],
+    ['5-2', 65  + r(22)*55 ],
+  ];
+  // Draws
+  const draw = [
+    ['0-0', 10  + r(30)*8  ],
+    ['1-1', 5.5 + r(31)*4  ],
+    ['2-2', 12  + r(32)*10 ],
+    ['3-3', 32  + r(33)*26 ],
+    ['4-4', 75  + r(34)*70 ],
+  ];
+  // Away wins
+  const away = [
+    ['0-1', 7   + r(40)*10 ],
+    ['0-2', 11  + r(41)*12 ],
+    ['1-2', 9   + r(42)*10 ],
+    ['0-3', 20  + r(43)*20 ],
+    ['1-3', 18  + r(44)*18 ],
+    ['2-3', 22  + r(45)*22 ],
+    ['0-4', 40  + r(46)*35 ],
+    ['1-4', 35  + r(47)*30 ],
+    ['2-4', 42  + r(48)*35 ],
+    ['3-4', 52  + r(49)*40 ],
+    ['0-5', 68  + r(50)*58 ],
+    ['1-5', 62  + r(51)*52 ],
+    ['2-5', 75  + r(52)*60 ],
+  ];
+
+  const fmt = (v) => (Math.round(v * 100) / 100).toFixed(2);
+  return {
+    toto: {
+      '1': fmt(baseHome),
+      'X': fmt(baseDraw),
+      '2': fmt(baseAway),
+    },
+    home: home.map(([s, v]) => [s, fmt(v)]),
+    draw: draw.map(([s, v]) => [s, fmt(v)]),
+    away: away.map(([s, v]) => [s, fmt(v)]),
+  };
+}
+
+// Precompute all odds
+const MATCH_ODDS = {};
+MATCHES.forEach(m => { MATCH_ODDS[m.id] = generateMatchOdds(m.id); });
+
+// ═══════════════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════════════
+
+let selectedPlayer = null;
+let predictions = {};
+let knockoutPicks = {};
+// Fantasy XV: p0-p10 = regular (11), t0-t3 = talents (4)
+let fantasyXV = {};
+let activeInfoSlot = null;
+let teamName = 'FC Panenka';
+let totalTokens = 104;
+let currentModalSlot = null;
+let modalFilters = { pos: '', competition: '', confederation: '' };
+
+const FX_REGULAR_SLOTS = ['p0','p1','p2','p3','p4','p5','p6','p7','p8','p9','p10'];
+const FX_TALENT_SLOTS  = ['t0','t1','t2','t3'];
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+
+function init() {
+  const grid = document.getElementById('name-grid');
+  PARTICIPANTS.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'name-btn';
+    btn.textContent = name;
+    btn.onclick = () => selectPlayer(name, btn);
+    grid.appendChild(btn);
+  });
+
+  const now = new Date();
+  document.getElementById('lb-date').textContent = now.toLocaleDateString('nl-NL', {day:'numeric',month:'long',year:'numeric'});
+}
+
+function selectPlayer(name, btn) {
+  document.querySelectorAll('.name-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedPlayer = name;
+  document.getElementById('start-btn').disabled = false;
+}
+
+function startApp() {
+  if (!selectedPlayer) return;
+  document.getElementById('screen-landing').classList.remove('active');
+  document.getElementById('screen-leaderboard').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('active-player-name').textContent = selectedPlayer;
+  // Set default team name based on player
+  teamName = 'FC ' + selectedPlayer;
+  document.getElementById('fx-teamname-display').textContent = teamName;
+  document.getElementById('fx-coach-name').textContent = selectedPlayer;
+  renderMatches();
+  renderKnockout();
+  renderFantasyXV();
+  window.scrollTo(0, 0);
+}
+
+function showLeaderboard() {
+  document.getElementById('screen-landing').classList.remove('active');
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-leaderboard').classList.add('active');
+  renderLeaderboard();
+  window.scrollTo(0, 0);
+}
+
+function showLanding() {
+  document.getElementById('screen-landing').classList.add('active');
+  document.getElementById('screen-leaderboard').classList.remove('active');
+  document.getElementById('screen-app').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════
+
+function showTab(name) {
+  ['poulefase','knockout','fantasy','submit'].forEach(t => {
+    document.getElementById(`tab-content-${t}`).classList.toggle('active', t === name);
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === name);
+    document.getElementById(`nav-${t}`)?.classList.toggle('active', t === name);
+  });
+  if (name === 'submit') renderSubmitSummary();
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════════════════════
+// MATCHES
+// ═══════════════════════════════════════════════════════
+
+function toggleOdds(matchId) {
+  const panel = document.getElementById(`odds-panel-${matchId}`);
+  panel?.classList.toggle('open');
+}
+
+function openScorePicker(matchId) {
+  const panel = document.getElementById(`odds-panel-${matchId}`);
+  panel?.classList.toggle('open');
+}
+
+function selectScore(matchId, score) {
+  if (!predictions[matchId]) predictions[matchId] = {};
+  predictions[matchId].uitslag = score;
+
+  // Update uitslag chip
+  const chip = document.getElementById(`uitslag-chip-${matchId}`);
+  if (chip) { chip.textContent = score; chip.className = 'mc-uitslag-chip set'; }
+
+  // Highlight selected score in panel
+  document.querySelectorAll(`#odds-panel-${matchId} .odds-row`).forEach(row => {
+    row.classList.toggle('selected-score', row.dataset.score === score);
+  });
+
+  // Close the score picker
+  document.getElementById(`odds-panel-${matchId}`)?.classList.remove('open');
+
+  renderStandings();
+  updateMatchCalc(matchId);
+}
+
+function openTokenPicker(matchId) {
+  // Close all other pickers
+  document.querySelectorAll('.mc-token-picker').forEach(el => {
+    if (el.id !== `token-picker-${matchId}`) el.classList.remove('open');
+  });
+  const picker = document.getElementById(`token-picker-${matchId}`);
+  const chip   = document.getElementById(`token-chip-${matchId}`);
+  if (!picker) return;
+  const willOpen = !picker.classList.contains('open');
+  picker.classList.toggle('open', willOpen);
+  chip?.classList.toggle('picker-open', willOpen && !predictions[matchId]?.tokens);
+}
+
+function selectToken(matchId, amount) {
+  if (!predictions[matchId]) predictions[matchId] = {};
+  predictions[matchId].tokens = amount;
+
+  // Close picker
+  const picker = document.getElementById(`token-picker-${matchId}`);
+  picker?.classList.remove('open');
+
+  // Update chip
+  const chip = document.getElementById(`token-chip-${matchId}`);
+  if (chip) { chip.textContent = amount; chip.className = 'mc-token-chip set'; }
+
+  // Highlight selected number
+  picker?.querySelectorAll('.token-opt').forEach(el => {
+    el.classList.toggle('selected', parseInt(el.textContent) === amount);
+  });
+
+  updateMatchCalc(matchId);
+}
+
+function updateMatchCalc(matchId) {
+  const p    = predictions[matchId] || {};
+  const odds = MATCH_ODDS[matchId];
+
+  // Toto result
+  const totoEl = document.getElementById(`toto-result-${matchId}`);
+  if (totoEl) {
+    if (p.toto && p.tokens) {
+      totoEl.textContent = (p.tokens * parseFloat(odds.toto[p.toto])).toFixed(2);
+      totoEl.className = 'mc-result-chip';
+    } else {
+      totoEl.textContent = '—';
+      totoEl.className = 'mc-result-chip empty';
+    }
+  }
+
+  // Uitslag result
+  const uitslagEl = document.getElementById(`uitslag-result-${matchId}`);
+  if (uitslagEl) {
+    if (p.uitslag && p.tokens) {
+      const o = getScoreOdds(matchId, p.uitslag);
+      uitslagEl.textContent = o ? (p.tokens * o).toFixed(2) : '?';
+      uitslagEl.className = 'mc-result-chip';
+    } else {
+      uitslagEl.textContent = '—';
+      uitslagEl.className = 'mc-result-chip empty';
+    }
+  }
+
+  updateTokenDisplay();
+  checkMatchFilled(matchId);
+}
+
+function abbrevCountry(name) {
+  const map = {
+    'Nederland':'NED','Argentinië':'ARG','Brazilië':'BRA','Duitsland':'DUI',
+    'Frankrijk':'FRA','Spanje':'ESP','België':'BEL','Portugal':'POR',
+    'Engeland':'ENG','Colombia':'COL','Uruguay':'URU','Mexico':'MEX',
+    'VS':'USA','Canada':'CAN','Japan':'JPN','Zuid-Korea':'KOR',
+    'Australië':'AUS','Marokko':'MAR','Senegal':'SEN','Noorwegen':'NOR',
+    'Turkije':'TUR','Kroatië':'KRO','Zweden':'ZWE','Tsjechië':'CZE',
+    'Zwitserland':'ZWI','Ivoorkust':'CIV','Ecuador':'ECU','Egypte':'EGY',
+    'Ghana':'GHA','Tunesië':'TUN','Zuid-Afrika':'ZAF','Haïti':'HAI',
+    'Schotland':'SCO','Curaçao':'CUR','Saoedi-Arabië':'SAU','Iran':'IRN',
+    'Nieuw-Zeeland':'NZL','Irak':'IRQ','Jordanië':'JOR','Algerije':'ALG',
+    'Oostenrijk':'AUT','DR Congo':'DRC','Panama':'PAN','Oezbekistan':'UZB',
+    'Kaapverdië':'CPV','Paraguay':'PAR','Qatar':'QAT','Bosnië':'BIH',
+    'Bosnië en Herzegovina':'BIH',
+  };
+  return map[name] || name.slice(0, 3).toUpperCase();
+}
+
+function getScoreOdds(matchId, score) {
+  const odds = MATCH_ODDS[matchId];
+  if (!odds || !score) return null;
+  for (const [s, v] of [...odds.home, ...odds.draw, ...odds.away]) {
+    if (s === score) return parseFloat(v);
+  }
+  return null;
+}
+
+function calcUitslagResult(matchId, p) {
+  if (!p.uitslag || !p.tokens) return '—';
+  const o = getScoreOdds(matchId, p.uitslag);
+  return o ? (p.tokens * o).toFixed(2) : '?';
+}
+
+function renderMatches() {
+  const container = document.getElementById('matches-container');
+  container.innerHTML = '';
+
+  const byDate = {};
+  MATCHES.forEach(m => {
+    if (!byDate[m.datum]) byDate[m.datum] = [];
+    byDate[m.datum].push(m);
+  });
+
+  Object.entries(byDate).forEach(([datum, matches]) => {
+    const group = document.createElement('div');
+    group.className = 'match-group';
+    group.innerHTML = `<div class="match-group-label">${datum}</div>`;
+
+    matches.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'match-card';
+      card.id = `match-card-${m.id}`;
+      const p = predictions[m.id] || {};
+      const odds = MATCH_ODDS[m.id];
+
+      const oddsRowsHtml = (scores) => scores.map(([s, v]) =>
+        `<div class="odds-row" data-score="${s}" onclick="selectScore(${m.id}, '${s}')">
+          <span class="odds-score">${s}</span>
+          <span class="odds-val">${v}</span>
+        </div>`
+      ).join('');
+
+      const totoResult = (p.toto && p.tokens)
+        ? (p.tokens * parseFloat(odds.toto[p.toto])).toFixed(2)
+        : '—';
+      const uitslagResult = calcUitslagResult(m.id, p);
+
+      card.innerHTML = `
+        <div class="mc-header">
+          <span class="mc-no">#${m.id}</span>
+          <div class="mc-teams-info">
+            <div class="mc-teams-line">
+              ${flagImg(m.thuis,'flag-img-sm')}
+              <span>${abbrevCountry(m.thuis)}</span>
+              <span class="mc-dash">—</span>
+              <span>${abbrevCountry(m.uit)}</span>
+              ${flagImg(m.uit,'flag-img-sm')}
+            </div>
+            <div class="mc-date-line">Poule ${m.poule} · ${m.datum}</div>
+          </div>
+        </div>
+
+        <div class="mc-token-picker" id="token-picker-${m.id}">
+          ${[1,2,3,4,5,6,7,8,9,10,12,15,20].map(n =>
+            `<div class="token-opt ${(p.tokens||0)===n?'selected':''}" onclick="selectToken(${m.id},${n})">${n}</div>`
+          ).join('')}
+        </div>
+
+        <div class="mc-row">
+          <div class="mc-col">
+            <div class="mc-col-label">Tokens</div>
+            <div class="mc-token-chip ${p.tokens?'set':''}" id="token-chip-${m.id}" onclick="openTokenPicker(${m.id})">
+              ${p.tokens||'Kies'}
+            </div>
+          </div>
+
+          <div class="mc-sep">×</div>
+
+          <div class="mc-col">
+            <div class="mc-col-label">Toto</div>
+            <div class="toto-group">
+              <div class="toto-btn ${p.toto==='1'?'selected':''}" onclick="setToto(${m.id},'1',this)">1<span class="toto-odds">${odds.toto['1']}</span></div>
+              <div class="toto-btn ${p.toto==='X'?'selected':''}" onclick="setToto(${m.id},'X',this)">X<span class="toto-odds">${odds.toto['X']}</span></div>
+              <div class="toto-btn ${p.toto==='2'?'selected':''}" onclick="setToto(${m.id},'2',this)">2<span class="toto-odds">${odds.toto['2']}</span></div>
+            </div>
+          </div>
+
+          <div class="mc-sep">=</div>
+
+          <div class="mc-col">
+            <div class="mc-col-label">Quote</div>
+            <div class="mc-result-chip ${(p.toto&&p.tokens)?'':'empty'}" id="toto-result-${m.id}">${totoResult}</div>
+          </div>
+
+          <div class="mc-sep" style="color:var(--bg4)">·</div>
+
+          <div class="mc-col">
+            <div class="mc-col-label">Uitslag</div>
+            <div class="mc-uitslag-chip ${p.uitslag?'set':''}" id="uitslag-chip-${m.id}" onclick="openScorePicker(${m.id})">${p.uitslag||'Kies'}</div>
+          </div>
+
+          <div class="mc-sep">=</div>
+
+          <div class="mc-col">
+            <div class="mc-col-label">Quote</div>
+            <div class="mc-result-chip ${(p.uitslag&&p.tokens)?'':'empty'}" id="uitslag-result-${m.id}">${uitslagResult}</div>
+          </div>
+        </div>
+
+        <div class="odds-panel" id="odds-panel-${m.id}" style="margin-top:0.8rem">
+          <div class="odds-title-bar">Kies uitslag <span style="font-size:0.65rem;color:var(--text-muted);font-family:Inter,sans-serif;font-weight:400;letter-spacing:0"> — klik een score om te selecteren</span></div>
+          <div class="odds-col-headers">
+            <div class="odds-col-header">${m.thuis}</div>
+            <div class="odds-col-header">Gelijkspel</div>
+            <div class="odds-col-header">${m.uit}</div>
+          </div>
+          <div class="odds-columns">
+            <div class="odds-col">${oddsRowsHtml(odds.home)}</div>
+            <div class="odds-col">${oddsRowsHtml(odds.draw)}</div>
+            <div class="odds-col">${oddsRowsHtml(odds.away)}</div>
+          </div>
+        </div>
+      `;
+
+      group.appendChild(card);
+    });
+
+    container.appendChild(group);
+  });
+}
+
+function setToto(matchId, val, el) {
+  if (!predictions[matchId]) predictions[matchId] = {};
+  predictions[matchId].toto = val;
+  el.closest('.toto-group').querySelectorAll('.toto-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  updateMatchCalc(matchId);
+}
+
+function setUitslag(matchId, val) {
+  if (!predictions[matchId]) predictions[matchId] = {};
+  predictions[matchId].uitslag = (val || '').trim();
+  checkMatchFilled(matchId);
+  renderStandings();
+}
+
+function setTokens(matchId, val) {
+  if (!predictions[matchId]) predictions[matchId] = {};
+  predictions[matchId].tokens = Math.max(1, val || 1);
+  updateTokenDisplay();
+  checkMatchFilled(matchId);
+}
+
+function checkMatchFilled(matchId) {
+  const p = predictions[matchId] || {};
+  const card = document.getElementById(`match-card-${matchId}`);
+  if (card) card.classList.toggle('filled', !!(p.toto && p.uitslag));
+}
+
+function updateTokenDisplay() {
+  const used = Object.values(predictions).reduce((s, p) => s + (parseInt(p.tokens)||0), 0);
+  const left = totalTokens - used;
+  document.getElementById('tokens-left-val').textContent = left;
+  document.getElementById('tokens-used-val').textContent = used;
+  const pct = Math.max(0, (left / totalTokens) * 100);
+  document.getElementById('token-bar').style.width = pct + '%';
+  document.getElementById('token-bar').style.background = left < 10 ? 'var(--red)' : 'var(--oranje)';
+  document.getElementById('tokens-left-val').className = 'token-value' + (left < 10 ? ' low' : '');
+}
+
+// ═══════════════════════════════════════════════════════
+// KNOCKOUT
+// ═══════════════════════════════════════════════════════
+
+function renderTeamTokensForRound(roundId) {
+  const container = document.getElementById(`team-tokens-${roundId}`);
+  if (!container) return;
+  const selected = knockoutPicks[roundId] || [];
+  if (selected.length === 0) {
+    container.innerHTML = `<div style="font-size:0.72rem;color:var(--text-muted);padding:0.2rem 0">Selecteer teams om tokens toe te wijzen.</div>`;
+    return;
+  }
+  container.innerHTML = selected.map(name => {
+    const flagSrc = FLAG_PATHS[name];
+    const flagEl = flagSrc
+      ? `<img src="${flagSrc}" alt="${name}" class="flag-img-sm">`
+      : `<div class="flag-img-sm" style="background:var(--bg4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:700">${name.slice(0,2)}</div>`;
+    const key = `${roundId}_tok_${name.replace(/\s/g,'_')}`;
+    const val = knockoutPicks[key] !== undefined ? knockoutPicks[key] : '';
+    return `<div class="per-team-token-row">
+      ${flagEl}
+      <span class="per-team-name">${name}</span>
+      <input type="number" min="1" max="30" placeholder="1" value="${val}"
+        class="per-team-token-input"
+        onchange="knockoutPicks['${key}'] = Math.max(1,parseInt(this.value)||1); this.value = knockoutPicks['${key}']">
+      <span class="per-team-token-label">tokens</span>
+    </div>`;
+  }).join('');
+}
+
+function renderKnockout() {
+  const container = document.getElementById('knockout-container');
+  container.innerHTML = '';
+
+  KNOCKOUT_ROUNDS.forEach(round => {
+    if (!knockoutPicks[round.id]) knockoutPicks[round.id] = [];
+
+    const div = document.createElement('div');
+    div.className = 'knockout-round';
+    div.innerHTML = `
+      <div class="round-header">
+        <span class="round-badge">${round.badge}</span>
+        <span class="round-desc">${round.desc}</span>
+      </div>
+      <div class="country-chips" id="chips-${round.id}"></div>
+      <div class="tokens-subheader">Tokens per team</div>
+      <div id="team-tokens-${round.id}">
+        <div style="font-size:0.72rem;color:var(--text-muted);padding:0.2rem 0">Selecteer teams om tokens toe te wijzen.</div>
+      </div>
+    `;
+    container.appendChild(div);
+
+    const chips = div.querySelector(`#chips-${round.id}`);
+    ALL_COUNTRIES.forEach(name => {
+      const chip = document.createElement('div');
+      chip.className = 'country-chip' + (knockoutPicks[round.id].includes(name) ? ' selected' : '');
+      chip.innerHTML = `${flagImg(name, 'flag-img-sm')} ${name}`;
+      chip.onclick = () => toggleKnockout(round, name, chip);
+      chips.appendChild(chip);
+    });
+  });
+}
+
+function toggleKnockout(round, country, el) {
+  const arr = knockoutPicks[round.id];
+  const idx = arr.indexOf(country);
+  if (idx >= 0) {
+    arr.splice(idx, 1);
+    el.classList.remove('selected');
+  } else {
+    if (arr.length >= round.slots) {
+      const removed = arr.shift();
+      document.querySelectorAll(`#chips-${round.id} .country-chip.selected`)[0]?.classList.remove('selected');
+      delete knockoutPicks[`${round.id}_tok_${removed.replace(/\s/g,'_')}`];
+    }
+    arr.push(country);
+    el.classList.add('selected');
+  }
+  renderTeamTokensForRound(round.id);
+}
+
+// ═══════════════════════════════════════════════════════
+// FANTASY XV — HELPERS
+// ═══════════════════════════════════════════════════════
+
+function abbrevName(fullName) {
+  const parts = fullName.trim().split(' ');
+  if (parts.length === 1) return fullName;
+  const last = parts.slice(1).join(' ');
+  return parts[0][0] + '. ' + last;
+}
+
+function playerQuote(player) {
+  // Seeded deterministic quote based on name hash
+  let h = 0;
+  for (let i = 0; i < player.name.length; i++) h = (h * 31 + player.name.charCodeAt(i)) & 0xffff;
+  const t = (h % 1000) / 1000;
+  return (1.2 + t * 3.1).toFixed(2);
+}
+
+function editTeamName() {
+  const disp = document.getElementById('fx-teamname-display');
+  const inp  = document.getElementById('fx-teamname-input');
+  inp.value = teamName;
+  disp.style.display = 'none';
+  inp.style.display = 'block';
+  inp.focus();
+  inp.select();
+}
+
+function saveTeamName() {
+  const inp  = document.getElementById('fx-teamname-input');
+  const disp = document.getElementById('fx-teamname-display');
+  teamName = inp.value.trim() || teamName;
+  disp.textContent = teamName;
+  disp.style.display = 'inline-block';
+  inp.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+// FANTASY XV — RENDER LIST
+// ═══════════════════════════════════════════════════════
+
+function renderFantasyXV() {
+  renderFXList('fx-regular-list', FX_REGULAR_SLOTS, 'regulier');
+  renderFXList('fx-talent-list',  FX_TALENT_SLOTS,  'talent');
+  updateRulesPanel();
+}
+
+function renderFXList(containerId, slots, type) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  const { violations } = validateFantasyXV();
+
+  slots.forEach(key => {
+    const player = fantasyXV[key];
+    if (player) {
+      const isViolated = violations[key] && violations[key].length > 0;
+      const isActive   = activeInfoSlot === key;
+      const flagSrc    = FLAG_PATHS[player.country] || '';
+
+      const row = document.createElement('div');
+      row.className = 'fx-row' + (isActive ? ' active' : '') + (isViolated ? ' violation' : '');
+      row.id = `fx-row-${key}`;
+      row.onclick = () => togglePlayerInfo(key);
+
+      const flagHtml = flagSrc
+        ? `<img src="${flagSrc}" alt="${player.country}" class="flag-img-sm">`
+        : `<div class="flag-img-sm" style="background:var(--bg4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:700">${player.country.slice(0,2)}</div>`;
+
+      const violTag = isViolated
+        ? `<span class="fx-violation-tag">${violations[key][0].toUpperCase()}</span>`
+        : '';
+
+      row.innerHTML = `
+        <div class="fx-row-name">${abbrevName(player.name)}</div>
+        ${flagHtml}
+        ${violTag}
+        <div class="fx-row-quote">${playerQuote(player)}</div>
+      `;
+      container.appendChild(row);
+
+      // Inline info card
+      const card = document.createElement('div');
+      card.className = 'fx-info-card' + (isActive ? ' open' : '');
+      card.id = `fx-info-${key}`;
+      const rating = player.rating || Math.floor(75 + playerQuote(player) * 4);
+      const positions = player.positions || player.pos;
+      const flagCellHtml = flagSrc
+        ? `<img src="${flagSrc}" alt="" class="flag-img-sm"> ${player.country}`
+        : player.country;
+      card.innerHTML = `
+        <div class="fx-info-header">
+          <span>SPELER INFO</span>
+          <span class="fx-info-remove" onclick="removePlayerXV('${key}', event)">✕ Verwijder</span>
+        </div>
+        <div class="fx-info-grid">
+          <div class="fx-info-cell">${player.name.split(' ').pop().toUpperCase()}</div>
+          <div class="fx-info-cell muted">LEEFTIJD: ${player.age}</div>
+          <div class="fx-info-cell muted">RATING: ${rating}</div>
+          <div class="fx-info-cell">${flagCellHtml}</div>
+          <div class="fx-info-cell muted">${player.confederation}</div>
+          <div class="fx-info-cell" style="color:var(--gold)">QUOTE: ${playerQuote(player)}</div>
+          <div class="fx-info-cell">${player.club.toUpperCase()}</div>
+          <div class="fx-info-cell muted">${player.competition}</div>
+          <div class="fx-info-cell muted">${positions}</div>
+        </div>
+      `;
+      container.appendChild(card);
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'fx-empty';
+      empty.onclick = () => openPlayerModalXV(key, type);
+      empty.innerHTML = `<span class="fx-empty-plus">+</span><span class="fx-empty-label">${type === 'talent' ? 'Talent (U22)' : 'Speler toevoegen'}</span>`;
+      container.appendChild(empty);
+    }
+  });
+}
+
+function togglePlayerInfo(key) {
+  activeInfoSlot = activeInfoSlot === key ? null : key;
+  renderFantasyXV();
+}
+
+function removePlayerXV(key, e) {
+  e.stopPropagation();
+  delete fantasyXV[key];
+  activeInfoSlot = null;
+  renderFantasyXV();
+}
+
+function openPlayerModalXV(key, type) {
+  currentModalSlot = { key, type };
+  // Pre-set filter: talents must be U22
+  modalFilters = { pos: '', competition: '', confederation: '' };
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('player-search-input').value = '';
+  document.getElementById('modal-title-text').textContent =
+    type === 'talent' ? 'Kies een talent (jonger dan 22)' : 'Kies een speler';
+  // Reset chips
+  ['filter-pos','filter-confed','filter-comp'].forEach(id => {
+    document.getElementById(id)?.querySelectorAll('.filter-chip').forEach((c, i) => c.classList.toggle('active', i === 0));
+  });
+  buildCompetitionFilters();
+  applyFilters(type === 'talent');
+  setTimeout(() => document.getElementById('player-search-input').focus(), 100);
+}
+
+// ═══════════════════════════════════════════════════════
+// FANTASY XV — VALIDATION
+// ═══════════════════════════════════════════════════════
+
+function validateFantasyXV() {
+  const entries = Object.entries(fantasyXV); // [[key, player], ...]
+  const violations = {}; // key -> [reason, ...]
+
+  const count = (field, val) => entries.filter(([,p]) => p[field] === val).length;
+  const keysWhere = (field, val) => entries.filter(([,p]) => p[field] === val).map(([k]) => k);
+
+  // Rule 1: max 1 per land
+  const countryMap = {};
+  entries.forEach(([k, p]) => { countryMap[p.country] = (countryMap[p.country]||[]).concat(k); });
+  Object.entries(countryMap).forEach(([country, keys]) => {
+    if (keys.length > 1) keys.forEach(k => {
+      violations[k] = violations[k] || [];
+      violations[k].push('land');
+    });
+  });
+
+  // Rule 2: max 3 per confederatie
+  const confedMap = {};
+  entries.forEach(([k, p]) => { confedMap[p.confederation] = (confedMap[p.confederation]||[]).concat(k); });
+  Object.entries(confedMap).forEach(([confed, keys]) => {
+    if (keys.length > 3) keys.forEach(k => {
+      violations[k] = violations[k] || [];
+      violations[k].push('confederatie');
+    });
+  });
+
+  // Rule 3: max 3 per competitie
+  const compMap = {};
+  entries.forEach(([k, p]) => { compMap[p.competition] = (compMap[p.competition]||[]).concat(k); });
+  Object.entries(compMap).forEach(([comp, keys]) => {
+    if (keys.length > 3) keys.forEach(k => {
+      violations[k] = violations[k] || [];
+      violations[k].push('competitie');
+    });
+  });
+
+  // Rule 4: max 1 per club
+  const clubMap = {};
+  entries.forEach(([k, p]) => { clubMap[p.club] = (clubMap[p.club]||[]).concat(k); });
+  Object.entries(clubMap).forEach(([club, keys]) => {
+    if (keys.length > 1) keys.forEach(k => {
+      violations[k] = violations[k] || [];
+      violations[k].push('club');
+    });
+  });
+
+  // Rule 5: min 4 talents (< 22); XV has 15 total
+  const talentCount = entries.filter(([,p]) => p.age < 22).length;
+  const totalPlayers = entries.length;
+  const needed = 15;
+
+  return { violations, countryMap, confedMap, compMap, clubMap, talentCount, totalPlayers };
+}
+
+function updateRulesPanel() {
+  const { violations, countryMap, confedMap, compMap, clubMap, talentCount, totalPlayers } = validateFantasyXV();
+  const needed = 15;
+
+  function setRule(id, detailId, status, detail) {
+    const row = document.getElementById(id);
+    const icon = row.querySelector('.rule-icon');
+    row.className = 'rule-row' + (status === 'ok' ? ' ok' : status === 'error' ? ' error' : status === 'warn' ? ' warning' : '');
+    icon.textContent = status === 'ok' ? '✓' : status === 'error' ? '✗' : status === 'warn' ? '!' : '—';
+    document.getElementById(detailId).textContent = detail;
+  }
+
+  // Land
+  const landViolations = Object.values(countryMap).filter(keys => keys.length > 1);
+  if (totalPlayers === 0) setRule('rule-land', 'rule-land-detail', '', '');
+  else if (landViolations.length > 0) setRule('rule-land', 'rule-land-detail', 'error', `${landViolations.length} conflict${landViolations.length>1?'en':''}`);
+  else setRule('rule-land', 'rule-land-detail', 'ok', 'OK');
+
+  // Confederatie
+  const confedViolations = Object.entries(confedMap).filter(([,keys]) => keys.length > 3);
+  if (totalPlayers === 0) setRule('rule-confed', 'rule-confed-detail', '', '');
+  else if (confedViolations.length > 0) {
+    const worst = confedViolations.map(([c,keys]) => `${c}: ${keys.length}`).join(', ');
+    setRule('rule-confed', 'rule-confed-detail', 'error', worst);
+  } else {
+    const max = Math.max(...Object.values(confedMap).map(k=>k.length), 0);
+    setRule('rule-confed', 'rule-confed-detail', 'ok', `max ${max}/3`);
+  }
+
+  // Competitie
+  const compViolations = Object.entries(compMap).filter(([,keys]) => keys.length > 3);
+  if (totalPlayers === 0) setRule('rule-comp', 'rule-comp-detail', '', '');
+  else if (compViolations.length > 0) {
+    const worst = compViolations.map(([c,keys]) => `${c}: ${keys.length}`).join(', ');
+    setRule('rule-comp', 'rule-comp-detail', 'error', worst);
+  } else {
+    const max = Math.max(...Object.values(compMap).map(k=>k.length), 0);
+    setRule('rule-comp', 'rule-comp-detail', 'ok', `max ${max}/3`);
+  }
+
+  // Club
+  const clubViolations = Object.entries(clubMap).filter(([,keys]) => keys.length > 1);
+  if (totalPlayers === 0) setRule('rule-club', 'rule-club-detail', '', '');
+  else if (clubViolations.length > 0) {
+    setRule('rule-club', 'rule-club-detail', 'error', `${clubViolations.length} club${clubViolations.length>1?'s':''}`);
+  } else setRule('rule-club', 'rule-club-detail', 'ok', 'OK');
+
+  // Talent
+  const needed22 = 4;
+  if (totalPlayers === 0) setRule('rule-talent', 'rule-talent-detail', '', '');
+  else if (talentCount < needed22) {
+    const more = needed22 - talentCount;
+    setRule('rule-talent', 'rule-talent-detail', totalPlayers < needed ? 'warn' : 'error', `${talentCount}/${needed22} (nog ${more} nodig)`);
+  } else setRule('rule-talent', 'rule-talent-detail', 'ok', `${talentCount}/${needed22} ✓`);
+
+  // List re-renders with violation state inline
+}
+
+function _unused_updatePitchViolations(violations) {
+  const slots = [];
+  slots.forEach(key => {
+    const circle = document.getElementById(`slot-${key}`);
+    const slot = circle?.parentElement;
+    if (!circle) return;
+    slot?.querySelector('.violation-badge')?.remove();
+    if (violations[key] && violations[key].length > 0) {
+      circle.classList.add('violation');
+      const badge = document.createElement('div');
+      badge.className = 'violation-badge';
+      badge.textContent = violations[key][0].toUpperCase();
+      slot.appendChild(badge);
+    } else {
+      circle.classList.remove('violation');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// FANTASY XI — MODAL & PLAYER SELECTION
+// ═══════════════════════════════════════════════════════
+
+function buildCompetitionFilters() {
+  const comps = [...new Set(MOCK_PLAYERS.map(p => p.competition))].sort();
+  const row = document.getElementById('filter-comp');
+  row.innerHTML = `<button class="filter-chip active" onclick="setModalFilter('competition','',this)">Alle</button>`;
+  comps.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip';
+    btn.textContent = c;
+    btn.onclick = function() { setModalFilter('competition', c, this); };
+    row.appendChild(btn);
+  });
+}
+
+function setModalFilter(type, value, el) {
+  modalFilters[type] = value;
+  // Update active chip in that row
+  const rowId = type === 'pos' ? 'filter-pos' : type === 'confederation' ? 'filter-confed' : 'filter-comp';
+  document.getElementById(rowId)?.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el?.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters(talentOnly = false) {
+  const q = document.getElementById('player-search-input').value.toLowerCase();
+  const alreadySelected = new Set(Object.values(fantasyXV).map(p => p.name));
+
+  let filtered = MOCK_PLAYERS.filter(p => {
+    if (talentOnly && p.age >= 22) return false;
+    if (modalFilters.pos && p.pos !== modalFilters.pos) return false;
+    if (modalFilters.competition && p.competition !== modalFilters.competition) return false;
+    if (modalFilters.confederation && p.confederation !== modalFilters.confederation) return false;
+    if (q && !p.name.toLowerCase().includes(q) && !p.country.toLowerCase().includes(q)
+           && !p.club.toLowerCase().includes(q) && !p.competition.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('player-count').innerHTML =
+    `<strong>${filtered.length}</strong> speler${filtered.length !== 1 ? 's' : ''} gevonden`;
+
+  renderPlayerList(filtered, alreadySelected);
+}
+
+function openPlayerModal(pos, idx) {
+  // Legacy: redirect to XV modal for first empty regular slot
+  const key = `p${['GK','DEF','DEF','DEF','DEF','MID','MID','MID','ATT','ATT','ATT'].indexOf(pos)}`;
+  openPlayerModalXV(key, 'regulier');
+}
+
+function closePlayerModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentModalSlot = null;
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closePlayerModal();
+}
+
+function renderPlayerList(players, alreadySelected = new Set()) {
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+
+  if (players.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">Geen spelers gevonden</div>';
+    return;
+  }
+
+  players.forEach(p => {
+    const isDuplicate = alreadySelected.has(p.name);
+    const flagSrc = FLAG_PATHS[p.country];
+    const flagEl = flagSrc
+      ? `<img src="${flagSrc}" alt="${p.country}" class="flag-img-sm">`
+      : `<div class="flag-img-sm" style="background:var(--bg4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:700;color:var(--text-muted)">${p.country.slice(0,2)}</div>`;
+    const isTalent = p.age < 22;
+
+    const el = document.createElement('div');
+    el.className = 'player-card' + (isDuplicate ? ' conflict' : '');
+    if (isDuplicate) el.dataset.conflict = 'Al gekozen';
+    el.innerHTML = `
+      <div class="pc-flag">${flagEl}</div>
+      <div class="pc-info">
+        <div class="pc-name">${p.name}</div>
+        <div class="pc-meta">${p.country} · ${p.club} · ${p.competition}</div>
+      </div>
+      <div class="pc-badges">
+        ${isTalent ? `<span class="pc-badge badge-talent">U22</span>` : ''}
+        <span class="pc-badge badge-pos">${p.pos}</span>
+        <span class="pc-badge badge-quote">${playerQuote(p)}</span>
+      </div>
+    `;
+    if (!isDuplicate) el.onclick = () => selectFantasyPlayer(p);
+    list.appendChild(el);
+  });
+}
+
+function selectFantasyPlayer(player) {
+  if (!currentModalSlot) return;
+  const { key } = currentModalSlot;
+  fantasyXV[key] = player;
+  activeInfoSlot = key;
+  closePlayerModal();
+  renderFantasyXV();
+}
+
+// ═══════════════════════════════════════════════════════
+// SUBMIT
+// ═══════════════════════════════════════════════════════
+
+function renderSubmitSummary() {
+  const filled = Object.values(predictions).filter(p => p.toto && p.uitslag).length;
+  const tokensUsed = Object.values(predictions).reduce((s, p) => s + (parseInt(p.tokens)||0), 0);
+  const tokensLeft = totalTokens - tokensUsed;
+  const fantasyCount = Object.keys(fantasyXV).length;
+  const koRounds = Object.keys(knockoutPicks).filter(k => !k.includes('_tokens') && knockoutPicks[k].length > 0).length;
+
+  document.getElementById('submit-summary').innerHTML = `
+    <div class="submit-row">
+      <label>Deelnemer</label>
+      <strong>${selectedPlayer || '—'}</strong>
+    </div>
+    <div class="submit-row">
+      <label>Wedstrijden ingevuld</label>
+      <strong class="${filled === MATCHES.length ? 'ok' : filled > 0 ? '' : 'warn'}">${filled} / ${MATCHES.length}</strong>
+    </div>
+    <div class="submit-row">
+      <label>Tokens gebruikt</label>
+      <strong class="${tokensLeft === 0 ? 'ok' : ''}">${tokensUsed} / ${totalTokens} ${tokensLeft > 0 ? '('+tokensLeft+' over)' : '✓'}</strong>
+    </div>
+    <div class="submit-row">
+      <label>Knock-out rondes</label>
+      <strong class="${koRounds >= 3 ? 'ok' : 'warn'}">${koRounds} / 5 ingevuld</strong>
+    </div>
+    <div class="submit-row">
+      <label>Fantasy XV</label>
+      <strong class="${fantasyCount === 15 ? 'ok' : fantasyCount > 0 ? '' : 'warn'}">${fantasyCount} / 15 spelers</strong>
+    </div>
+  `;
+}
+
+function confirmSubmit() {
+  const btn = document.getElementById('confirm-btn');
+  btn.textContent = '✓ Opgeslagen!';
+  btn.style.background = 'var(--green)';
+  btn.disabled = true;
+  setTimeout(() => {
+    alert(`Dankjewel ${selectedPlayer}! Je voorspellingen zijn opgeslagen. In de echte app worden deze direct doorgestuurd.`);
+  }, 300);
+}
+
+// ═══════════════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════════════
+
+function renderLeaderboard() {
+  const sorted = [...MOCK_STANDINGS]
+    .map(p => ({ ...p, total: Math.round((p.poulefase + p.knockout + p.tickets) * 100) / 100 }))
+    .sort((a, b) => b.total - a.total);
+
+  const podiumEl = document.getElementById('podium');
+  const order = [sorted[1], sorted[0], sorted[2]];
+  const classes = ['second', 'first', 'third'];
+  const ranks = ['2', '1', '3'];
+  podiumEl.innerHTML = order.map((p, i) => `
+    <div class="podium-item ${classes[i]}">
+      <div class="podium-rank">${ranks[i]}</div>
+      <div style="font-size:1.5rem;margin:0.3rem 0">${['🥈','🥇','🥉'][i]}</div>
+      <div class="podium-name">${p.name}</div>
+      <div class="podium-score">${p.total.toFixed(2)}</div>
+      <div class="podium-delta">punten</div>
+    </div>
+  `).join('');
+
+  const list = document.getElementById('rank-list');
+  list.innerHTML = sorted.slice(3).map((p, i) => {
+    const rank = i + 4;
+    const isMe = p.name === selectedPlayer;
+    return `
+      <div class="rank-item ${isMe ? 'me' : ''}">
+        <div class="rank-pos">${rank}</div>
+        <div class="rank-avatar">${p.name.slice(0,2).toUpperCase()}</div>
+        <div class="rank-name">${p.name}</div>
+        <div class="rank-breakdown">
+          <span>🏟 ${p.poulefase.toFixed(1)}</span>
+          <span>⚡ ${p.knockout.toFixed(1)}</span>
+          <span>🎫 ${p.tickets.toFixed(1)}</span>
+        </div>
+        <div class="rank-total">${p.total.toFixed(1)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// POULE STANDINGS
+// ═══════════════════════════════════════════════════════
+
+function parseScore(uitslag) {
+  const m = uitslag && uitslag.match(/^(\d+)[-:](\d+)$/);
+  if (!m) return null;
+  return [parseInt(m[1]), parseInt(m[2])];
+}
+
+function computeStandings() {
+  const groups = {};
+  MATCHES.forEach(m => {
+    if (!groups[m.poule]) groups[m.poule] = {};
+    [m.thuis, m.uit].forEach(t => {
+      if (!groups[m.poule][t]) groups[m.poule][t] = { P:0, W:0, D:0, L:0, GF:0, GA:0 };
+    });
+    const p = predictions[m.id];
+    if (!p || !p.uitslag) return;
+    const score = parseScore(p.uitslag);
+    if (!score) return;
+    const [gh, ga] = score;
+    const home = groups[m.poule][m.thuis];
+    const away = groups[m.poule][m.uit];
+    home.P++; away.P++;
+    home.GF += gh; home.GA += ga;
+    away.GF += ga; away.GA += gh;
+    if (gh > ga)      { home.W++; away.L++; }
+    else if (gh === ga) { home.D++; away.D++; }
+    else              { home.L++; away.W++; }
+  });
+
+  const result = {};
+  Object.entries(groups).forEach(([poule, teams]) => {
+    result[poule] = Object.entries(teams)
+      .map(([name, s]) => ({ name, ...s, GD: s.GF - s.GA, Pts: s.W * 3 + s.D }))
+      .sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF);
+  });
+  return result;
+}
+
+let standingsOpen = false;
+
+function toggleStandingsPanel() {
+  standingsOpen = !standingsOpen;
+  const panel = document.getElementById('standings-panel');
+  const btn   = document.getElementById('standings-toggle');
+  panel.classList.toggle('collapsed', !standingsOpen);
+  btn.classList.toggle('open', standingsOpen);
+}
+
+function renderStandings() {
+  const standings = computeStandings();
+  const poules = Object.keys(standings).sort();
+  const hasPredictions = poules.some(p => standings[p].some(t => t.P > 0));
+
+  const section = document.getElementById('standings-section');
+  section.style.display = hasPredictions ? 'block' : 'none';
+
+  // Count groups with at least one match filled
+  const filledGroups = poules.filter(p => standings[p].some(t => t.P > 0)).length;
+  const lbl = document.getElementById('standings-filled-label');
+  if (lbl) lbl.textContent = `(${filledGroups}/${poules.length} poules)`;
+
+  const panel = document.getElementById('standings-panel');
+  panel.innerHTML = poules.map(poule => {
+    const rows = standings[poule];
+    const hasData = rows.some(t => t.P > 0);
+    return `
+      <div class="group-table">
+        <div class="group-table-header">Poule ${poule}</div>
+        ${rows.map((t, i) => {
+          const isQualifier = i < 2;
+          const gdStr = t.GD > 0 ? `+${t.GD}` : `${t.GD}`;
+          const gdClass = t.GD > 0 ? 'pos' : t.GD < 0 ? 'neg' : '';
+          const flagSrc = FLAG_PATHS[t.name];
+          const flagEl = flagSrc
+            ? `<img src="${flagSrc}" alt="${t.name}" class="flag-img-sm">`
+            : `<div class="flag-img-sm" style="background:var(--bg4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.5rem;font-weight:700">${t.name.slice(0,2)}</div>`;
+          return `<div class="standing-row ${isQualifier && hasData ? 'qualifier' : ''}">
+            <span class="standing-pos">${i+1}</span>
+            ${flagEl}
+            <span class="standing-name">${t.name}</span>
+            ${hasData ? `<span class="standing-gd ${gdClass}">${gdStr}</span>
+            <span class="standing-pts">${t.Pts}</span>` : `<span class="standing-pts" style="color:var(--text-muted)">—</span>`}
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  }).join('');
+
+  // Auto-suggest qualifiers in knockout 1/16 section (add suggestion banner)
+  updateKnockoutSuggestions(standings);
+}
+
+function updateKnockoutSuggestions(standings) {
+  const suggestEl = document.getElementById('ko-suggestions');
+  if (!suggestEl) return;
+  const qualifiers = [];
+  Object.values(standings).forEach(teams => {
+    teams.slice(0, 2).forEach(t => { if (t.P > 0) qualifiers.push(t.name); });
+  });
+  if (qualifiers.length === 0) {
+    suggestEl.style.display = 'none';
+    return;
+  }
+  suggestEl.style.display = 'block';
+  suggestEl.innerHTML = `
+    <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--green);margin-bottom:0.4rem">
+      ✦ Suggesties op basis van poulestanden (${qualifiers.length} teams)
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:0.3rem">
+      ${qualifiers.map(name => {
+        const flagSrc = FLAG_PATHS[name];
+        const f = flagSrc ? `<img src="${flagSrc}" alt="${name}" class="flag-img-sm">` : '';
+        return `<div style="display:flex;align-items:center;gap:0.25rem;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.25);border-radius:20px;padding:0.2rem 0.5rem;font-size:0.72rem">${f}${name}</div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════
+
+init();
+</script>
+</body>
+</html>

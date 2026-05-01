@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Claude internal
+.claude/
+
+# WhatsApp screenshots (not needed in repo)
+WhatsApp Image*.jpeg
+WhatsApp Image*.jpg
+
+# Node / Next.js (once the app is scaffolded here)
+node_modules/
+.next/
+.env.local
+.env*.local
+out/
+
+# Old/archive files
+OLD/
