@@ -1,0 +1,51 @@
+/* Self-hosted fonts — place .woff2 files in public/fonts/ */
+@font-face {
+  font-family: 'Built Titling';
+  src: url('/fonts/BuiltTitling-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Built Titling';
+  src: url('/fonts/BuiltTitling-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sporty Pro';
+  src: url('/fonts/SportyPro-Shadow.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sporty Pro';
+  src: url('/fonts/SportyPro-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Chalky';
+  src: url('/fonts/Chalky.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  overflow-x: clip; /* clip not hidden — hidden breaks position:sticky */
+}
+
+body {
+  background-color: #0D0D0D;
+  background-image: url('/Background/1a@4x.png');
+  background-size: contain;
+  background-attachment: fixed;
+  background-position: center top;
+  background-repeat: no-repeat;
+  color: #F0F0F0;
+  font-family: Inter, system-ui, sans-serif;
+}

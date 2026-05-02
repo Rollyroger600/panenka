@@ -1,6 +1,6 @@
 # Panenka — Build Plan
 
-> This document is the **execution guide**. For feature specs, design system, and data structures see `PROJECT.md`. For the visual reference open `panenka_mockup.html` in a browser.
+> This document is the **execution guide**. For feature specs, design system, and data structures see `PROJECT.md`. For the visual reference open `panenka_wk2026.html` in a browser.
 
 ---
 
@@ -8,7 +8,7 @@
 
 Work through phases in order. Each phase ends with a clear deliverable you can verify in the browser. When prompting Claude to build, reference both files:
 
-> *"Read `PROJECT.md` for the full spec and `BUILD_PLAN.md` for the folder structure and implementation approach. The visual reference is `panenka_mockup.html` — open it in a browser side by side."*
+> *"Read `PROJECT.md` for the full spec and `BUILD_PLAN.md` for the folder structure and implementation approach. The visual reference is `panenka_wk2026.html` — open it in a browser side by side."*
 
 Mark phases done as you complete them. The plan becomes a progress tracker.
 
@@ -47,11 +47,10 @@ git push origin feature/poulefase-tab
 **Environment variables** — never commit `.env.local`. Both collaborators set up their own:
 ```
 .env.local:
-  NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-  SUPABASE_SERVICE_ROLE_KEY=eyJ...
+  UPSTASH_REDIS_REST_URL=https://xxxx.upstash.io
+  UPSTASH_REDIS_REST_TOKEN=AXxx...
 ```
-Also add all three to the Vercel dashboard for production deploys.
+These are auto-generated when you connect the Upstash Redis integration in Vercel. Copy them from "Settings → Environment Variables" and add them to your local `.env.local`. They're already injected into Vercel deploys automatically.
 
 ---
 
@@ -61,12 +60,10 @@ Also add all three to the Vercel dashboard for production deploys.
 panenka/
 ├── app/
 │   ├── layout.tsx                  # Root layout: fonts (@font-face), background image, body styles
-│   ├── page.tsx                    # Landing screen: name buttons + magic link flow
-│   ├── auth/
-│   │   └── callback/route.ts       # Supabase magic link callback handler
+│   ├── page.tsx                    # Landing screen: name grid → select name → enter app
 │   ├── leaderboard/
 │   │   └── page.tsx                # Public leaderboard — no auth required
-│   └── (app)/                      # Route group: auth-protected
+│   └── (app)/                      # Route group: requires name in cookie
 │       ├── layout.tsx              # App shell: deadline banner + header + tabs + bottom nav
 │       ├── poulefase/
 │       │   └── page.tsx
@@ -81,7 +78,7 @@ panenka/
 │
 ├── components/
 │   ├── layout/
-│   │   ├── AppHeader.tsx           # Logo (left) + participant name (right)
+│   │   ├── AppHeader.tsx           # Logo (left) + name + token count (right); compact mode at scrollY>50
 │   │   ├── TabBar.tsx              # Sticky top tab navigation (5 tabs)
 │   │   ├── BottomNav.tsx           # Fixed bottom icon navigation (5 tabs)
 │   │   └── DeadlineBanner.tsx      # Orange full-width deadline strip
@@ -117,10 +114,8 @@ panenka/
 │       └── TokenBanner.tsx         # Tokens remaining + progress bar (global pool)
 │
 ├── lib/
-│   ├── supabase/
-│   │   ├── client.ts               # createBrowserClient (for Client Components)
-│   │   ├── server.ts               # createServerClient (for Server Components + actions)
-│   │   └── middleware.ts           # Auth check + deadline enforcement
+│   ├── kv/
+│   │   └── kv.ts                   # Vercel KV client: get/set helpers per participant
 │   ├── data/
 │   │   ├── matches.ts              # MATCHES array (72 rows — all group stage)
 │   │   ├── players.ts              # WK_PLAYERS array (from sofifa tab in Excel)
@@ -134,7 +129,7 @@ panenka/
 │   └── helpers.ts                  # abbrevName(), abbrevCountry(), computePlayerQuote()
 │
 ├── hooks/
-│   ├── usePredictions.ts           # Load from Supabase + auto-save with 500ms debounce
+│   ├── usePredictions.ts           # Load from KV on mount + auto-save with 500ms debounce
 │   ├── useKnockoutPicks.ts         # Load + auto-save knockout selections + tokens
 │   ├── useOranjeVoorspelling.ts    # Load + auto-save Oranje picks (no tokens)
 │   ├── useFantasyXV.ts             # Load + auto-save fantasy squad
@@ -160,9 +155,9 @@ panenka/
 │       ├── france-flag-round-xl.png
 │       └── ... (48 total)
 │
-├── middleware.ts                   # Redirect unauthenticated users away from /app/*
+├── middleware.ts                   # Redirect to / if no participant name cookie
 ├── tailwind.config.ts              # Panenka colors + Built Titling / Sporty Pro / Chalky / Inter
-└── .env.local                      # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
+└── .env.local                      # UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
 ```
 
 ---
@@ -265,44 +260,57 @@ body {
 }
 ```
 
-**5. Supabase + Vercel**
+**5. Vercel KV**
 
-- Create Supabase project at supabase.com (free tier)
-- Copy URL + anon key into `.env.local`
 - Connect GitHub repo to Vercel; set `main` = production, `dev` = preview
-- Add env vars in Vercel dashboard
+- In Vercel dashboard → Integrations → find **Upstash Redis** (Vercel KV was migrated to Upstash)
+- Create a Redis database (free tier, ~2 min)
+- Vercel auto-injects `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` into all deployments
+- Copy those two vars from "Settings → Environment Variables" into local `.env.local`
+- Install the client: `npm install @upstash/redis`
 
 **Verify:** Visit the Vercel preview URL — you should see the background footballer image, the dark background color, and all custom fonts loading (check in DevTools → Network → Fonts).
 
 ---
 
-## Phase 1 — Database, Seeding & Auth
+## Phase 1 — KV Setup & Name Selector Auth
 
-**Goal:** All 15 participants can log in via magic link. Route protection works.
+**Goal:** All 15 participants can select their name and enter the app. KV is wired up and data persists across page reloads.
 
 Steps:
-1. Run the full SQL schema from PROJECT.md in the Supabase SQL editor
-2. Enable Row Level Security on all tables; write policies:
-   - `participants`: read for all authenticated users
-   - `predictions`, `knockout_picks`, `oranje_picks`, `fantasy_players`, `fantasy_teams`: read/write own rows only
-   - Leaderboard aggregate view: public read
-3. **Seed `matches` table (72 rows):**
-   - Extract all 72 matches from `Matchday_01` through `Matchday_27` tabs in the Excel master
-   - Each match needs: id, poule (A–L), round (1/2/3), date, home, away, stadium
-   - Use the `Toernooi` tab as a reference for the full match schedule structure
-   - Write a one-time seed script or run the INSERT statements directly in Supabase SQL editor
-4. Seed `participants` table (15 rows — name, initials, email for each person)
-5. In Supabase Auth → invite all 15 participants by email (sends magic link)
-6. Create `lib/supabase/client.ts` and `lib/supabase/server.ts` using `@supabase/ssr`
-7. Create `app/auth/callback/route.ts` to handle the magic link redirect
-8. Build landing page (`app/page.tsx`):
-   - Show the 15 name buttons
-   - Clicking a name triggers a magic link email to their pre-seeded address
-   - After submitting: show "Check je email!" confirmation state
-9. Write `middleware.ts`: redirect unauthenticated requests from `/(app)/*` to `/`
-10. Write `useDeadline.ts` hook
+1. **Create `lib/kv/kv.ts`** — thin wrapper around `@upstash/redis`:
+   ```typescript
+   import { Redis } from '@upstash/redis'
+   const redis = Redis.fromEnv() // reads UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN
 
-**Verify:** Click your name on landing → receive magic link email → click link → arrive at `/poulefase` (even if empty). Visiting `/poulefase` without auth redirects to `/`.
+   export async function kvGet<T>(key: string): Promise<T | null> {
+     return redis.get<T>(key)
+   }
+   export async function kvSet(key: string, value: unknown): Promise<void> {
+     await redis.set(key, JSON.stringify(value))
+   }
+   export function participantKey(section: string, initials: string): string {
+     return `${section}:${initials.toLowerCase()}`
+   }
+   ```
+   KV keys used by the app:
+   - `predictions:{initials}` — full predictions object `{ matchId: {toto, uitslag, tokens} }`
+   - `knockout:{initials}` — knockout picks `{ roundId: string[], roundId_tok_Country: number }`
+   - `oranje:{initials}` — oranje voorspelling `{ matchId: {toto, uitslag} }`
+   - `fantasy:{initials}` — fantasy squad `{ slotKey: playerObject, teamName: string }`
+   - `scores` — computed leaderboard (written by scoring engine, not by participants)
+
+2. **Build landing page (`app/page.tsx`):**
+   - Show the 15 name buttons in a 3-column grid
+   - Clicking a name sets a cookie: `participant=RH` (initials) and `participantName=Rogier`
+   - Then redirect to `/poulefase`
+   - No email, no magic link, no auth provider needed
+
+3. **Write `middleware.ts`**: read the `participant` cookie; redirect to `/` if missing on any `/(app)/*` route
+
+4. **Write `useDeadline.ts` hook**: returns `{ isPast, timeRemaining }` from hardcoded deadline `2026-06-09T17:00:00+02:00`
+
+**Verify:** Click your name on landing → land on `/poulefase` (empty). Reload — still on poulefase (cookie persists). Visiting `/poulefase` in a new tab without selecting a name redirects to `/`.
 
 ---
 
@@ -353,15 +361,17 @@ This phase is mainly data extraction from the Excel master. Do it once, then all
 
 5. **`lib/data/countries.ts`** — `ALL_COUNTRIES` array (all 48 WK participants) + `FLAG_PATHS` map (from PROJECT.md)
 
-6. **`lib/data/knockoutRounds.ts`** — 6-round config:
+6. **`lib/data/knockoutRounds.ts`** — 8-section config (6 UI tabs: "Ronde van 32" bundles w1+w2+w3):
    ```typescript
    export const KNOCKOUT_ROUNDS = [
-     { id: 'r16',    label: '1/16', slots: 32, minTokens: 2, maxTokens: 9 },
-     { id: 'r8',     label: '1/8',  slots: 16, minTokens: 3, maxTokens: 9 },
-     { id: 'qf',     label: '1/4',  slots:  8, minTokens: 4, maxTokens: 9 },
-     { id: 'sf',     label: '1/2',  slots:  4, minTokens: 5, maxTokens: 9 },
-     { id: 'final',  label: 'Finale', slots: 2, minTokens: 5, maxTokens: 9 },
-     { id: 'winner', label: 'Winnaar', slots: 1, minTokens: 6, maxTokens: 9 },
+     { id: 'w1',     label: 'Poulewinnaars',   uiTab: 'ronde32', slots: 12, minTokens: 2, maxTokens: 9, qkey: 'winnaar_poule' },
+     { id: 'w2',     label: 'Nummers 2',       uiTab: 'ronde32', slots: 12, minTokens: 2, maxTokens: 9, qkey: 'tweede' },
+     { id: 'w3',     label: 'Beste nummers 3', uiTab: 'ronde32', slots:  8, minTokens: 2, maxTokens: 9, qkey: 'derde' },
+     { id: 'r16',    label: 'Ronde van 16',    uiTab: 'r16',     slots: 16, minTokens: 3, maxTokens: 9, qkey: 'r16' },
+     { id: 'r8',     label: 'Kwartfinales',    uiTab: 'r8',      slots:  8, minTokens: 4, maxTokens: 9, qkey: 'r8' },
+     { id: 'r4',     label: 'Halve finales',   uiTab: 'r4',      slots:  4, minTokens: 5, maxTokens: 9, qkey: 'r4' },
+     { id: 'finale', label: 'Finalisten',      uiTab: 'finale',  slots:  2, minTokens: 5, maxTokens: 9, qkey: 'finale' },
+     { id: 'winner', label: 'WK Winnaar',      uiTab: 'winner',  slots:  1, minTokens: 6, maxTokens: 9, qkey: 'winnaar' },
    ]
    ```
 
@@ -399,12 +409,12 @@ This phase is mainly data extraction from the Excel master. Do it once, then all
 
 **Goal:** Full match prediction UI working end-to-end with persistence.
 
-> **Visual reference:** Open `panenka_mockup.html` in a browser for the exact match card layout. For design close-ups, open `Style/Artboard 2@4x.png` in an image viewer.
+> **Visual reference:** Open `panenka_wk2026.html` in a browser for the exact match card layout. For design close-ups, open `Style/Artboard 2@4x.png` in an image viewer.
 
 This is the most complex screen — build component by component:
 
 1. **`store/gameStore.ts`** — Zustand store with `predictions` map: `matchId → {toto, uitslag, tokens}`
-2. **`usePredictions` hook** — on mount: fetch all rows for current user from `predictions` table, populate store; on change: debounce 500ms → upsert to Supabase
+2. **`usePredictions` hook** — on mount: call `loadParticipantData(initials, 'predictions')` and populate store; on change: debounce 500ms → call `saveParticipantData(initials, 'predictions', data)`
 3. **`useTokenBudget` hook** — computes `{ base: 335, bonus: 0, used, remaining }` from store state
 4. **`TokenChip`** + **`TokenPicker`** — chip shows current token count (orange if set, muted "Kies" if not); clicking opens inline number bar; poulefase range: 1–6
 5. **`TotoButtons`** — three buttons (1, X, 2) in a flex row; odds from `MATCH_ODDS[id]` displayed below each in gold; selected button turns orange
@@ -412,47 +422,54 @@ This is the most complex screen — build component by component:
 7. **`UitslagChip`** + **`ScorePicker`** — chip shows score or "Kies"; clicking toggles the odds panel below; selecting a score closes panel, updates chip green, triggers calculation
 8. **`MatchCard`** — assembles all above into the 5-column row: `Tokens × Toto = Quote · Uitslag = Quote`
 9. **`TokenBanner`** — sums all `tokens` from store across all 72 matches; shows remaining / used / progress bar (against global 335-token pool)
-10. **`lib/standings.ts`** — port `computeStandings()` and `parseScore()` from mockup
+10. **`lib/standings.ts`** — port `computeStandings()` and `parseScore()` from `panenka_wk2026.html`
 11. **`StandingsPanel`** — collapsible; appears once any uitslag is filled; 2-column grid of 12 group tables; top-2 per group have green left border
 12. Render matches grouped by round (Ronde 1 / Ronde 2 / Ronde 3) with date sub-labels
 
 **Token constraint:** The `TokenPicker` for poulefase shows chips 1–6 only. Enforce `tokens >= 1 && tokens <= 6` in the store update and the database CHECK constraint.
 
-**Verify:** Fill in a match — token chip, toto button, uitslag score. Gold quote chips update live. Reload the page — picks are still there (fetched from Supabase). Token banner updates correctly.
+**Verify:** Fill in a match — token chip, toto button, uitslag score. Gold quote chips update live. Reload the page — picks are still there (fetched from KV). Token banner updates correctly.
 
 ---
 
 ## Phase 4 — Oranje Voorspelling Tab
 
-**Goal:** Netherlands-specific bonus prediction screen. No tokens, just toto + score.
+**Goal:** 3 Netherlands matches × 9 questions each = 27 bonus predictions. No tokens.
+
+NL matches: #10 NED–JPN (14-06), #33 NED–SWE (20-06), #58 TUN–NED (26-06).
 
 Steps:
-1. Filter `MATCHES` for matches where `home === 'Nederland' || away === 'Nederland'` — these are the NL matches
-2. **`OranjeMatchCard`** — simplified version of MatchCard: no token chip, just toto (1/X/2) + uitslag score picker; same odds display
-3. **`store/gameStore.ts`** — add `oranjeVoorspelling` map: `matchId → {toto, uitslag}`
-4. **`useOranjeVoorspelling` hook** — load + auto-save to `oranje_picks` table
-5. **Bonus token calculation** — for display purposes, show estimated bonus tokens based on fills. Actual bonus tokens only credited post-match by the scoring engine.
-6. Show an info banner explaining: "Vul hier de NL-wedstrijden in. Goede voorspellingen leveren extra tokens op voor de Knock-out fase."
+1. **`store/gameStore.ts`** — add `oranjeVoorspelling` map: `matchId → { q1..q9 }` where q1–q4 are `'NED' | 'OPP'` and q5–q9 are a player name string
+2. **`useOranjeVoorspelling` hook** — load + auto-save to KV key `oranje:{initials}`
+3. **`OranjeMatchCard`** — for each of the 3 NL matches, render 9 question rows:
+   - Q1–Q4 (Eerste ingooi / corner / vrije trap / kaart): two-button toggle `NED` / `[OPP]`
+   - Q5–Q9 (Meeste km / passes / tackles / schoten op doel / buitenspel): dropdown with NL squad names
+4. Show match header (flag, teams, date) above the 9 questions
+5. **`useDeadline.ts`** — lock all inputs after deadline
 
-**Verify:** Fill in a NL match toto and uitslag. Reload — picks persist. The Overzicht tab shows "Oranje Voorspelling: X / Y ingevuld".
+**Verify:** Fill in questions for all 3 matches. Reload — answers persist. Overzicht shows "Oranje Voorspelling: X / 27 vragen ingevuld".
 
 ---
 
 ## Phase 5 — Knockout Tab
 
-**Goal:** Full knockout round UI with per-team token assignment persisted.
+**Goal:** Full 8-section knockout UI with 6 navigation tabs and per-team token assignment persisted.
 
 Steps:
-1. **`store/gameStore.ts`** — add `knockoutPicks` map: `roundId → string[]` and `roundId_tok_Country → number`
-2. **`useKnockoutPicks` hook** — load + auto-save (same debounce pattern as predictions)
-3. **`CountryChip`** — flag image + country name; selected = orange; clicking toggles selection; when max slots reached, oldest is auto-removed
-4. **`TeamTokenRow`** — renders for each selected country: flag + name + number input (min/max from KNOCKOUT_ROUNDS config); shows the knockout quote for that country at that round in gold
-5. **`RoundSection`** — round badge + slot count info + `CountryChip` grid (all 48 countries) + "Tokens per team" subheader + `TeamTokenRow` list + running quote calculation
-6. **`SuggestionsPanel`** — reads standings from `gameStore`; shows top-2 per group with flags as suggestion chips; hidden until standings exist
-7. **Token validation** — each round enforces its own min/max per team; the total knockout tokens also count against the global 335-token pool
-8. **3-tier quote display** — when hovering a country chip, show a tooltip: `Poulewinnaar: 1.XX · 2e: 1.00 · 3e-plek: X.XX`
+1. **`store/gameStore.ts`** — add `knockoutPicks` map: `{ [sectionId_slotIndex]: { country: string, tok: number } }` — e.g. `w1_0` through `w1_11` for the 12 group winners, `r16_0` through `r16_15` for round of 16
+2. **`useKnockoutPicks` hook** — load from KV key `knockout:{initials}` on mount; debounce 500ms → save on change
+3. **6 tab navigation**: `Ronde van 32` / `Ronde van 16` / `Kwartfinales` / `Halve finales` / `Finale` / `Winnaar`
+4. **"Ronde van 32" tab** renders 3 sub-sections (w1/w2/w3) stacked:
+   - **w1 (Poulewinnaars):** 12 slots, one per group (A–L). Each slot: empty label shows poule letter; picker shows 4 teams from that group. Suggestion = standings leader.
+   - **w2 (Nummers 2):** Same as w1 but excludes the chosen w1-winner per group.
+   - **w3 (Beste nummers 3):** 8 slots. Picker shows all 12 third-place finishers ranked by pts + GD. Uniqueness enforced across w1+w2+w3.
+5. **Remaining 5 tabs** (r16/r8/r4/finale/winner): chip grid of all 48 countries; max = slots count; each selected country gets a `TeamTokenRow` below
+6. **`SlotPicker` overlay** — two sections: "Op basis van je voorspelde uitslagen" (smart suggestion, orange) + "Overige opties" (grey). Country can be deselected by tapping it again in the picker.
+7. **Uniqueness rule** — if a country appears in both w1 and w2 (or w3), the earlier slot is auto-cleared on selection
+8. **`BracketView`** — toggle shows M73–M103 bracket with both sides and participant's chosen winners. Unfilled = "?"
+9. **Token validation** — each section enforces its own min/max per team; all knockout tokens count against the global pool
 
-**Verify:** Select 32 teams for 1/16 round — token rows appear below. Assign tokens per team (min 2, max 9). Reload — all selections and tokens persist. Token banner reflects knockout tokens used.
+**Verify:** In "Ronde van 32", pick a winner for each of the 12 groups (w1). Assign tokens. Switch to w2 and pick runners-up. Reload — all selections and tokens persist. Token banner reflects knockout tokens used.
 
 ---
 
@@ -461,9 +478,9 @@ Steps:
 **Goal:** Full 15-player squad builder with live validation, modal, and persistence.
 
 Steps:
-1. **`lib/validation.ts`** — port `validateFantasyXV()` from mockup; returns `{ violations, countryMap, confedMap, compMap, clubMap, talentCount }`
+1. **`lib/validation.ts`** — `validateFantasyXV()` checks 3 rules: max 1 per country, max 3 per confederation, max 1 per club. Returns `{ violations, countryMap, confedMap, clubMap }`. Talent age rule is structural (slots t0–t3 are talent-only, enforced in the modal filter).
 2. **`store/gameStore.ts`** — add `fantasyXV` map (`slotKey → player`), `teamName`, `activeInfoSlot`
-3. **`useFantasyXV` hook** — load squad + team name from Supabase; auto-save on change
+3. **`useFantasyXV` hook** — load squad + team name from KV key `fantasy:{initials}`; auto-save on change
 4. **`RulesPanel`** — 5 rule rows; reads violations from store; shows ✓ / ✗ / ! / — with detail text
 5. **`PlayerRow`** — abbreviated name + flag + violation tag (if any) + computed quote (`computePlayerQuote(player)`); clicking toggles info card
 6. **`EmptySlot`** — `+` icon + "Speler toevoegen" or "Talent (U22)"; clicking opens modal
@@ -480,7 +497,7 @@ export function computePlayerQuote(player: Player): number {
 }
 ```
 
-**Verify:** Add 15 players. Trigger a violation (two from same country) — rows turn red. Open the modal and use filters. Remove a player from the info card. Reload — squad persists.
+**Verify:** Add 15 players. Trigger a violation (two from same country) — rows turn red. Open the modal and use filters. Remove a player from the info card. Reload — squad persists (loaded from KV).
 
 ---
 
@@ -496,13 +513,13 @@ Steps:
    - Count knockout rounds with at least 1 pick
    - Count fantasy players (out of 15)
    - Show global token budget: `335 base + X bonus − Y used = Z remaining`
-   - "Bevestigen" button sets `confirmed_at` on a `submissions` table and shows locked state
-2. **`/leaderboard` page** — server component, no auth needed; fetches computed scores from Supabase; renders Podium + RankList
+   - "Bevestigen" button sets `confirmed:true` in the participant's KV key and shows locked state
+2. **`/leaderboard` page** — server component, no auth needed; reads `scores` KV key (computed by scoring engine); renders Podium + RankList
 3. **`Podium`** — top 3 in 2/1/3 visual order; gold border + larger on #1
-4. **`RankList`** — positions 4–15; current user row highlighted orange; shows breakdown: Poulefase / Knockout / Fantasy XV columns
-5. **Supabase Realtime** — subscribe to leaderboard data; auto-refreshes during tournament without page reload
+4. **`RankList`** — positions 4–15; current participant row highlighted orange; shows breakdown: Poulefase / Knockout / Fantasy XV columns
+5. **Polling for leaderboard updates** — simple `setInterval` refresh every 60 seconds during tournament (no WebSocket needed for 15 users)
 
-**Verify:** Open leaderboard at `/leaderboard` without being logged in — it works. Multiple participants' scores appear once scoring engine runs.
+**Verify:** Overzicht shows correct counts: "X / 72 wedstrijden", "X / 27 Oranje vragen", "X / 8 KO-secties", "X / 15 Fantasy spelers". Leaderboard at `/leaderboard` works without a cookie.
 
 ---
 
@@ -511,9 +528,9 @@ Steps:
 **Goal:** Real scores appear on the leaderboard as matches are played.
 
 **Option A — Manual admin (recommended):**
-- Hidden page at `/admin` protected by a separate Supabase role
-- Form to enter actual result per match (`actual_toto`, `actual_uitslag`)
-- Supabase Edge Function `compute-scores` reads all predictions + actual results + knockout picks + KO_QUOTES, writes totals to a `scores` table
+- Hidden page at `/admin` protected by a hardcoded admin cookie (no separate auth)
+- Form to enter actual result per match (`actual_toto`, `actual_uitslag`) — stored in KV key `results`
+- Server Action `computeScores()` reads all 15 participants' KV data + `results` + KO_QUOTES, writes totals to KV key `scores`
 - Trigger manually after each matchday
 
 **Scoring formula:**
@@ -540,15 +557,14 @@ bonus_tokens = COUNT(correct_oranje_totos) × TOTO_BONUS + COUNT(correct_uitslag
 **Goal:** App is stable, tested on real devices, and ready for all 15 participants.
 
 Checklist:
-- [ ] Loading skeletons while Supabase data is fetching (prevent layout shift)
+- [ ] Loading skeletons while KV data is fetching (prevent layout shift)
 - [ ] Optimistic UI: show state changes immediately, revert silently on save failure
 - [ ] Toast/snackbar: subtle confirmation when auto-save succeeds; clear error if it fails
 - [ ] Read-only mode: after deadline, disable all inputs; show "Inzending gesloten" banner
 - [ ] Test on iOS Safari (check `backdrop-filter`, sticky positioning, bottom nav safe area)
 - [ ] Test on Android Chrome
-- [ ] Verify all 15 magic links work end-to-end
-- [ ] Verify two participants cannot see or overwrite each other's data (RLS test)
-- [ ] Verify deadline enforcement: manually set system clock past deadline, confirm writes fail
+- [ ] Verify all 15 participants can enter the app by selecting their name
+- [ ] Verify deadline enforcement: manually set system clock past deadline, confirm writes are blocked
 - [ ] Verify font loading: check all 5 custom fonts render correctly (DevTools → Network → Fonts)
 - [ ] Set up custom domain on Vercel (e.g. `panenka.nl`) if desired
 
@@ -564,11 +580,10 @@ git push origin feature/my-feature
 # Open PR → review → merge to dev → test preview URL → merge dev to main → auto-deploys
 ```
 
-Environment variables to set in Vercel dashboard:
+Environment variables (auto-added by Upstash Redis integration):
 ```
-NEXT_PUBLIC_SUPABASE_URL          = https://xxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY     = eyJ...
-SUPABASE_SERVICE_ROLE_KEY         = eyJ...   # server-only, for Edge Functions
+UPSTASH_REDIS_REST_URL    = https://xxxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN  = AXxx...
 ```
 
 Every pull request gets a unique preview URL for testing before merging.
@@ -580,22 +595,21 @@ Every pull request gets a unique preview URL for testing before merging.
 | Phase | What | Effort |
 |-------|------|--------|
 | 0 | Project setup, fonts (self-hosted), Tailwind config, Vercel + GitHub | 2–3 hrs |
-| 1 | Database schema (72 matches), seeding, magic link auth | 3–4 hrs |
+| 1 | Vercel KV setup, KV client, name selector auth, cookie middleware | ~1 hr |
 | 2 | Static data files (matches, odds, quotes, players) — Excel extraction | 2–3 hrs |
-| 3 | Poulefase tab — full match card UI + persistence | 5–7 hrs |
+| 3 | Poulefase tab — full match card UI + KV persistence | 5–7 hrs |
 | 4 | Oranje Voorspelling tab — simplified NL predictions | 1–2 hrs |
 | 5 | Knockout tab — country selection + per-team tokens + 3-tier quotes | 3–4 hrs |
 | 6 | Fantasy XV tab — squad builder + real quote formula + modal | 4–5 hrs |
-| 7 | Overzicht + leaderboard + Realtime | 2–3 hrs |
+| 7 | Overzicht + leaderboard + polling | 2–3 hrs |
 | 8 | Scoring engine *(post-deadline)* | 3–5 hrs |
 | 9 | Polish, mobile testing, launch | 2–3 hrs |
-| **Total** | | **~27–39 hrs** |
+| **Total** | | **~25–36 hrs** |
 
 ---
 
 ## Things to Collect Before Phase 1
 
-1. **Email addresses of all 15 participants** — needed to seed `participants` table and send Supabase invites
-2. **Font files** — `.woff2` files for Built Titling, Sporty Pro, and Chalky/Tomatoes (commercial — must obtain licenses)
-3. **Full match schedule confirmation** — verify the 72-match extraction from Excel matches the official WK 2026 fixture list (fixtures finalized closer to tournament)
-4. **Bonus token values** — exact number of bonus tokens awarded per correct Oranje Voorspelling toto/uitslag (check with pool creator)
+1. **Font files** — `.woff2` files for Built Titling, Sporty Pro, and Chalky/Tomatoes (commercial — must obtain licenses)
+2. **Full match schedule confirmation** — verify the 72-match extraction from Excel matches the official WK 2026 fixture list (fixtures finalized closer to tournament)
+3. **Bonus token values** — exact number of bonus tokens awarded per correct Oranje Voorspelling toto/uitslag (check with pool creator)

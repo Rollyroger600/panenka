@@ -4,7 +4,7 @@
 
 Panenka is a **private betting pool app** for 15 friends to compete during the FIFA World Cup 2026 (hosted by USA/Canada/Mexico, June–July 2026). Each participant fills in predictions before the tournament starts and earns points based on how accurate they are. There is no real money involved — this is purely for bragging rights.
 
-A **working visual mockup** exists at `panenka_mockup.html` in this folder. Open it in a browser to see the exact design, layout, and interactions. The mockup is a single-file HTML/CSS/JS prototype with all screens implemented. **Use it as the definitive visual reference.** This document describes what the real app needs to do and how it should be structured.
+A **working visual mockup** exists at `panenka_wk2026.html` in this folder. Open it in a browser to see the exact design, layout, and interactions. The mockup is a single-file HTML/CSS/JS prototype with all screens implemented. **Use it as the definitive visual reference.** This document describes what the real app needs to do and how it should be structured.
 
 ---
 
@@ -12,13 +12,27 @@ A **working visual mockup** exists at `panenka_mockup.html` in this folder. Open
 
 Initials in parentheses are the internal short codes used in the Excel master.
 
-```
-Michiel (MG), Bob (BH), Thom (TW), Henk Jan (HP), Rogier (RH),
-Daan (DM), Barthold (BM), Robert (RA), Tom (TdL), Willem (WP),
-Bert (BS), Wouter (WS), Tim (TvL), Timo (TG), Laurens (LV)
-```
+| Naam | Ref | Basis | Extra | Totaal |
+|------|-----|-------|-------|--------|
+| Michiel | MG | 335 | +9 | 344 |
+| Bob | BH | 335 | +5 | 340 |
+| Thom | TW | 335 | +4 | 339 |
+| Henk Jan | HP | 335 | +2 | 337 |
+| Rogier | RH | 335 | +10 | 345 |
+| Daan | DM | 335 | +9 | 344 |
+| Barthold | BM | 335 | +5 | 340 |
+| Robert | RA | 335 | +3 | 338 |
+| Tom | TdL | 335 | +1 | 336 |
+| Willem | WP | 335 | +4 | 339 |
+| Bert | BS | 335 | +7 | 342 |
+| Wouter | WS | 335 | +6 | 341 |
+| Tim | TvL | 335 | +5 | 340 |
+| Timo | TG | 335 | +9 | 344 |
+| Laurens | LV | 335 | +3 | 338 |
 
-In the mockup, users simply tap their name. In the real app, the landing screen sends a **magic link** to the participant's email — clicking it logs them in automatically. All data is scoped to the authenticated participant.
+Extra tokens are fixed per participant (sourced from `Poule_{ref}` cel (3,11) in the Excel master). They are part of the total token budget from the start, not earned during the app.
+
+In the mockup and real app, users simply tap their name on the landing screen. This sets a cookie that identifies them throughout the session. All data is scoped per participant using their initials as the KV key prefix.
 
 ---
 
@@ -53,7 +67,7 @@ All fonts are **commercial, not available on Google Fonts**. They must be **self
 | **Sporty Pro Light** | Lighter accent display — sub-labels, less prominent numbers | Lighter sporty variant |
 | **Chalky** or **Tomatoes** | Fantasy team name, "Talents" section header, coach label | Handwritten / cursive texture |
 
-> **Replacing the mockup fonts:** Built Titling replaces Bebas Neue. Chalky/Tomatoes replaces Dancing Script. Inter (system/web-safe) remains for body text. Sporty Pro is an addition — use it for the most prominent numeric elements (token count, final quote result).
+> **Replacing the mockup fonts:** The mockup (`panenka_wk2026.html`) uses Barlow Condensed + Barlow via Google Fonts. In the real app these are replaced by self-hosted commercial fonts: Built Titling (headings), Sporty Pro (prominent numbers), Chalky/Tomatoes (fantasy team name). Inter remains for body text.
 
 Font file placement in Next.js:
 ```
@@ -199,106 +213,78 @@ The `Style/` folder contains **visual reference images only** — open them in P
 |-------|--------|
 | Framework | **Next.js 15** — App Router, TypeScript |
 | Styling | **Tailwind CSS** — extend with Panenka design tokens |
-| Database | **Supabase** — Postgres + Row Level Security + Realtime |
-| Auth | **Supabase Magic Link** — passwordless, one email per participant |
-| Deployment | **Vercel** — zero-config for Next.js, auto-deploys on push |
-| Client state | **Zustand** — predictions / fantasy picks before auto-save |
+| Persistence | **Upstash Redis** (via Vercel integration) — one JSON blob per participant per data type; no SQL |
+| Auth | **Name selector + cookie** — tap name on landing → cookie set → redirect to app |
+| Deployment | **Vercel** — zero-config for Next.js, auto-deploys on push; KV built-in |
+| Client state | **Zustand** — predictions / fantasy picks before auto-save to KV |
 | Version control | **GitHub** — shared repo for collaborative development |
 
 The app is mobile-first, max content width 700px centered.
 
 ### Authentication
 
-Each of the 15 participants has a pre-created Supabase account (name + email). Before the tournament, everyone receives one magic-link email — they click it and are permanently logged in on that device. No passwords, no registration form.
+No auth provider needed. The landing screen shows all 15 names as buttons. Tapping a name sets two cookies:
+- `participant` = initials (e.g. `RH`) — used as the KV key prefix
+- `participantName` = display name (e.g. `Rogier`) — shown in the header
 
-- The leaderboard (`/leaderboard`) is publicly readable — no auth required
-- All prediction write routes require an active session
-- After the deadline, all writes are blocked server-side regardless of auth state
+`middleware.ts` reads the `participant` cookie and redirects to `/` if missing on any `/(app)/*` route.
+
+- The leaderboard (`/leaderboard`) is publicly readable — no cookie required
+- All prediction writes check that a valid participant cookie is present and that the deadline has not passed
+- After the deadline, all writes return 403
 
 ### Deadline
 
 All predictions must be submitted before **9 juni 2026, 17:00** (one hour before the opening match). Enforced in `middleware.ts` — after this timestamp all inputs become read-only and API writes return 403.
 
-### Database Schema
+### Data Storage (Vercel KV)
 
-```sql
--- Seeded once: the 15 fixed participants
-CREATE TABLE participants (
-  id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name     TEXT UNIQUE NOT NULL,        -- 'Rogier', 'Michiel', etc.
-  initials TEXT UNIQUE NOT NULL,        -- 'RH', 'MG', etc.
-  email    TEXT UNIQUE NOT NULL,
-  auth_id  UUID REFERENCES auth.users(id)
-);
+No SQL schema. Each participant's data is stored as a JSON blob per key. All keys use lowercase initials as the suffix.
 
--- Seeded once: all 72 group-stage matches
-CREATE TABLE matches (
-  id           INT PRIMARY KEY,         -- 1 through 72
-  poule        TEXT NOT NULL,           -- 'A' through 'L'
-  round        INT NOT NULL,            -- 1, 2, or 3
-  match_date   TEXT NOT NULL,           -- '11 jun'
-  home         TEXT NOT NULL,           -- Dutch country name
-  away         TEXT NOT NULL,
-  stadium      TEXT,
-  -- Filled post-match by admin for scoring:
-  actual_toto    TEXT,                  -- '1', 'X', or '2'
-  actual_uitslag TEXT                   -- '2-1'
-);
-
--- One row per participant per match (upserted on every change)
-CREATE TABLE predictions (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  participant_id UUID NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
-  match_id       INT  NOT NULL REFERENCES matches(id),
-  toto           TEXT CHECK (toto IN ('1','X','2')),
-  uitslag        TEXT,                  -- e.g. '2-1'
-  tokens         INT  CHECK (tokens BETWEEN 1 AND 6),
-  updated_at     TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(participant_id, match_id)
-);
-
--- One row per participant per round per selected country
-CREATE TABLE knockout_picks (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  participant_id UUID NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
-  round_id       TEXT NOT NULL,         -- 'r16', 'r8', 'qf', 'sf', 'final', 'winner'
-  country        TEXT NOT NULL,
-  tokens         INT  CHECK (tokens >= 1),
-  UNIQUE(participant_id, round_id, country)
-);
-
--- Oranje Voorspelling: NL-specific extra predictions that earn bonus tokens
-CREATE TABLE oranje_picks (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  participant_id UUID NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
-  match_id       INT  NOT NULL REFERENCES matches(id),
-  toto           TEXT CHECK (toto IN ('1','X','2')),
-  uitslag        TEXT,
-  UNIQUE(participant_id, match_id)
-);
-
--- Fantasy team name (one per participant)
-CREATE TABLE fantasy_teams (
-  participant_id UUID PRIMARY KEY REFERENCES participants(id),
-  team_name      TEXT NOT NULL DEFAULT 'FC Panenka'
-);
-
--- Fantasy player selections (up to 15 slots per participant)
-CREATE TABLE fantasy_players (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  participant_id UUID NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
-  slot_key       TEXT NOT NULL,         -- 'p0'–'p10', 't0'–'t3'
-  player_id      INT,                   -- sofifa player_id
-  player_name    TEXT NOT NULL,
-  UNIQUE(participant_id, slot_key)
-);
+```
+KV key                  Value type          Description
+─────────────────────────────────────────────────────────────────────────────
+predictions:{initials}  JSON object         { [matchId]: { toto, uitslag, tokens } }
+knockout:{initials}     JSON object         see structure below
+oranje:{initials}       JSON object         { [matchId]: { q1..q9 } }  (q1-q4: "NED"|"OPP", q5-q9: player name)
+fantasy:{initials}      JSON object         { slots: PlayerObject[], teamName: string, confirmed: boolean }
+results                 JSON object         { [matchId]: { toto, uitslag } }  ← written by admin
+scores                  JSON object         { [initials]: { poulefase, knockout, fantasy, total } }  ← written by scoring engine
 ```
 
-Row Level Security: every participant can only read/write their own rows. Leaderboard aggregates are publicly readable.
+**Knockout KV structure** — slots are indexed because w1/w2 each have exactly 12 slots (one per group A–L), and w3 has 8 slots in ranked order:
+```
+knockout:rh → {
+  // w1: one slot per group (index 0-11 = groups A-L)
+  "w1_0": { country: "Mexico",    tok: 3 },   // Poule A winner
+  "w1_1": { country: "Canada",    tok: 4 },   // Poule B winner
+  ...
+  "w1_11": { country: "Engeland", tok: 2 },   // Poule L winner
+
+  // w2: same indexed structure, excluding w1 choice per group
+  "w2_0": { country: "Zuid-Korea", tok: 2 },
+
+  // w3: 8 slots (best 3rd-place finishers, order = picking order)
+  "w3_0": { country: "Turkije", tok: 3 },
+
+  // r16–winner: slots are free-pick (any country)
+  "r16_0": { country: "Nederland", tok: 5 },
+  ...
+}
+```
+
+Examples (other keys):
+```
+predictions:rh   → { "1": { toto: "1", uitslag: "2-0", tokens: 4 }, "2": { ... } }
+fantasy:rh       → { slots: [{ name: "Mbappé", country: "Frankrijk", ... }, ...], teamName: "FC Rogier" }
+scores           → { "rh": { poulefase: 142, knockout: 87, fantasy: 0, total: 229 }, ... }
+```
+
+Match data (72 matches), player pool, odds, and knockout quotes are all **static TypeScript files** — they are never stored in KV.
 
 ### Key Technical Decisions
 
-1. **Auto-save, not manual save.** Every prediction change is debounced 500ms and upserted to Supabase. The "Bevestigen" button in Overzicht only sets a `confirmed_at` timestamp — data is never at risk of being lost by forgetting to press save.
+1. **Auto-save, not manual save.** Every prediction change is debounced 500ms and written to Vercel KV. The "Bevestigen" button in Overzicht only sets `confirmed: true` inside the participant's KV blob — data is never at risk of being lost by forgetting to press save.
 
 2. **Match odds stay client-side.** The seeded RNG (`sr()` + `generateMatchOdds()`) runs entirely in the browser. All 72 × 26 score odds are computed in milliseconds — no API call, no database column. The actual odds values come from `Quoteringen_toto_uitslag_test` in the Excel master (48+ score options per match, pre-computed).
 
@@ -306,7 +292,7 @@ Row Level Security: every participant can only read/write their own rows. Leader
 
 4. **Standings are derived, not stored.** `computeStandings()` is a pure function over the local predictions state. No standings table needed — recalculated whenever an uitslag changes.
 
-5. **Player list lives in code, not the database.** The full WK 2026 player pool (from sofifa dataset) is a static TypeScript array in `lib/data/players.ts`. Only slot assignments (`slot_key → player_id`) are stored in Supabase.
+5. **Player list lives in code, not KV.** The full WK 2026 player pool (from sofifa dataset) is a static TypeScript array in `lib/data/players.ts`. Only slot assignments (`slot_key → player object`) are stored in KV under the `fantasy:{initials}` key.
 
 6. **Scoring formula is multiplicative, not additive.**
    - `toto_score = tokens × toto_quote` (if toto correct)
@@ -319,21 +305,23 @@ Row Level Security: every participant can only read/write their own rows. Leader
 ## Token System
 
 ### Total Budget
-Each participant starts with **335 base tokens**. Additional tokens can be earned through the **Oranje Voorspelling** section (for correctly predicting Netherlands matches). The Overzicht tab shows the total available tokens and how many have been allocated.
+Each participant starts with a fixed token budget (335 base + their personal extra, see participants table). The Overzicht tab shows total available tokens and how many have been allocated.
 
 ### Per-Section Token Constraints
 
-| Section | Min per bet | Max per bet |
-|---------|------------|------------|
-| Poulefase (72 matches) | 1 | 6 |
-| Knock-out: 1/16 | 2 | 9 |
-| Knock-out: 1/8 | 3 | 9 |
-| Knock-out: Kwartfinale | 4 | 9 |
-| Knock-out: Halve Finale | 5 | 9 |
-| Knock-out: Finale | 5 | 9 |
-| Knock-out: Winnaar | 6 | 9 |
+| Section | Id | Slots | Min per pick | Max per pick |
+|---------|-----|-------|-------------|-------------|
+| Poulefase (72 matches) | — | 72 | 1 | 6 |
+| Knock-out: Poulewinnaars | `w1` | 12 | 2 | 9 |
+| Knock-out: Nummers 2 | `w2` | 12 | 2 | 9 |
+| Knock-out: Beste nummers 3 | `w3` | 8 | 2 | 9 |
+| Knock-out: Ronde van 16 | `r16` | 16 | 3 | 9 |
+| Knock-out: Kwartfinales | `r8` | 8 | 4 | 9 |
+| Knock-out: Halve finales | `r4` | 4 | 5 | 9 |
+| Knock-out: Finalisten | `finale` | 2 | 5 | 9 |
+| Knock-out: WK Winnaar | `winner` | 1 | 6 | 9 |
 
-All sections share the same 335-token pool. The participant decides how to distribute tokens within the constraints above.
+w1 + w2 + w3 together predict which 32 teams advance from the group stage (12 group winners + 12 runners-up + 8 best 3rd-place finishers). All sections share the same personal token pool. The participant decides how to distribute tokens within the constraints above.
 
 ---
 
@@ -354,7 +342,7 @@ All sections share the same 335-token pool. The participant decides how to distr
 - Primary CTA button: `Invullen →` — disabled until a name is selected
 - Secondary link: `📊 Bekijk tussenstand` — opens the leaderboard screen
 
-**Behavior:** Clicking "Invullen →" triggers a magic link email to the participant's address. Shows "Check je email!" confirmation state.
+**Behavior:** Clicking a name selects it (button turns orange). Clicking "Invullen →" sets the `participant` and `participantName` cookies and redirects directly to `/poulefase`. No email, no magic link.
 
 ---
 
@@ -362,10 +350,15 @@ All sections share the same 335-token pool. The participant decides how to distr
 
 The main app shell contains:
 - **Deadline banner** at top: `⏰ Deadline: 9 juni 2026 · 17:00` (full-width orange strip)
-- **Sticky header**: Logo (left) + selected participant name with icon (right)
+- **Sticky header**: Logo (left) + selected participant name with token count (right)
 - **Tab bar** (sticky, below header): 5 tabs — `Poulefase`, `Oranje`, `Knock-out`, `Fantasy XV`, `Overzicht`
 - **Tab content area** — switches between the 5 sections
 - **Bottom navigation bar** (fixed): same 5 tabs with icons
+
+**Header compact mode** (triggered at `scrollY > 50`):
+- Normal state: logo 56px, page title + subtitle visible, name + `| 🪙 X tokens over` on one row
+- Compact state: logo shrinks to 34px, page title and subtitle hidden (`display:none`), name + token count stay visible at all times
+- Use a CSS class (e.g. `.compact`) toggled via a `scroll` event listener
 
 ---
 
@@ -412,23 +405,38 @@ Then a horizontal input row with 5 columns:
 
 **Score picker (uitslag):** A panel that slides open below the card showing correct-score odds in 3 columns (home wins / draws / away wins). Clicking a score fills it in, highlights it, and closes the panel.
 
-**Toto odds** and **score odds** come from the `Quoteringen_toto_uitslag_test` Excel tab. The mockup uses a seeded RNG to approximate these; in the real app the actual values from that tab should be loaded as static data in `lib/data/odds.ts`.
+**Toto odds** and **score odds** come from the `Quoteringen_toto_uitslag_test` Excel tab. The mockup (`panenka_wk2026.html`) uses a seeded RNG to approximate these; in the real app the actual values from that tab are loaded as static data in `lib/data/odds.ts`.
 
 ---
 
 ### 4. Tab: Oranje Voorspelling
 
-**Purpose:** Extra predictions specifically for Netherlands matches. Correct answers earn **bonus tokens** that are added to the participant's total pool for use in the Knock-out phase.
+**Purpose:** Extra predictions for the 3 Netherlands group-stage matches. 9 specific questions per match (27 questions total).
 
-**Structure:**
-- Shows only the Netherlands matches (from Poules containing Nederland)
-- Each NL match: predict toto (1/X/2) and optionally exact score
-- No token allocation here — these are bonus predictions
-- Correct toto prediction → +X bonus tokens added to knockout budget
-- Correct uitslag prediction → +Y bonus tokens (higher bonus)
-- Bonus tokens are shown in Overzicht tab as "+ X extra tokens"
+**NL matches:**
+- Match #10: NED – JPN (14-06)
+- Match #33: NED – SWE (20-06)
+- Match #58: TUN – NED (26-06)
 
-**Visual:** Same match card layout as Poulefase but without the token column. Lighter treatment.
+**Per match: 9 questions**
+
+Each question has a fixed set of answer options:
+
+| Vraag | Antwoordtype |
+|-------|-------------|
+| Eerste ingooi | NED of tegenstander |
+| Eerste corner | NED of tegenstander |
+| Eerste vrije trap | NED of tegenstander |
+| Eerste kaart | NED of tegenstander |
+| Meeste km gelopen | NED-speler (dropdown) |
+| Meeste passes | NED-speler (dropdown) |
+| Meeste tackles | NED-speler (dropdown) |
+| Meeste schoten op doel | NED-speler (dropdown) |
+| Meeste buitenspelval | NED-speler (dropdown) |
+
+Questions 1–4: answer is either NED or the opponent (two-option toggle). Questions 5–9: answer is a NED player selected from a dropdown of the NL squad.
+
+**No tokens** — these are bonus predictions, not part of the token system. Scoring/bonus rules TBD (see Claude.docx for the exact bonus mechanism).
 
 ---
 
@@ -449,34 +457,50 @@ If a participant predicted a team to advance as group winner but they actually a
 
 **Suggestions banner** (appears when poulefase uitslags are filled): Shows the projected qualifiers based on the current standings.
 
-**6 knockout rounds**, each rendered as a section:
+**8 data sections, 6 UI tabs:**
 
-| Round | Badge | Slots | Token min | Token max |
-|-------|-------|-------|-----------|-----------|
-| Kwalificatie 1/16 | `1/16` | 32 | 2 | 9 |
-| 1/8 Finale | `1/8` | 16 | 3 | 9 |
-| Kwartfinale | `1/4` | 8 | 4 | 9 |
-| Halve Finale | `1/2` | 4 | 5 | 9 |
-| Finale | `Finale` | 2 | 5 | 9 |
-| Winnaar | `🏆` | 1 | 6 | 9 |
+The knockout screen has 6 navigation tabs: `Ronde van 32` / `Ronde van 16` / `Kwartfinales` / `Halve finales` / `Finale` / `Winnaar`. The first tab ("Ronde van 32") bundles three sub-sections: w1 + w2 + w3.
 
-**Team selection:** For each round, a grid of country chips (all 48 WK 2026 countries). Each chip shows a round flag + country name. Tapping selects it (turns orange). Max `slots` teams can be selected; selecting more automatically deselects the oldest.
+| Section | Id | UI tab | Slots | Token min | Token max | Excel qkey |
+|---------|-----|--------|-------|-----------|-----------|------------|
+| Poulewinnaars | `w1` | Ronde van 32 | 12 | 2 | 9 | `winnaar_poule` |
+| Nummers 2 | `w2` | Ronde van 32 | 12 | 2 | 9 | `tweede` |
+| Beste nummers 3 | `w3` | Ronde van 32 | 8 | 2 | 9 | `derde` |
+| Ronde van 16 | `r16` | Ronde van 16 | 16 | 3 | 9 | `r16` |
+| Kwartfinales | `r8` | Kwartfinales | 8 | 4 | 9 | `r8` |
+| Halve finales | `r4` | Halve finales | 4 | 5 | 9 | `r4` |
+| Finalisten | `finale` | Finale | 2 | 5 | 9 | `finale` |
+| WK Winnaar | `winner` | Winnaar | 1 | 6 | 9 | `winnaar` |
 
-**Per-team token assignment:** Below the chips, each selected team gets its own row:
+**w1 (Poulewinnaars):** 12 slots, one per group (A–L). Pick 1 country per group from the 4 teams in that group. Suggestion = standings leader.
+
+**w2 (Nummers 2):** 12 slots, one per group. Same selection logic as w1, excluding the chosen w1-winner per group. Suggestion = standings #2.
+
+**w3 (Beste nummers 3):** 8 slots from the pool of all 12 third-place finishers. Suggestion = ranked by pts + goal difference.
+
+**Uniqueness rule (w1/w2/w3):** A country can appear in only one of w1/w2/w3. If the same country is selected in a second slot, the first occurrence is automatically cleared.
+
+**Lege slots:** w1/w2 tonen alleen de pouleletters (A–L). r16 toont bracketverwijzingen (bijv. "2A vs 3ABCDF"). Overige lege slots tonen "+".
+
+**Per-slot picker:** Opens as an overlay. Shows two sections: "Keuze op basis van je voorspelde uitslagen" (orange — smart suggestion based on standings/bracket) and "Overige opties" (grey — all other valid countries).
+
+**Per-team token assignment:** Below each selected country chip, a token input row:
 ```
 [Flag] Country Name    [___] tokens
 ```
-Input is a number field with round-specific min/max. Stored separately per team per round.
+Number input with round-specific min/max. Stored per team per round in KV.
 
-**Knockout quotes** (from `Quotes doorgaande landen` tab — full table stored in `lib/data/knockoutQuotes.ts`):
+**Bracket view:** A toggle button reveals a full bracket overview (M73–M103) showing both sides, arrows, and the participant's chosen winner per match. Unfilled slots show "?".
 
-Sample values (Poulewinnaar quote | 2e in poule | 1/16 | 1/8 | 1/4 | 1/2 | Finale | Winnaar):
+**Knockout quotes** (from `Quotes doorgaande landen` tab — stored in `lib/data/knockoutQuotes.ts`):
+
+Sample values (Poulewinnaar | 2e in poule | 3e plek | r16 | r8 | r4 | finale | winnaar):
 ```
-Spanje:       1.17 | 1 | 1.02 | 1.28 | 1.72 | 2.37 | 3.25 | 5.5
-Engeland:     1.25 | 1 | 1.02 | 1.30 | 1.80 | 2.75 | 4.00 | 7.0
-Brazilië:     1.13 | 1 | 1.02 | 1.40 | 2.00 | 3.25 | 5.00 | 9.0
-Nederland:    1.69 | 1 | 1.07 | 1.72 | 2.75 | 4.75 | 9.00 | 21
-Mexico:       2.10 | 1 | 1.11 | 2.25 | 5.50 | 12.0 | 26.0 | 81
+Spanje:       1.17 | 1 | ... | 1.02 | 1.28 | 1.72 | 2.37 | 3.25 | 5.5
+Engeland:     1.25 | 1 | ... | 1.02 | 1.30 | 1.80 | 2.75 | 4.00 | 7.0
+Brazilië:     1.13 | 1 | ... | 1.02 | 1.40 | 2.00 | 3.25 | 5.00 | 9.0
+Nederland:    1.69 | 1 | ... | 1.07 | 1.72 | 2.75 | 4.75 | 9.00 | 21
+Mexico:       2.10 | 1 | ... | 1.11 | 2.25 | 5.50 | 12.0 | 26.0 | 81
 ... (full 49-country table in lib/data/knockoutQuotes.ts)
 ```
 
@@ -493,9 +517,7 @@ Mexico:       2.10 | 1 | 1.11 | 2.25 | 5.50 | 12.0 | 26.0 | 81
 **Rules panel** (always visible, updates in real time):
 - Max 1 speler per land
 - Max 3 spelers per confederatie
-- Max 3 spelers per competitie
 - Max 1 speler per club
-- Min 4 spelers jonger dan 22 (talents)
 
 Each rule row shows: status icon (✓ / ✗ / ! / —), rule text, detail (e.g. "UEFA: 4" or "2 conflicten").
 
@@ -559,9 +581,8 @@ The full team_quote and verwachtingsquote values are stored in `lib/data/teamQuo
 **Team validation (`validateFantasyXV`):**
 - Rule 1: Max 1 player per `country`
 - Rule 2: Max 3 players per `confederation`
-- Rule 3: Max 3 players per `competition`
-- Rule 4: Max 1 player per `club`
-- Rule 5: Min 4 players with `age < 22` (in the talent slots t0–t3)
+- Rule 3: Max 1 player per `club`
+- Rule 4 (structural): Slots t0–t3 are talent-only — only players with `age < 22` (born after June 2004) can fill them. Min 4 talents is enforced by requiring all 4 talent slots to be filled.
 
 ---
 
@@ -570,19 +591,19 @@ The full team_quote and verwachtingsquote values are stored in `lib/data/teamQuo
 **Purpose:** Summary before confirming submission. Shows total token status including bonus tokens.
 
 **Token summary card:**
-- Base tokens: 335
-- Extra tokens earned (Oranje Voorspelling): +X
-- Total available: 335 + X
-- Tokens used in Poulefase: Y (of which max 6/match across 72 matches)
-- Tokens used in Knock-out: Z
-- Tokens remaining: (335 + X) − Y − Z
+- Basis tokens: 335
+- Extra tokens (persoonlijk, vast): +X
+- Totaal beschikbaar: 335 + X
+- Tokens gebruikt in Poulefase: Y
+- Tokens gebruikt in Knock-out: Z
+- Tokens over: (335 + X) − Y − Z
 
 **Completion summary card** showing:
 - Deelnemer: [name]
 - Wedstrijden ingevuld: X / 72
 - Tokens gebruikt: Y / (335 + X)
-- Oranje Voorspelling: X / [NL match count] ingevuld
-- Knock-out rondes: X / 6 ingevuld
+- Oranje Voorspelling: X / 27 vragen ingevuld
+- Knock-out: X / 8 secties ingevuld
 - Fantasy XV: X / 15 spelers
 
 **Primary button:** `✓ Bevestigen & Insturen` — on click, locks submission and shows confirmation.
@@ -605,6 +626,27 @@ The full team_quote and verwachtingsquote values are stored in `lib/data/teamQuo
 
 ---
 
+## WK 2026 Poules
+
+| Poule | Teams |
+|-------|-------|
+| A | Mexico, Zuid-Afrika, Zuid-Korea, Tsjechië |
+| B | Canada, Bosnië en Herzegovina, Qatar, Zwitserland |
+| C | Brazilië, Marokko, Haïti, Schotland |
+| D | Verenigde Staten, Paraguay, Australië, Turkije |
+| E | Duitsland, Curaçao, Ivoorkust, Ecuador |
+| F | Nederland, Japan, Zweden, Tunesië |
+| G | België, Egypte, Iran, Nieuw-Zeeland |
+| H | Spanje, Kaapverdië, Saoedi-Arabië, Uruguay |
+| I | Frankrijk, Senegal, Irak, Noorwegen |
+| J | Argentinië, Algerije, Oostenrijk, Jordanië |
+| K | Portugal, DR Congo, Oezbekistan, Colombia |
+| L | Engeland, Kroatië, Ghana, Panama |
+
+Nederland-wedstrijden (relevant voor Oranje Voorspelling tab): #10 NED–JPN (14-06), #33 NED–SWE (20-06), #58 TUN–NED (26-06).
+
+---
+
 ## Match Data (72 Poulefase Matches)
 
 WK 2026 has 48 teams in **12 groups (A–L)** of 4 teams each. Every team plays 3 group-stage matches (each team plays the other 3 teams in its group once). Total: 12 groups × (3+2+1) = 12 × 6 = 72 matches.
@@ -624,7 +666,7 @@ Grouped by round:
 
 Full match schedule is in the `Matchday_01` through `Matchday_27` tabs of `260428_WK 2026_Master.xlsx`. Extract all 72 match rows from these tabs and seed them into `lib/data/matches.ts` and the `matches` database table.
 
-> **Note:** The mockup currently only contains 24 matches (first 2 per group). The real app needs all 72. The full fixtures must be extracted from the Excel master.
+> **Note:** The full fixtures must be extracted from the `Matchday_01`–`Matchday_27` tabs in the Excel master and verified against the official WK 2026 schedule.
 
 ---
 
@@ -652,7 +694,7 @@ export const MATCH_ODDS: Record<number, {
 }
 ```
 
-The seeded RNG (`sr()` + `generateMatchOdds()`) from the mockup was an approximation for prototyping. The real app uses the actual Excel values.
+The seeded RNG (`sr()` + `generateMatchOdds()`) in `panenka_wk2026.html` was an approximation for prototyping. The real app uses the actual Excel values.
 
 ---
 
@@ -709,7 +751,7 @@ All image assets live in the project root and must be copied into `public/` in t
 ```
 Source location                    → Next.js public/ path
 ─────────────────────────────────────────────────────────────────
-panenka_mockup.html                ← working prototype, open in browser — NOT copied to public/
+panenka_wk2026.html                ← working prototype, open in browser — NOT copied to public/
 Background/1a@4x.png               → public/Background/1a@4x.png
 Logo/Artboard 1@4x.png             → public/Logo/Artboard 1@4x.png
 Landen/algeria-flag-round-xl.png   → public/Landen/algeria-flag-round-xl.png
