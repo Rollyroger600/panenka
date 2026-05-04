@@ -5,18 +5,15 @@ import { MATCH_ODDS } from '@/lib/data/odds'
 import { abbrevCountry } from '@/lib/helpers'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { TotoButtons } from './TotoButtons'
-import { TokenChip } from './TokenChip'
 import { TokenPicker } from './TokenPicker'
-import { ResultQuote } from './ResultQuote'
-import { UitslagChip } from './UitslagChip'
 import { ScorePicker } from './ScorePicker'
 import type { Match } from '@/lib/data/matches'
 
-interface Props {
-  match: Match
-}
-
+interface Props { match: Match }
 type Panel = 'tokens' | 'score' | null
+
+const MUTED = '#7e7667'
+const LABEL = 'text-[9px] font-bold uppercase tracking-wider text-center'
 
 export function MatchCard({ match }: Props) {
   const { predictions, setPrediction } = useGameStore()
@@ -28,49 +25,118 @@ export function MatchCard({ match }: Props) {
     ? pred.toto === '1' ? odds?.home : pred.toto === 'X' ? odds?.draw : odds?.away
     : null
   const scoreOdd = pred.uitslag && odds ? odds.scores[pred.uitslag] ?? null : null
+  const maxScore =
+    pred.tokens !== null && totoOdd != null && scoreOdd != null
+      ? pred.tokens * totoOdd + pred.tokens * scoreOdd
+      : null
 
   function togglePanel(panel: Panel) {
     setOpenPanel((p) => (p === panel ? null : panel))
   }
 
   return (
-    <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-      {/* Match header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-[#111]">
-        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <FlagImage country={match.home} size={18} />
-          <span className="text-sm font-bold text-white truncate">{abbrevCountry(match.home)}</span>
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+
+      {/* Header */}
+      <div className="relative flex flex-col items-center px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
+        {/* Match number — square badge */}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg border border-[#3a3a3a] text-sm font-bold text-white"
+          style={{ background: 'rgba(37,37,37,0.8)' }}>
+          {match.id}
         </div>
-        <div className="flex flex-col items-center px-2 shrink-0">
-          <span className="text-[10px] text-[#555] uppercase tracking-widest">Poule {match.poule}</span>
-          <span className="text-xs text-[#888]">{match.date}</span>
+
+        {/* Teams */}
+        <div className="flex items-center gap-2">
+          <FlagImage country={match.home} size={24} />
+          <span className="text-sm font-bold text-white">{abbrevCountry(match.home)}</span>
+          <span className="font-bold" style={{ color: MUTED }}>-</span>
+          <span className="text-sm font-bold text-white">{abbrevCountry(match.away)}</span>
+          <FlagImage country={match.away} size={24} />
         </div>
-        <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
-          <span className="text-sm font-bold text-white truncate">{abbrevCountry(match.away)}</span>
-          <FlagImage country={match.away} size={18} />
+        <p className="text-[10px] uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
+          {match.date} · {match.stadium}
+        </p>
+      </div>
+
+      {/* Input row — centered, extra spacing between groups */}
+      <div className="flex justify-center items-end px-3 pt-2 pb-2">
+
+        {/* Tokens */}
+        <div className="flex flex-col items-center gap-1 mr-4">
+          <span className={LABEL} style={{ color: MUTED }}>Tokens</span>
+          <button
+            onClick={() => togglePanel('tokens')}
+            className={`h-9 w-14 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border ${
+              pred.tokens !== null
+                ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
+                : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
+            }`}
+            style={pred.tokens === null ? { color: MUTED } : undefined}
+          >
+            {pred.tokens ?? 'Kies'}
+          </button>
+        </div>
+
+        {/* Toto */}
+        <div className="flex flex-col items-center gap-1">
+          <span className={LABEL} style={{ color: MUTED }}>Toto</span>
+          <TotoButtons
+            matchId={match.id}
+            selected={pred.toto}
+            onChange={(toto) => setPrediction(match.id, { toto })}
+          />
+        </div>
+
+        {/* Quote toto */}
+        <div className="flex flex-col items-center gap-1 ml-2 mr-4">
+          <span className={LABEL} style={{ color: MUTED }}>Quote</span>
+          <span className={`h-9 w-16 flex items-center justify-center text-xs font-bold rounded-lg border ${
+            totoOdd != null ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-[#3a3a3a]'
+          }`}
+            style={totoOdd == null ? { color: MUTED } : undefined}
+          >
+            {totoOdd != null ? totoOdd.toFixed(2) : '—'}
+          </span>
+        </div>
+
+        {/* Uitslag */}
+        <div className="flex flex-col items-center gap-1">
+          <span className={LABEL} style={{ color: MUTED }}>Uitslag</span>
+          <button
+            onClick={() => togglePanel('score')}
+            className={`h-9 w-16 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border ${
+              pred.uitslag !== null
+                ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
+                : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
+            }`}
+            style={pred.uitslag === null ? { color: MUTED } : undefined}
+          >
+            {pred.uitslag ?? 'Kies'}
+          </button>
+        </div>
+
+        {/* Quote uitslag */}
+        <div className="flex flex-col items-center gap-1 ml-1">
+          <span className={LABEL} style={{ color: MUTED }}>Quote</span>
+          <span className={`h-9 w-16 flex items-center justify-center text-xs font-bold rounded-lg border ${
+            scoreOdd != null ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-[#3a3a3a]'
+          }`}
+            style={scoreOdd == null ? { color: MUTED } : undefined}
+          >
+            {scoreOdd != null ? scoreOdd.toFixed(2) : '—'}
+          </span>
         </div>
       </div>
 
-      {/* Prediction row */}
-      <div className="px-3 py-2 flex items-center gap-2 flex-wrap">
-        {/* Token section */}
-        <TokenChip tokens={pred.tokens} onClick={() => togglePanel('tokens')} />
-        <span className="text-[#444] text-xs">×</span>
-        <TotoButtons
-          matchId={match.id}
-          selected={pred.toto}
-          onChange={(toto) => setPrediction(match.id, { toto })}
-        />
-        <span className="text-[#444] text-xs">=</span>
-        <ResultQuote tokens={pred.tokens} odds={totoOdd ?? null} />
-
-        <span className="text-[#333] mx-1">·</span>
-
-        {/* Uitslag section */}
-        <UitslagChip uitslag={pred.uitslag} onClick={() => togglePanel('score')} />
-        <span className="text-[#444] text-xs">=</span>
-        <ResultQuote tokens={pred.tokens} odds={scoreOdd} />
-      </div>
+      {/* Max score */}
+      {maxScore !== null && (
+        <div className="px-3 pb-2 flex justify-end">
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>
+            Max. score{' '}
+            <span className="text-[#FF6B00]">{maxScore.toFixed(1)} pts</span>
+          </span>
+        </div>
+      )}
 
       {/* Token picker */}
       {openPanel === 'tokens' && (

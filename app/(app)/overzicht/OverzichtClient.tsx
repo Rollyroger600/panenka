@@ -84,8 +84,8 @@ export function OverzichtClient({ initials, participantName }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-1">Overzicht</h1>
-      <p className="text-[#888] text-sm mb-5">Jouw inzending, {participantName}</p>
+      <h1 className="text-2xl font-bold text-white mb-1 text-center">Overzicht</h1>
+      <p className="text-white text-sm mb-5 text-center">Jouw inzending, {participantName}</p>
 
       {!isLoaded ? (
         <SkeletonList count={4} />

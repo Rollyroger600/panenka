@@ -31,8 +31,8 @@ export function OranjeClient() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-1">Oranje Voorspelling</h1>
-      <p className="text-[#888] text-sm mb-1">9 bonus vragen per wedstrijd · geen tokens</p>
+      <h1 className="text-2xl font-bold text-white mb-1 text-center">Oranje Voorspelling</h1>
+      <p className="text-white text-sm mb-1 text-center">9 bonus vragen per wedstrijd · geen tokens</p>
       <p className="text-[#FF6B00] text-xs font-bold mb-5">
         {totalFilled} / 27 vragen ingevuld
       </p>

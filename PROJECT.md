@@ -823,3 +823,90 @@ Style/Fonts.png                    ← font reference only, do NOT copy to publi
 8. **Country chip deselection** in knockout: when max teams reached and a new one is added, the oldest is automatically removed.
 9. All screens have `backdrop-filter: blur(8px)` on the sticky header/tabs to keep the background visible.
 10. **Oranje Voorspelling** tab is only meaningful for participants — it shows Netherlands group-stage matches. Bonus tokens are credited to the participant's total automatically.
+
+---
+
+## Implemented UX Deviations from Spec
+
+The following decisions were made during implementation that deviate from or extend the original spec:
+
+- **Quote fields** in match cards show only the raw odds value (e.g. `7.30`), not `tokens × odds`. The calculated max score is shown separately at the bottom of the card as `Max. score X.X pts = (tokens × toto_odds) + (tokens × uitslag_odds)`.
+- **Uitslag chip** uses orange background (same as token/toto) rather than green.
+- **Poule standings** are integrated as a fifth filter button ("Standen") in the round filter bar, not as a separate collapsible panel above the match list.
+- **Best 8 third-place teams** in the standings overview also receive a green left border, in addition to group winners and runners-up.
+
+---
+
+## Changelog
+
+### 2026-05-04 — UI session (Claude Code)
+
+#### Lokale ontwikkelomgeving
+- `.env.local` aangemaakt voor Upstash Redis credentials (`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`)
+- `npm install` uitgevoerd; dev server draait via `npm run dev` op `http://localhost:3000`
+
+#### Landingspagina (`app/page.tsx`)
+- Bovenbadge (`🏆 WK 2026 · VS / Canada / Mexico`) verwijderd
+- Subtitel gewijzigd naar `WK 2026 | Mexico | Canada | USA` in wit
+- 15-knoppengrid en "Wie ben jij?" prompt vervangen door één "Selecteer naam" dropdown-knop
+- Link naar tussenstand verwijderd
+- Dropdown-tekst gecentreerd in knop; pijltje absoluut gepositioneerd rechts
+- Twee knoppen (dropdown + Invullen) verticaal gecentreerd op de pagina
+
+#### App header (`components/layout/AppHeader.tsx`)
+- Logo gecentreerd (was links); groter bij uitgevouwen staat (3rem → 1.75rem compact)
+- Naam en token-teller gecentreerd gestapeld onder het logo, altijd zichtbaar
+- Harde scheidingslijn onderaan vervangen door een gradient-verloop naar transparant
+- Achtergrond: `rgba(13,13,13,0.75)` met `backdrop-blur`
+
+#### Token-teller (`components/layout/TokenCount.tsx`)
+- 🪙 emoji verwijderd; format gewijzigd naar `{remaining} tokens over`
+
+#### Navigatie (`components/layout/BottomNav.tsx`)
+- Volgorde gewijzigd: Poule → **KO** → Oranje → Fantasy → Overzicht
+- Emoji-iconen vervangen door kleurloze Unicode-symbolen (◎ ◈ ◆ ★ ≡) die CSS-kleur overnemen
+- Inactieve tabs: `#444`; actief tabblad: oranje
+- Achtergrond: `rgba(13,13,13,0.75)` met `backdrop-blur`
+
+#### Globale stijl (`app/globals.css`)
+- `background-size: contain` → `background-size: cover` (geen zwarte zijbalken meer)
+
+#### Poulefase — filter en standen (`app/(app)/poulefase/PoulefaseClient.tsx`)
+- Rondefilter uitgebreid van 4 naar 5 knoppen: Alle · Ronde 1 · Ronde 2 · Ronde 3 · **Standen**
+- "Standen"-knop toont volledige poulestanden-weergave (vervangt oude uitklapbare StandingsPanel)
+- Paginatitel en subtitel gecentreerd
+
+#### Poulestanden (`components/matches/StandingsPanel.tsx`)
+- Herontworpen als volledige niet-inklapbare weergave: 2-koloms grid, oranje poulewinnaar-headers
+- Kolommen: G (gespeeld) · DS (doelsaldo) · Pt (punten)
+- Top 2 per poule: groen linkerbalkje
+- **Beste 8 nummers-3-finishers** (over alle 12 poules gerangschikt): ook groen balkje
+- `PouleGrid` geëxporteerd als herbruikbare component (gebruikt in SuggestionsPanel)
+
+#### Wedstrijdkaarten (`components/matches/MatchCard.tsx`, `TotoButtons.tsx`)
+- **Header**: wedstrijdnummer als vierkant wit badge linksboven; landen wit + 24px vlaggen gecentreerd; datum · stadion in `#7e7667`
+- **Separator**: `—` → `-` (smaller)
+- **Kolomlabels** (TOKENS · TOTO · QUOTE · UITSLAG · QUOTE) boven elke knopgroep
+- Alle knoppen `h-9`, `rounded-lg`, gecentreerd als groep
+- Quote-chips: oranje rand + oranje tekst; tonen alleen de odds-waarde (niet tokens × odds)
+- Uitslag gevuld: oranje achtergrond (was groen)
+- Secundaire teksten (`#7e7667`): labels, "Kies", datum, stadion, "Max. score"-label
+- Max. score-regel: label in `#7e7667`, puntenaantal in oranje
+- Extra ruimte na Token-knop en na eerste Quote-chip
+- Kaartachtergrond: `rgba(22,22,22,0.82)` (licht transparant)
+
+#### Knockout-tabblad (`app/(app)/knockout/KnockoutClient.tsx`)
+- "X landen gekozen"-tekst verwijderd
+- Rondetabbladen hernoemd: Ronde van 32 · Ronde van 16 · Kwartfinales · Halve Finales · Finale · Winnaar
+- Tabbladen gecentreerd als groep (`flex-wrap justify-center`)
+- Inactieve tabbladtekst: wit (was grijs)
+
+#### Knockout suggesties (`components/knockout/SuggestionsPanel.tsx`)
+- 📊 icoon verwijderd vóór de titel
+- Interne weergave herontworpen: zelfde opmaak als Poulestanden (oranje headers, G/DS/Pt kolommen, vlaggen + afkortingen)
+- "Beste derde-plaatsers" hernoemd naar **Beste nummers 3**, zelfde kaartopmaak
+- "Stel alles in"-knop bewaard
+- `PouleGrid` hergebruikt vanuit StandingsPanel
+
+#### Overige pagina-subtitels
+- Subtitels op Knockout, Oranje, Overzicht: `text-[#888]` → `text-white`

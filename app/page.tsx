@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { selectParticipant } from './actions/auth'
-import Link from 'next/link'
 
 const PARTICIPANTS = [
   { name: 'Michiel',  initials: 'MG'  },
@@ -24,9 +23,21 @@ const PARTICIPANTS = [
 
 export default function LandingPage() {
   const [selected, setSelected] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const chosen = PARTICIPANTS.find(p => p.initials === selected)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   async function handleSubmit() {
     if (!chosen) return
@@ -35,47 +46,54 @@ export default function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-4 pt-12 pb-24 max-w-[420px] mx-auto">
+    <main className="min-h-screen flex flex-col items-center px-4 max-w-[420px] mx-auto">
 
-      {/* Badge */}
-      <div className="flex items-center gap-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-full px-4 py-1.5 mb-8 text-xs font-bold tracking-widest text-[#FF6B00] uppercase">
-        🏆 WK 2026 · VS / Canada / Mexico
+      {/* Top: logo + subtitle + divider */}
+      <div className="w-full flex flex-col items-center pt-12">
+        <img
+          src="/Logo/Artboard 1@4x.png"
+          alt="Panenka"
+          className="w-56 mb-4"
+        />
+        <p className="text-white uppercase tracking-[0.25em] text-xs mb-5">
+          WK 2026 | Mexico | Canada | USA
+        </p>
+        <div className="w-full h-px bg-[#FF6B00] opacity-60" />
       </div>
 
-      {/* Logo */}
-      <img
-        src="/Logo/Artboard 1@4x.png"
-        alt="Panenka"
-        className="w-56 mb-4"
-      />
+      {/* Buttons — vertically centered in remaining space */}
+      <div className="flex-1 flex flex-col justify-center w-full gap-4 pb-16">
 
-      {/* Subtitle */}
-      <p className="text-[#555] uppercase tracking-[0.25em] text-xs mb-5">
-        Poule — WK 2026
-      </p>
+      {/* Name dropdown */}
+      <div className="relative w-full" ref={dropdownRef}>
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide border bg-[#1a1a1a] border-[#2a2a2a] relative flex items-center justify-center transition-all hover:border-[#FF6B00]"
+        >
+          <span className={chosen ? 'text-white' : 'text-[#555]'}>
+            {chosen ? chosen.name : 'Selecteer naam'}
+          </span>
+          <span className="absolute right-4 text-[#FF6B00]">{open ? '▲' : '▼'}</span>
+        </button>
 
-      {/* Divider */}
-      <div className="w-full h-px bg-[#FF6B00] mb-6 opacity-60" />
-
-      {/* Prompt */}
-      <p className="text-[#888] text-sm mb-4 tracking-wide">Wie ben jij?</p>
-
-      {/* Name grid */}
-      <div className="grid grid-cols-3 gap-2 w-full mb-8">
-        {PARTICIPANTS.map(p => (
-          <button
-            key={p.initials}
-            onClick={() => setSelected(p.initials === selected ? null : p.initials)}
-            className={[
-              'py-2.5 px-1 rounded-lg text-sm font-bold tracking-wide transition-all border',
-              selected === p.initials
-                ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
-                : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#ccc] hover:border-[#FF6B00] hover:text-white',
-            ].join(' ')}
-          >
-            {p.name}
-          </button>
-        ))}
+        {open && (
+          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden shadow-xl">
+            {PARTICIPANTS.map(p => (
+              <button
+                key={p.initials}
+                onClick={() => { setSelected(p.initials); setOpen(false) }}
+                className={[
+                  'w-full text-left px-4 py-3 text-sm font-bold tracking-wide transition-all',
+                  selected === p.initials
+                    ? 'bg-[#FF6B00] text-white'
+                    : 'text-[#ccc] hover:bg-[#252525] hover:text-white',
+                ].join(' ')}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* CTA */}
@@ -92,13 +110,7 @@ export default function LandingPage() {
         {loading ? 'Laden…' : 'Invullen →'}
       </button>
 
-      {/* Leaderboard link */}
-      <Link
-        href="/leaderboard"
-        className="mt-5 text-[#666] text-sm hover:text-[#FF6B00] transition-colors"
-      >
-        📊 Bekijk tussenstand
-      </Link>
+      </div>
     </main>
   )
 }

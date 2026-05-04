@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { computeStandings, type StandingRow } from '@/lib/standings'
 import { FlagImage } from '@/components/ui/FlagImage'
+import { abbrevCountry } from '@/lib/helpers'
+import { PouleGrid } from '@/components/matches/StandingsPanel'
 import { POULE_LETTERS } from '@/lib/knockoutHelpers'
 
 export interface Suggestion {
@@ -16,6 +18,12 @@ interface Props {
   onApplyAll: (suggestions: Suggestion[], bestThird: StandingRow[]) => void
 }
 
+function getBest3Set(standings: Record<string, StandingRow[]>): Set<string> {
+  const thirds = POULE_LETTERS.map((p) => standings[p]?.[2]).filter(Boolean) as StandingRow[]
+  thirds.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf)
+  return new Set(thirds.slice(0, 8).map((r) => r.country))
+}
+
 export function SuggestionsPanel({ onApplyAll }: Props) {
   const [open, setOpen] = useState(false)
   const predictions = useGameStore((s) => s.predictions)
@@ -26,16 +34,12 @@ export function SuggestionsPanel({ onApplyAll }: Props) {
   )
 
   const standings = useMemo(() => computeStandings(predictions), [predictions])
+  const best3Set = useMemo(() => getBest3Set(standings), [standings])
 
   const suggestions: Suggestion[] = useMemo(() =>
     POULE_LETTERS.map((poule) => {
       const ranked = standings[poule] ?? []
-      return {
-        poule,
-        w1: ranked[0]?.country ?? '',
-        w2: ranked[1]?.country ?? '',
-        w3: ranked[2]?.country ?? '',
-      }
+      return { poule, w1: ranked[0]?.country ?? '', w2: ranked[1]?.country ?? '', w3: ranked[2]?.country ?? '' }
     }),
     [standings],
   )
@@ -51,88 +55,71 @@ export function SuggestionsPanel({ onApplyAll }: Props) {
 
   if (!hasAnyUitslag) return null
 
-  const filledCount = suggestions.filter((s) => s.w1 && s.w2).length
-
   return (
-    <div className="rounded-xl border border-[#FF6B00]/30 bg-[#FF6B00]/5 overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#FF6B00]/30 overflow-hidden mb-4" style={{ background: 'rgba(255,107,0,0.05)' }}>
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-4 py-3 text-left"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-sm">📊</span>
-          <span className="text-sm font-bold text-[#FF6B00]">
-            Suggesties op basis van jouw voorspellingen
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[#FF6B00]/70">{filledCount}/12 poules</span>
-          <span className="text-[#FF6B00] text-xs">{open ? '▲' : '▼'}</span>
-        </div>
+        <span className="text-sm font-bold text-[#FF6B00]">
+          Suggesties op basis van jouw voorspellingen
+        </span>
+        <span className="text-[#FF6B00] text-xs">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
-        <div className="px-4 pb-4">
-          <p className="text-xs text-[#888] mb-3">
-            Gebaseerd op jouw uitslag-voorspellingen. "Stel alles in" vult alleen lege slots.
-          </p>
+        <div className="px-3 pb-4 flex flex-col gap-4">
 
-          {/* Group suggestions grid */}
-          <div className="grid grid-cols-2 gap-1.5 mb-3">
-            {suggestions.map(({ poule, w1, w2, w3 }) => (
-              <div key={poule} className="bg-[#111] rounded-lg px-3 py-2">
-                <div className="text-[10px] font-bold text-[#FF6B00] uppercase mb-1">Poule {poule}</div>
-                {w1 ? (
-                  <>
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-[9px] text-[#2ECC71] font-bold w-3">1</span>
-                      <FlagImage country={w1} size={12} />
-                      <span className="text-[11px] text-white font-bold truncate">{w1}</span>
-                    </div>
-                    {w2 && (
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[9px] text-[#888] font-bold w-3">2</span>
-                        <FlagImage country={w2} size={12} />
-                        <span className="text-[11px] text-[#ccc] truncate">{w2}</span>
-                      </div>
-                    )}
-                    {w3 && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] text-[#555] font-bold w-3">3</span>
-                        <FlagImage country={w3} size={12} />
-                        <span className="text-[11px] text-[#666] truncate">{w3}</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-[10px] text-[#444]">Geen uitslag ingevuld</div>
-                )}
-              </div>
-            ))}
-          </div>
+          {/* Standings-style grid */}
+          <PouleGrid standings={standings} best3Set={best3Set} />
 
-          {/* Best 3rd-place teams */}
+          {/* Beste nummers 3 */}
           {bestThird.length > 0 && (
-            <div className="bg-[#111] rounded-lg px-3 py-2 mb-3">
-              <div className="text-[10px] font-bold text-[#FFB800] uppercase mb-1.5">
-                Beste derde-plaatsers → w3 suggesties
+            <div className="rounded-xl overflow-hidden border border-[#2a2a2a]">
+              <div className="bg-[#FF6B00] px-2 py-1.5 flex items-center justify-between">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  Beste nummers 3
+                </span>
+                <div className="flex gap-2.5">
+                  <span className="text-[9px] font-bold text-white/80 w-4 text-right">G</span>
+                  <span className="text-[9px] font-bold text-white/80 w-5 text-right">DS</span>
+                  <span className="text-[9px] font-bold text-white/80 w-4 text-right">Pt</span>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {bestThird.map((team, i) => (
-                  <div key={team.country} className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg px-2 py-1">
-                    <span className="text-[9px] text-[#555] font-bold">{i + 1}.</span>
-                    <FlagImage country={team.country} size={12} />
-                    <span className="text-[11px] text-[#888]">{team.country}</span>
-                    <span className="text-[9px] text-[#555] ml-1">{team.pts}pt</span>
+              {bestThird.map((team, i) => (
+                <div
+                  key={team.country}
+                  className="flex items-center px-2 py-1.5 border-b border-[#1e1e1e] last:border-0 bg-[#111] border-l-2 border-l-[#2ECC71]"
+                >
+                  <span className="text-[9px] font-bold text-[#555] w-3 shrink-0">{i + 1}</span>
+                  <div className="flex items-center gap-1 flex-1 min-w-0 ml-1">
+                    <FlagImage country={team.country} size={14} />
+                    <span className="text-[10px] font-bold text-white truncate">
+                      {abbrevCountry(team.country)}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div className="flex gap-2.5 shrink-0">
+                    <span className="text-[10px] font-bold text-white w-4 text-right">{team.played}</span>
+                    <span className={`text-[10px] font-bold w-5 text-right ${
+                      team.gd > 0 ? 'text-[#FF6B00]' : team.gd < 0 ? 'text-[#E74C3C]' : 'text-white'
+                    }`}>
+                      {team.gd > 0 ? `+${team.gd}` : team.gd}
+                    </span>
+                    <span className={`text-[10px] font-bold w-4 text-right ${
+                      team.pts > 0 ? 'text-[#FF6B00]' : 'text-white'
+                    }`}>
+                      {team.pts}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
+          {/* Apply button */}
           <button
             onClick={() => onApplyAll(suggestions, bestThird)}
-            className="w-full py-2 rounded-lg bg-[#FF6B00] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#FF8C33] transition-colors"
+            className="w-full py-2.5 rounded-lg bg-[#FF6B00] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#FF8C33] transition-colors"
           >
             Stel alles in op basis van suggesties
           </button>
