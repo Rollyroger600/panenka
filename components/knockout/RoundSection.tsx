@@ -3,7 +3,15 @@ import { useGameStore } from '@/store/gameStore'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { TokenStepper } from './TokenStepper'
 import { ALL_COUNTRIES } from '@/lib/data/countries'
+import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import type { KnockoutRound } from '@/lib/data/knockoutRounds'
+
+function getQuote(country: string, qkey: string): number | null {
+  const q = KO_QUOTES[country]
+  if (!q) return null
+  const key = qkey === 'winnaar_poule' ? 'poulewinnaar' : qkey
+  return (q as unknown as Record<string, number>)[key] ?? null
+}
 
 interface Props {
   round: KnockoutRound
@@ -50,6 +58,7 @@ export function RoundSection({ round }: Props) {
             const isPicked = pickedCountries.has(country)
             const maxReached = pickedCountries.size >= round.slots
             const isDisabled = !isPicked && maxReached
+            const quote = getQuote(country, round.qkey)
             return (
               <button
                 key={country}
@@ -65,6 +74,11 @@ export function RoundSection({ round }: Props) {
               >
                 <FlagImage country={country} size={14} />
                 {country}
+                {quote != null && (
+                  <span className={`text-[10px] ${isPicked ? 'text-orange-100' : 'text-[#FFB800]'}`}>
+                    {quote.toFixed(2)}
+                  </span>
+                )}
               </button>
             )
           })}
@@ -80,10 +94,15 @@ export function RoundSection({ round }: Props) {
             </span>
           </div>
           <div className="p-3 flex flex-col gap-2">
-            {filled.map(({ key, slot }) => (
+            {filled.map(({ key, slot }) => {
+              const quote = getQuote(slot.country!, round.qkey)
+              return (
               <div key={key} className="flex items-center gap-3">
                 <FlagImage country={slot.country!} size={18} />
                 <span className="text-sm font-bold text-white flex-1">{slot.country}</span>
+                {quote != null && (
+                  <span className="text-xs font-bold text-[#FFB800]">{quote.toFixed(2)}</span>
+                )}
                 <TokenStepper
                   value={slot.tok}
                   min={round.minTokens}
@@ -97,7 +116,8 @@ export function RoundSection({ round }: Props) {
                   ✕
                 </button>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

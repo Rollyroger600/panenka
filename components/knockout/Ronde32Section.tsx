@@ -5,8 +5,16 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import { TokenStepper } from './TokenStepper'
 import { GROUP_TEAMS, POULE_LETTERS, getW3Excluded } from '@/lib/knockoutHelpers'
 import { ALL_COUNTRIES } from '@/lib/data/countries'
+import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import { SuggestionsPanel, type Suggestion } from './SuggestionsPanel'
 import type { StandingRow } from '@/lib/standings'
+
+function getQuote(country: string, qkey: string): number | null {
+  const q = KO_QUOTES[country]
+  if (!q) return null
+  const key = qkey === 'winnaar_poule' ? 'poulewinnaar' : qkey
+  return (q as unknown as Record<string, number>)[key] ?? null
+}
 
 const W1_MIN = 2; const W1_MAX = 9
 const W3_MAX_SLOTS = 8
@@ -81,6 +89,7 @@ export function Ronde32Section() {
         setTok={setTok}
         min={W1_MIN}
         max={W1_MAX}
+        qkey="winnaar_poule"
       />
 
       {/* W2 — Nummers 2 */}
@@ -100,6 +109,7 @@ export function Ronde32Section() {
         setTok={setTok}
         min={W1_MIN}
         max={W1_MAX}
+        qkey="tweede"
       />
 
       {/* W3 — Beste nummers 3 */}
@@ -129,19 +139,30 @@ export function Ronde32Section() {
                   {slot.country ? (
                     <>
                       <FlagImage country={slot.country} size={16} />
-                      <span className="font-bold">{slot.country}</span>
+                      <span className="font-bold flex-1">{slot.country}</span>
+                      {getQuote(slot.country, 'derde') != null && (
+                        <span className="text-xs font-bold text-[#FFB800]">
+                          {getQuote(slot.country, 'derde')!.toFixed(2)}
+                        </span>
+                      )}
                     </>
                   ) : (
                     <span>+ Kies land</span>
                   )}
                 </button>
                 {slot.country && (
-                  <TokenStepper
-                    value={slot.tok}
-                    min={W1_MIN}
-                    max={W1_MAX}
-                    onChange={(tok) => setTok(key, tok)}
-                  />
+                  <>
+                    <TokenStepper
+                      value={slot.tok}
+                      min={W1_MIN}
+                      max={W1_MAX}
+                      onChange={(tok) => setTok(key, tok)}
+                    />
+                    <button
+                      onClick={() => pickCountry(key, null)}
+                      className="text-[#444] hover:text-[#888] text-sm px-1"
+                    >✕</button>
+                  </>
                 )}
               </div>
             )
@@ -175,7 +196,7 @@ interface SlotDef {
 }
 
 function SlotSection({
-  title, subtitle, slots, openPicker, setOpenPicker, pickCountry, setTok, min, max,
+  title, subtitle, slots, openPicker, setOpenPicker, pickCountry, setTok, min, max, qkey,
 }: {
   title: string
   subtitle: string
@@ -186,6 +207,7 @@ function SlotSection({
   setTok: (key: string, tok: number) => void
   min: number
   max: number
+  qkey?: string
 }) {
   const filled = slots.filter((s) => s.slot.country).length
   return (
@@ -213,7 +235,12 @@ function SlotSection({
                 {slot.country ? (
                   <>
                     <FlagImage country={slot.country} size={16} />
-                    <span className="font-bold">{slot.country}</span>
+                    <span className="font-bold flex-1">{slot.country}</span>
+                    {qkey && getQuote(slot.country, qkey) != null && (
+                      <span className="text-xs font-bold text-[#FFB800]">
+                        {getQuote(slot.country, qkey)!.toFixed(2)}
+                      </span>
+                    )}
                   </>
                 ) : (
                   <span className="text-xs">+ Kies winnaar</span>
@@ -228,20 +255,29 @@ function SlotSection({
             </div>
             {openPicker === key && (
               <div className="mt-1 ml-7 flex flex-wrap gap-1.5 p-2 bg-[#111] rounded-lg">
-                {options.map((country) => (
-                  <button
-                    key={country}
-                    onClick={() => pickCountry(key, country)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
-                      slot.country === country
-                        ? 'bg-[#FF6B00] text-white'
-                        : 'bg-[#252525] text-[#ccc] hover:bg-[#333]'
-                    }`}
-                  >
-                    <FlagImage country={country} size={14} />
-                    {country}
-                  </button>
-                ))}
+                {options.map((country) => {
+                  const isSelected = slot.country === country
+                  const quote = qkey ? getQuote(country, qkey) : null
+                  return (
+                    <button
+                      key={country}
+                      onClick={() => pickCountry(key, country)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
+                        isSelected
+                          ? 'bg-[#FF6B00] text-white'
+                          : 'bg-[#252525] text-[#ccc] hover:bg-[#333]'
+                      }`}
+                    >
+                      <FlagImage country={country} size={14} />
+                      {country}
+                      {quote != null && (
+                        <span className={`text-[10px] ${isSelected ? 'text-orange-100' : 'text-[#FFB800]'}`}>
+                          {quote.toFixed(2)}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -282,6 +318,7 @@ function W3CountryPicker({
           const isSelected = currentValue === country
           const isPicked = alreadyPicked.has(country) && !isSelected
           const isDisabled = isPicked || (maxReached && !isSelected)
+          const quote = getQuote(country, 'r16')
           return (
             <button
               key={country}
@@ -297,6 +334,11 @@ function W3CountryPicker({
             >
               <FlagImage country={country} size={12} />
               {country}
+              {quote != null && (
+                <span className={`text-[10px] ${isSelected ? 'text-orange-100' : 'text-[#FFB800]'}`}>
+                  {quote.toFixed(2)}
+                </span>
+              )}
             </button>
           )
         })}

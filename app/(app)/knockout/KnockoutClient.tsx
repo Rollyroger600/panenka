@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useKnockoutPicks } from '@/hooks/useKnockoutPicks'
 import { useDeadline } from '@/hooks/useDeadline'
-import { useGameStore } from '@/store/gameStore'
 import { Ronde32Section } from '@/components/knockout/Ronde32Section'
 import { RoundSection } from '@/components/knockout/RoundSection'
 import { SkeletonList } from '@/components/ui/Skeleton'
@@ -10,8 +9,8 @@ import { BracketView } from '@/components/knockout/BracketView'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 
 const TABS = [
-  { id: 'ronde32', label: 'Ronde van 32' },
-  { id: 'r16',    label: 'Ronde van 16' },
+  { id: 'ronde32', label: 'Ronde van 16' },
+  { id: 'r16',    label: 'Ronde van 8' },
   { id: 'r8',     label: 'Kwartfinales' },
   { id: 'r4',     label: 'Halve Finales' },
   { id: 'finale', label: 'Finale' },

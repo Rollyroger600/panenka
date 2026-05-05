@@ -26,7 +26,7 @@ export function TotoButtons({ matchId, selected, onChange }: Props) {
           <button
             key={key}
             onClick={() => onChange(key)}
-            className={`h-9 w-10 flex flex-col items-center justify-center rounded-lg border transition-colors ${
+            className={`h-9 w-9 flex flex-col items-center justify-center rounded-lg border transition-colors ${
               isSelected
                 ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
                 : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'

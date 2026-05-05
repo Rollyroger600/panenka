@@ -910,3 +910,36 @@ The following decisions were made during implementation that deviate from or ext
 
 #### Overige pagina-subtitels
 - Subtitels op Knockout, Oranje, Overzicht: `text-[#888]` → `text-white`
+
+---
+
+### 2026-05-05 — Knockout quoteringen & lay-out (Claude Code)
+
+#### Wedstrijdkaarten — knoprij (`components/matches/MatchCard.tsx`, `TotoButtons.tsx`)
+- Knoprij omgezet van `justify-center` naar `justify-between`: knoppen verdeeld over volledige breedte
+- Zijmarge rij verkleind: `px-3` → `px-2`
+- Breedtes aangepast aan smartphonescherm: Tokens `w-11`, Toto `w-9`, Quote `w-9`, Uitslag `w-16`, Quote `w-9`
+- Alle handmatige `mr-x`/`ml-x` marges tussen groepen verwijderd
+
+#### Knockout — quoteringen (`lib/data/knockoutQuotes.ts`)
+- Kolom "Door naar 1/16e" toegevoegd als `derde`-sleutel (was niet geëxtraheerd bij eerste import)
+- Waarden ingelezen uit Excel-tabblad "Quotes doorgaande landen" (`260428_WK 2026_Master.xlsx`)
+- Interface `CountryKOQuotes` uitgebreid met `derde: number`
+
+#### Knockout — sleutelkoppeling gecorrigeerd (`lib/data/knockoutRounds.ts`)
+- `r16`-ronde: `qkey` gecorrigeerd van `'r16'` naar `'r16'` (toont "door naar 1/8e"-odds)
+- Correct bevestigde koppeling: `r16` → "Door naar 1/8e" · `r8` → "1/4e finalisten" · `derde` → "Door naar 1/16e"
+
+#### Knockout — tabnamen hernoemd (`app/(app)/knockout/KnockoutClient.tsx`)
+- "Ronde van 32" → **"Ronde van 16"**
+- "Ronde van 16" → **"Ronde van 8"**
+- Bijbehorend label in `knockoutRounds.ts` meegenomen
+
+#### Knockout — quoteringen zichtbaar (`components/knockout/RoundSection.tsx`, `Ronde32Section.tsx`)
+- Quoteringen zichtbaar naast landnamen in selectiechips (geel `#FFB800`, oranje-licht bij selectie)
+- Quoteringen zichtbaar in token-rijen na het kiezen van een land
+- Poulewinnaars: `poulewinnaar`-kolom · Nummers 2: `tweede`-kolom · Beste nummers 3: `derde`-kolom
+- Ronde van 8 t/m Winnaar: sleutel direct uit `qkey` van de ronde
+
+#### Knockout — Beste nummers 3 verwijderknop (`components/knockout/Ronde32Section.tsx`)
+- ✕-knop toegevoegd naast TokenStepper per gekozen land, identiek aan Poulewinnaars/Nummers 2
