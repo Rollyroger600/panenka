@@ -943,3 +943,63 @@ The following decisions were made during implementation that deviate from or ext
 
 #### Knockout — Beste nummers 3 verwijderknop (`components/knockout/Ronde32Section.tsx`)
 - ✕-knop toegevoegd naast TokenStepper per gekozen land, identiek aan Poulewinnaars/Nummers 2
+
+---
+
+### 2026-05-05 — KO UI-overhaul: kaartgrid, sliders en UX-verbeteringen (Claude Code)
+
+#### Wedstrijdkaarten — wedstrijdnummer (`components/matches/MatchCard.tsx`)
+- `#` toegevoegd voor elk wedstrijdnummer in het badge (bijv. `#1`)
+- Badge vergroot: `w-8 h-8` → `w-10 h-9`, uitlijning aangepast naar `left-2` (gelijk aan `px-2` van knoprij)
+
+#### Wedstrijdkaarten — knoprij groepering (`components/matches/MatchCard.tsx`, `TotoButtons.tsx`)
+- Toto-knoppen (1, X, 2) en eerste quote-knop in één `flex items-end gap-1` wrapper geplaatst: aparte kolommen met eigen labels, 4px tussenruimte
+- Uitslag-knop en tweede quote-knop eveneens in eigen `flex items-end gap-1` wrapper
+
+#### Knockout — kaartgrid layout (`components/knockout/Ronde32Section.tsx`)
+- `SlotSection` (Poulewinnaars, Nummers 2) volledig herontworpen: van lijstweergave naar **4-koloms kaartgrid**
+  - Lege kaart: groepsletter gecentreerd in donker vierkant
+  - Geselecteerde kaart: vlag (28px) + afkorting + quote, oranje rand
+  - TokenStepper altijd zichtbaar onder elke kaart
+- Beste nummers 3 eveneens omgezet naar 4-koloms kaartgrid (2 rijen van 4)
+
+#### Knockout — inline picker (`components/knockout/Ronde32Section.tsx`)
+- Picker verschijnt nu **direct onder de rij** van de aangeklikte kaart (niet meer onderaan de sectie)
+- Picker-opties in dezelfde kaartgridstijl als de hoofdgrid (vlag + afkorting + quote)
+- Niet-gekozen landen: `opacity-60` (geen grayscale), quotes grijs
+- Al gekozen elders: amber rand + oranje bolletje rechtsboven
+- Geselecteerd land: oranje rand, volle kleur
+
+#### Knockout — horizontale slider picker (`components/knockout/Ronde32Section.tsx`)
+- Beste nummers 3: picker omgezet naar horizontaal scrollbare slider (swipe links/rechts)
+- Alle 48 landen zichtbaar; al genomen landen gemarkeerd met oranje bolletje
+
+#### Knockout — globale uniqueness & steal-logica (`components/knockout/Ronde32Section.tsx`)
+- Eén land mag maar één keer gekozen worden over alle 32 slots (w1 + w2 + w3)
+- `pickCountry` doorzoekt alle slots en wist het land elders bij een nieuwe keuze ("steal")
+- `excluded` voor w1/w2 pickers uitgebreid met w3-picks van dezelfde groep
+
+#### Knockout — overige rondes kaartgrid (`components/knockout/RoundSection.tsx`)
+- `RoundSection` volledig herschreven: zelfde kaartgrid + inline slider picker als Ronde32Section
+- Kolomaantal dynamisch op basis van slotaantal: 4 kolommen (≥4 slots), 2 kolommen (2 slots), 1 kolom (1 slot)
+- Finale en Winnaar: kaartgrid gecentreerd, picker gebruikt volle breedte
+- Uniqueness binnen dezelfde ronde (steal-logica per ronde)
+
+#### Knockout — WK Winnaar (`components/knockout/RoundSection.tsx`, `lib/data/winnerPhrases.ts`)
+- Onder de geselecteerde winnaar verschijnt "Goede keuze maat!" in de taal van het gekozen land
+- Vertaald voor alle 48 landen in `lib/data/winnerPhrases.ts`
+- Weergave: volledige breedte, `text-base`, wit
+
+#### Knockout — tokenlimieten (`lib/data/knockoutRounds.ts`)
+- Finalisten: minTokens `5` → `6`
+- WK Winnaar: minTokens `6` → `7`
+
+#### Knockout — tabbladnavigatie (`app/(app)/knockout/KnockoutClient.tsx`)
+- Tabnamen gecorrigeerd: "Ronde van 16" → "Ronde van 32", "Ronde van 8" → "Ronde van 16"
+- Korte labels voor mobiel toegevoegd: R 32 · R 16 · 1/4 · 1/2 · Fin · Win (via responsive `sm:` klassen)
+- Tabstijl gelijkgetrokken met poulefase: `bg-[#161616] rounded-xl p-1`, `flex-1`, geen achtergrond op inactieve knoppen
+
+#### Knockout — bracket overzicht (`components/knockout/BracketView.tsx`, `KnockoutClient.tsx`)
+- BracketView verplaatst naar **onder** het tabbladmenu (was erboven)
+- BracketView verborgen op het R 32 tabblad, zichtbaar op alle overige rondes
+- Beker-icoon (🏆) verwijderd uit de header en de winnaar-kolom van BracketView

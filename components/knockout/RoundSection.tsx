@@ -1,16 +1,18 @@
 'use client'
+import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { TokenStepper } from './TokenStepper'
 import { ALL_COUNTRIES } from '@/lib/data/countries'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
+import { abbrevCountry } from '@/lib/helpers'
+import { WINNER_PHRASES } from '@/lib/data/winnerPhrases'
 import type { KnockoutRound } from '@/lib/data/knockoutRounds'
 
 function getQuote(country: string, qkey: string): number | null {
   const q = KO_QUOTES[country]
   if (!q) return null
-  const key = qkey === 'winnaar_poule' ? 'poulewinnaar' : qkey
-  return (q as unknown as Record<string, number>)[key] ?? null
+  return (q as unknown as Record<string, number>)[qkey] ?? null
 }
 
 interface Props {
@@ -19,63 +21,186 @@ interface Props {
 
 export function RoundSection({ round }: Props) {
   const { knockoutPicks, setKnockoutSlot, clearKnockoutSlot } = useGameStore()
+  const [openPicker, setOpenPicker] = useState<string | null>(null)
 
-  // All filled slots for this round
-  const filled = Array.from({ length: round.slots }, (_, i) => ({
-    key: `${round.id}_${i}`,
-    slot: knockoutPicks[`${round.id}_${i}`] ?? { country: null, tok: round.minTokens },
-  })).filter((s) => s.slot.country)
-
-  const pickedCountries = new Set(filled.map((s) => s.slot.country as string))
-
-  function toggle(country: string) {
-    // Find if already picked
-    const existingIndex = filled.findIndex((s) => s.slot.country === country)
-    if (existingIndex >= 0) {
-      clearKnockoutSlot(filled[existingIndex].key)
-      return
-    }
-    // Find next free slot
-    const nextIndex = Array.from({ length: round.slots }, (_, i) => i).find(
-      (i) => !knockoutPicks[`${round.id}_${i}`]?.country,
-    )
-    if (nextIndex === undefined) return // all slots filled
-    setKnockoutSlot(`${round.id}_${nextIndex}`, { country, tok: round.minTokens })
+  function getSlot(key: string) {
+    return knockoutPicks[key] ?? { country: null, tok: round.minTokens }
   }
 
+  const slots = Array.from({ length: round.slots }, (_, i) => ({
+    key: `${round.id}_${i}`,
+    label: String(i + 1),
+    slot: getSlot(`${round.id}_${i}`),
+  }))
+
+  const pickedCountries = new Set(slots.map(s => s.slot.country).filter(Boolean) as string[])
+
+  function pickCountry(key: string, country: string | null) {
+    if (country === null) {
+      clearKnockoutSlot(key)
+    } else {
+      // Steal within this round: clear if already picked elsewhere in same round
+      for (const s of slots) {
+        if (s.key !== key && s.slot.country === country) {
+          clearKnockoutSlot(s.key)
+        }
+      }
+      setKnockoutSlot(key, { country, tok: getSlot(key).tok || round.minTokens })
+    }
+    setOpenPicker(null)
+  }
+
+  function setTok(key: string, tok: number) {
+    setKnockoutSlot(key, { tok })
+  }
+
+  // Grid: max 4 columns; fewer for small slot counts
+  const cols = round.slots === 1 ? 1 : round.slots === 2 ? 2 : 4
+  const gridClass =
+    cols === 1 ? 'grid-cols-1' :
+    cols === 2 ? 'grid-cols-2' :
+    'grid-cols-4'
+  const wrapperClass =
+    cols === 1 ? 'max-w-[96px] mx-auto' :
+    cols === 2 ? 'max-w-[208px] mx-auto' :
+    ''
+
+  // Group into rows of `cols`
+  const rows: typeof slots[] = []
+  for (let i = 0; i < slots.length; i += cols) rows.push(slots.slice(i, i + cols))
+
+  const openRowIndex = openPicker
+    ? rows.findIndex(row => row.some(s => s.key === openPicker))
+    : -1
+  const openSlot = slots.find(s => s.key === openPicker) ?? null
+
+  // Countries already taken by other slots (for orange dot in picker)
+  const takenByOthers = (currentKey: string) =>
+    new Set(slots.filter(s => s.key !== currentKey).map(s => s.slot.country).filter(Boolean) as string[])
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Country chip grid */}
-      <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-        <div className="px-4 py-3 bg-[#111] flex items-center justify-between">
-          <span className="text-sm font-bold text-white">{round.label}</span>
-          <span className="text-xs font-bold text-[#FF6B00]">
-            {pickedCountries.size} / {round.slots}
-          </span>
-        </div>
-        <div className="p-3 flex flex-wrap gap-2">
+    <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+      <div className="px-4 py-3 bg-[#111] flex items-center justify-between">
+        <span className="text-sm font-bold text-white">{round.label}</span>
+        <span className="text-xs font-bold text-[#FF6B00]">{pickedCountries.size} / {round.slots}</span>
+      </div>
+      <div className="p-3 flex flex-col gap-3">
+        {rows.map((row, rowIndex) => (
+          <div key={rowIndex}>
+            <div className={`grid ${gridClass} gap-2 ${wrapperClass}`}>
+              {row.map(({ key, label, slot }) => (
+                <div key={key} className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => setOpenPicker(openPicker === key ? null : key)}
+                    className={`w-full aspect-square rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                      slot.country
+                        ? 'border-[#FF6B00] bg-[#1e1e1e]'
+                        : openPicker === key
+                        ? 'border-[#555] bg-[#1e1e1e]'
+                        : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                    }`}
+                  >
+                    {slot.country ? (
+                      <>
+                        <FlagImage country={slot.country} size={28} />
+                        <span className="text-[11px] font-bold text-white mt-1 leading-none">
+                          {abbrevCountry(slot.country)}
+                        </span>
+                        {getQuote(slot.country, round.qkey) != null && (
+                          <span className="text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                            {getQuote(slot.country, round.qkey)!.toFixed(2)}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-xl font-bold" style={{ color: '#333' }}>{label}</span>
+                    )}
+                  </button>
+                  <TokenStepper
+                    value={slot.tok}
+                    min={round.minTokens}
+                    max={round.maxTokens}
+                    onChange={(tok) => setTok(key, tok)}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Inline picker — directly below the row of the clicked card */}
+            {openRowIndex === rowIndex && openSlot && (
+              <div className="mt-2">
+                <RoundCountryPicker
+                  taken={takenByOthers(openSlot.key)}
+                  currentValue={openSlot.slot.country}
+                  qkey={round.qkey}
+                  onSelect={(country) => pickCountry(openSlot.key, country)}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+        {round.id === 'winner' && slots[0]?.slot.country && WINNER_PHRASES[slots[0].slot.country] && (
+          <p className="text-center text-base font-bold text-white whitespace-nowrap">
+            {WINNER_PHRASES[slots[0].slot.country]}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Horizontal country picker slider ─────────────────────────────────────────
+
+function RoundCountryPicker({
+  taken, currentValue, qkey, onSelect,
+}: {
+  taken: Set<string>
+  currentValue: string | null
+  qkey: string
+  onSelect: (c: string | null) => void
+}) {
+  return (
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(10,10,10,0.75)' }}>
+      <div className="px-3 py-2 bg-[#111] flex items-center justify-between">
+        <span className="text-[10px] text-[#555] uppercase tracking-widest">Kies land</span>
+        {currentValue && (
+          <button
+            onClick={() => onSelect(null)}
+            className="text-[10px] text-[#E74C3C] hover:text-[#ff6b6b] transition-colors"
+          >
+            ✕ Verwijder
+          </button>
+        )}
+      </div>
+      <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <div className="flex gap-2 p-3">
           {ALL_COUNTRIES.map((country) => {
-            const isPicked = pickedCountries.has(country)
-            const maxReached = pickedCountries.size >= round.slots
-            const isDisabled = !isPicked && maxReached
-            const quote = getQuote(country, round.qkey)
+            const isSelected = currentValue === country
+            const isTaken = !isSelected && taken.has(country)
+            const quote = getQuote(country, qkey)
             return (
               <button
                 key={country}
-                onClick={() => !isDisabled && toggle(country)}
-                disabled={isDisabled}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  isPicked
-                    ? 'bg-[#FF6B00] text-white'
-                    : isDisabled
-                    ? 'bg-[#161616] text-[#333] cursor-not-allowed'
-                    : 'bg-[#252525] text-[#ccc] hover:bg-[#333]'
+                onClick={() => onSelect(isSelected ? null : country)}
+                className={`relative flex-shrink-0 w-[72px] h-[72px] rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                  isSelected
+                    ? 'border-[#FF6B00] bg-[#FF6B00]/10'
+                    : isTaken
+                    ? 'border-[#553300] bg-[#1a1a1a] hover:border-[#886600]'
+                    : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
                 }`}
               >
-                <FlagImage country={country} size={14} />
-                {country}
+                {isTaken && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FF6B00] opacity-70" />
+                )}
+                <span className={isSelected ? '' : 'opacity-60'}>
+                  <FlagImage country={country} size={24} />
+                </span>
+                <span className={`text-[10px] font-bold mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
+                  {abbrevCountry(country)}
+                </span>
                 {quote != null && (
-                  <span className={`text-[10px] ${isPicked ? 'text-orange-100' : 'text-[#FFB800]'}`}>
+                  <span className={`text-[9px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
                     {quote.toFixed(2)}
                   </span>
                 )}
@@ -84,43 +209,6 @@ export function RoundSection({ round }: Props) {
           })}
         </div>
       </div>
-
-      {/* Token rows per selected country */}
-      {filled.length > 0 && (
-        <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-          <div className="px-4 py-2 bg-[#111]">
-            <span className="text-xs text-[#888] uppercase tracking-widest">
-              Tokens per land · min {round.minTokens} · max {round.maxTokens}
-            </span>
-          </div>
-          <div className="p-3 flex flex-col gap-2">
-            {filled.map(({ key, slot }) => {
-              const quote = getQuote(slot.country!, round.qkey)
-              return (
-              <div key={key} className="flex items-center gap-3">
-                <FlagImage country={slot.country!} size={18} />
-                <span className="text-sm font-bold text-white flex-1">{slot.country}</span>
-                {quote != null && (
-                  <span className="text-xs font-bold text-[#FFB800]">{quote.toFixed(2)}</span>
-                )}
-                <TokenStepper
-                  value={slot.tok}
-                  min={round.minTokens}
-                  max={round.maxTokens}
-                  onChange={(tok) => setKnockoutSlot(key, { tok })}
-                />
-                <button
-                  onClick={() => clearKnockoutSlot(key)}
-                  className="text-[#444] hover:text-[#E74C3C] text-sm px-1 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

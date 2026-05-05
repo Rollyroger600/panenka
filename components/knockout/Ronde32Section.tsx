@@ -7,6 +7,7 @@ import { GROUP_TEAMS, POULE_LETTERS, getW3Excluded } from '@/lib/knockoutHelpers
 import { ALL_COUNTRIES } from '@/lib/data/countries'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import { SuggestionsPanel, type Suggestion } from './SuggestionsPanel'
+import { abbrevCountry } from '@/lib/helpers'
 import type { StandingRow } from '@/lib/standings'
 
 function getQuote(country: string, qkey: string): number | null {
@@ -24,15 +25,12 @@ export function Ronde32Section() {
   const [openPicker, setOpenPicker] = useState<string | null>(null)
 
   function applyAllSuggestions(suggestions: Suggestion[], bestThird: StandingRow[]) {
-    // Fill w1 / w2 empty slots per group
     suggestions.forEach(({ w1, w2 }, i) => {
       if (w1 && !knockoutPicks[`w1_${i}`]?.country) setKnockoutSlot(`w1_${i}`, { country: w1, tok: W1_MIN })
       if (w2 && !knockoutPicks[`w2_${i}`]?.country) setKnockoutSlot(`w2_${i}`, { country: w2, tok: W1_MIN })
     })
-    // Fill empty w3 slots from bestThird list
     let w3Slot = 0
     for (const team of bestThird) {
-      // Skip slots already filled
       while (w3Slot < W3_MAX_SLOTS && knockoutPicks[`w3_${w3Slot}`]?.country) w3Slot++
       if (w3Slot >= W3_MAX_SLOTS) break
       setKnockoutSlot(`w3_${w3Slot}`, { country: team.country, tok: W1_MIN })
@@ -48,6 +46,17 @@ export function Ronde32Section() {
     if (country === null) {
       clearKnockoutSlot(key)
     } else {
+      // Global steal: clear this country from any other slot it currently occupies
+      const allKeys = [
+        ...POULE_LETTERS.map((_, i) => `w1_${i}`),
+        ...POULE_LETTERS.map((_, i) => `w2_${i}`),
+        ...Array.from({ length: W3_MAX_SLOTS }, (_, i) => `w3_${i}`),
+      ]
+      for (const otherKey of allKeys) {
+        if (otherKey !== key && knockoutPicks[otherKey]?.country === country) {
+          clearKnockoutSlot(otherKey)
+        }
+      }
       setKnockoutSlot(key, { country, tok: getSlot(key).tok || W1_MIN })
     }
     setOpenPicker(null)
@@ -57,7 +66,6 @@ export function Ronde32Section() {
     setKnockoutSlot(key, { tok })
   }
 
-  // Derive w1/w2 picks for exclusion logic
   const w1Countries: Record<string, string | null> = {}
   const w2Countries: Record<string, string | null> = {}
   POULE_LETTERS.forEach((p, i) => {
@@ -79,9 +87,12 @@ export function Ronde32Section() {
         slots={POULE_LETTERS.map((poule, i) => {
           const key = `w1_${i}`
           const slot = getSlot(key)
-          const excluded = new Set([w2Countries[poule]].filter(Boolean) as string[])
-          const options = GROUP_TEAMS[poule]?.filter((t) => !excluded.has(t)) ?? []
-          return { key, label: poule, slot, options }
+          const excluded = new Set([
+            w2Countries[poule],
+            ...(GROUP_TEAMS[poule]?.filter(t => w3PickedCountries.has(t)) ?? []),
+          ].filter(Boolean) as string[])
+          const options = GROUP_TEAMS[poule] ?? []
+          return { key, label: poule, slot, options, excluded }
         })}
         openPicker={openPicker}
         setOpenPicker={setOpenPicker}
@@ -99,9 +110,12 @@ export function Ronde32Section() {
         slots={POULE_LETTERS.map((poule, i) => {
           const key = `w2_${i}`
           const slot = getSlot(key)
-          const excluded = new Set([w1Countries[poule]].filter(Boolean) as string[])
-          const options = GROUP_TEAMS[poule]?.filter((t) => !excluded.has(t)) ?? []
-          return { key, label: poule, slot, options }
+          const excluded = new Set([
+            w1Countries[poule],
+            ...(GROUP_TEAMS[poule]?.filter(t => w3PickedCountries.has(t)) ?? []),
+          ].filter(Boolean) as string[])
+          const options = GROUP_TEAMS[poule] ?? []
+          return { key, label: poule, slot, options, excluded }
         })}
         openPicker={openPicker}
         setOpenPicker={setOpenPicker}
@@ -113,75 +127,86 @@ export function Ronde32Section() {
       />
 
       {/* W3 — Beste nummers 3 */}
-      <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-        <div className="px-4 py-3 bg-[#111] flex items-center justify-between">
-          <div>
-            <span className="text-sm font-bold text-white">Beste nummers 3</span>
-            <span className="ml-2 text-xs text-[#555]">8 beste derde-plaatsers</span>
-          </div>
-          <span className="text-xs font-bold text-[#FF6B00]">{w3PickedCountries.size} / 8</span>
-        </div>
-        <div className="p-3 flex flex-col gap-2">
-          {Array.from({ length: W3_MAX_SLOTS }, (_, i) => {
-            const key = `w3_${i}`
-            const slot = getSlot(key)
-            return (
-              <div key={key} className="flex items-center gap-2">
-                <span className="text-[10px] text-[#444] w-4 text-center font-bold">{i + 1}</span>
-                <button
-                  onClick={() => setOpenPicker(openPicker === key ? null : key)}
-                  className={`flex-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors text-left ${
-                    slot.country
-                      ? 'bg-[#252525] text-white'
-                      : 'bg-[#1a1a1a] text-[#444] hover:text-[#666]'
-                  }`}
-                >
-                  {slot.country ? (
-                    <>
-                      <FlagImage country={slot.country} size={16} />
-                      <span className="font-bold flex-1">{slot.country}</span>
-                      {getQuote(slot.country, 'derde') != null && (
-                        <span className="text-xs font-bold text-[#FFB800]">
-                          {getQuote(slot.country, 'derde')!.toFixed(2)}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span>+ Kies land</span>
-                  )}
-                </button>
-                {slot.country && (
-                  <>
-                    <TokenStepper
-                      value={slot.tok}
-                      min={W1_MIN}
-                      max={W1_MAX}
-                      onChange={(tok) => setTok(key, tok)}
-                    />
-                    <button
-                      onClick={() => pickCountry(key, null)}
-                      className="text-[#444] hover:text-[#888] text-sm px-1"
-                    >✕</button>
-                  </>
-                )}
+      {(() => {
+        const w3Slots = Array.from({ length: W3_MAX_SLOTS }, (_, i) => ({
+          key: `w3_${i}`,
+          label: String(i + 1),
+          slot: getSlot(`w3_${i}`),
+        }))
+        const openW3Slot = openPicker?.startsWith('w3_')
+          ? w3Slots.find(s => s.key === openPicker) ?? null
+          : null
+        // All countries taken in w1, w2 or other w3 slots
+        const w3Taken = new Set([...w3Excluded, ...w3PickedCountries])
+        const w3Rows: typeof w3Slots[] = []
+        for (let i = 0; i < w3Slots.length; i += 4) w3Rows.push(w3Slots.slice(i, i + 4))
+        const openW3RowIndex = openPicker?.startsWith('w3_')
+          ? w3Rows.findIndex(row => row.some(s => s.key === openPicker))
+          : -1
+
+        return (
+          <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+            <div className="px-4 py-3 bg-[#111] flex items-center justify-between">
+              <div>
+                <span className="text-sm font-bold text-white">Beste nummers 3</span>
+                <span className="ml-2 text-xs text-[#555]">8 beste derde-plaatsers</span>
               </div>
-            )
-          })}
-        </div>
-        {/* W3 country picker */}
-        {openPicker?.startsWith('w3_') && (
-          <div className="px-3 pb-3">
-            <W3CountryPicker
-              excluded={w3Excluded}
-              alreadyPicked={w3PickedCountries}
-              currentKey={openPicker}
-              currentValue={getSlot(openPicker).country}
-              maxReached={w3PickedCountries.size >= W3_MAX_SLOTS}
-              onSelect={(country) => pickCountry(openPicker, country)}
-            />
+              <span className="text-xs font-bold text-[#FF6B00]">{w3PickedCountries.size} / 8</span>
+            </div>
+            <div className="p-3 flex flex-col gap-3">
+              {w3Rows.map((row, rowIndex) => (
+                <div key={rowIndex}>
+                  <div className="grid grid-cols-4 gap-2">
+                    {row.map(({ key, label, slot }) => (
+                      <div key={key} className="flex flex-col items-center gap-1">
+                        <button
+                          onClick={() => setOpenPicker(openPicker === key ? null : key)}
+                          className={`w-full aspect-square rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                            slot.country
+                              ? 'border-[#FF6B00] bg-[#1e1e1e]'
+                              : openPicker === key
+                              ? 'border-[#555] bg-[#1e1e1e]'
+                              : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                          }`}
+                        >
+                          {slot.country ? (
+                            <>
+                              <FlagImage country={slot.country} size={28} />
+                              <span className="text-[11px] font-bold text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
+                              {getQuote(slot.country, 'derde') != null && (
+                                <span className="text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                                  {getQuote(slot.country, 'derde')!.toFixed(2)}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-xl font-bold" style={{ color: '#333' }}>{label}</span>
+                          )}
+                        </button>
+                        <TokenStepper
+                          value={slot.tok}
+                          min={W1_MIN}
+                          max={W1_MAX}
+                          onChange={(tok) => setTok(key, tok)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {openW3RowIndex === rowIndex && openW3Slot && (
+                    <div className="mt-2">
+                      <W3CountryPicker
+                        taken={w3Taken}
+                        currentValue={openW3Slot.slot.country}
+                        onSelect={(country) => pickCountry(openW3Slot.key, country)}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
+        )
+      })()}
     </div>
   )
 }
@@ -193,6 +218,7 @@ interface SlotDef {
   label: string
   slot: { country: string | null; tok: number }
   options: string[]
+  excluded: Set<string>
 }
 
 function SlotSection({
@@ -210,6 +236,15 @@ function SlotSection({
   qkey?: string
 }) {
   const filled = slots.filter((s) => s.slot.country).length
+  const openSlot = slots.find(s => s.key === openPicker) ?? null
+
+  // Group slots into rows of 4
+  const rows: SlotDef[][] = []
+  for (let i = 0; i < slots.length; i += 4) rows.push(slots.slice(i, i + 4))
+  const openRowIndex = openPicker
+    ? rows.findIndex(row => row.some(s => s.key === openPicker))
+    : -1
+
   return (
     <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
       <div className="px-4 py-3 bg-[#111] flex items-center justify-between">
@@ -219,65 +254,92 @@ function SlotSection({
         </div>
         <span className="text-xs font-bold text-[#FF6B00]">{filled} / {slots.length}</span>
       </div>
-      <div className="p-3 flex flex-col gap-1">
-        {slots.map(({ key, label, slot, options }) => (
-          <div key={key}>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[#FF6B00] w-5 text-center">{label}</span>
-              <button
-                onClick={() => setOpenPicker(openPicker === key ? null : key)}
-                className={`flex-1 flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors text-left ${
-                  slot.country
-                    ? 'bg-[#252525] text-white'
-                    : 'bg-[#1a1a1a] text-[#444] hover:text-[#666]'
-                }`}
-              >
-                {slot.country ? (
-                  <>
-                    <FlagImage country={slot.country} size={16} />
-                    <span className="font-bold flex-1">{slot.country}</span>
-                    {qkey && getQuote(slot.country, qkey) != null && (
-                      <span className="text-xs font-bold text-[#FFB800]">
-                        {getQuote(slot.country, qkey)!.toFixed(2)}
-                      </span>
+      <div className="p-3 flex flex-col gap-3">
+        {rows.map((row, rowIndex) => (
+          <div key={rowIndex}>
+            <div className="grid grid-cols-4 gap-2">
+              {row.map(({ key, label, slot }) => (
+                <div key={key} className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => setOpenPicker(openPicker === key ? null : key)}
+                    className={`w-full aspect-square rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                      slot.country
+                        ? 'border-[#FF6B00] bg-[#1e1e1e]'
+                        : openPicker === key
+                        ? 'border-[#555] bg-[#1e1e1e]'
+                        : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                    }`}
+                  >
+                    {slot.country ? (
+                      <>
+                        <FlagImage country={slot.country} size={28} />
+                        <span className="text-[11px] font-bold text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
+                        {qkey && getQuote(slot.country, qkey) != null && (
+                          <span className="text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                            {getQuote(slot.country, qkey)!.toFixed(2)}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-xl font-bold" style={{ color: '#333' }}>{label}</span>
                     )}
-                  </>
-                ) : (
-                  <span className="text-xs">+ Kies winnaar</span>
-                )}
-              </button>
-              {slot.country && (
-                <>
+                  </button>
                   <TokenStepper value={slot.tok} min={min} max={max} onChange={(tok) => setTok(key, tok)} />
-                  <button onClick={() => pickCountry(key, null)} className="text-[#444] hover:text-[#888] text-sm px-1">✕</button>
-                </>
-              )}
+                </div>
+              ))}
             </div>
-            {openPicker === key && (
-              <div className="mt-1 ml-7 flex flex-wrap gap-1.5 p-2 bg-[#111] rounded-lg">
-                {options.map((country) => {
-                  const isSelected = slot.country === country
-                  const quote = qkey ? getQuote(country, qkey) : null
-                  return (
+
+            {/* Inline picker — shown directly below the row containing the open card */}
+            {openRowIndex === rowIndex && openSlot && (
+              <div className="mt-2 rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(10,10,10,0.75)' }}>
+                <div className="px-3 py-2 bg-[#111] flex items-center justify-between">
+                  <span className="text-[10px] text-[#555] uppercase tracking-widest">
+                    Groep {openSlot.label}
+                  </span>
+                  {openSlot.slot.country && (
                     <button
-                      key={country}
-                      onClick={() => pickCountry(key, country)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
-                        isSelected
-                          ? 'bg-[#FF6B00] text-white'
-                          : 'bg-[#252525] text-[#ccc] hover:bg-[#333]'
-                      }`}
+                      onClick={() => pickCountry(openPicker!, null)}
+                      className="text-[10px] text-[#E74C3C] hover:text-[#ff6b6b] transition-colors"
                     >
-                      <FlagImage country={country} size={14} />
-                      {country}
-                      {quote != null && (
-                        <span className={`text-[10px] ${isSelected ? 'text-orange-100' : 'text-[#FFB800]'}`}>
-                          {quote.toFixed(2)}
-                        </span>
-                      )}
+                      ✕ Verwijder
                     </button>
-                  )
-                })}
+                  )}
+                </div>
+                <div className="grid grid-cols-4 gap-2 p-3">
+                  {openSlot.options.map((country) => {
+                    const isSelected = openSlot.slot.country === country
+                    const isTaken = !isSelected && openSlot.excluded.has(country)
+                    const quote = qkey ? getQuote(country, qkey) : null
+                    return (
+                      <button
+                        key={country}
+                        onClick={() => pickCountry(openPicker!, isSelected ? null : country)}
+                        className={`relative aspect-square rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                          isSelected
+                            ? 'border-[#FF6B00] bg-[#FF6B00]/10'
+                            : isTaken
+                            ? 'border-[#553300] bg-[#1a1a1a] hover:border-[#886600]'
+                            : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                        }`}
+                      >
+                        {isTaken && (
+                          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FF6B00] opacity-70" />
+                        )}
+                        <span className={isSelected ? '' : 'opacity-60'}>
+                          <FlagImage country={country} size={28} />
+                        </span>
+                        <span className={`text-[11px] font-bold mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
+                          {abbrevCountry(country)}
+                        </span>
+                        {quote != null && (
+                          <span className={`text-[10px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
+                            {quote.toFixed(2)}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -290,58 +352,61 @@ function SlotSection({
 // ── W3 country picker ─────────────────────────────────────────────────────────
 
 function W3CountryPicker({
-  excluded, alreadyPicked, currentKey, currentValue, maxReached, onSelect,
+  taken, currentValue, onSelect,
 }: {
-  excluded: Set<string>
-  alreadyPicked: Set<string>
-  currentKey: string
+  taken: Set<string>
   currentValue: string | null
-  maxReached: boolean
   onSelect: (c: string | null) => void
 }) {
-  const available = ALL_COUNTRIES.filter((c) => !excluded.has(c))
   return (
-    <div className="bg-[#111] rounded-xl p-3 border border-[#2a2a2a]">
-      <div className="text-[10px] text-[#555] uppercase tracking-widest mb-2">
-        Kies een land (niet al gekozen als winnaar of runner-up)
-      </div>
-      <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(10,10,10,0.75)' }}>
+      <div className="px-3 py-2 bg-[#111] flex items-center justify-between">
+        <span className="text-[10px] text-[#555] uppercase tracking-widest">Kies land</span>
         {currentValue && (
           <button
             onClick={() => onSelect(null)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-[#E74C3C]/20 text-[#E74C3C] border border-[#E74C3C]/30"
+            className="text-[10px] text-[#E74C3C] hover:text-[#ff6b6b] transition-colors"
           >
             ✕ Verwijder
           </button>
         )}
-        {available.map((country) => {
-          const isSelected = currentValue === country
-          const isPicked = alreadyPicked.has(country) && !isSelected
-          const isDisabled = isPicked || (maxReached && !isSelected)
-          const quote = getQuote(country, 'r16')
-          return (
-            <button
-              key={country}
-              onClick={() => !isDisabled && onSelect(isSelected ? null : country)}
-              disabled={isDisabled}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-                isSelected
-                  ? 'bg-[#FF6B00] text-white'
-                  : isDisabled
-                  ? 'bg-[#1a1a1a] text-[#333] cursor-not-allowed'
-                  : 'bg-[#252525] text-[#ccc] hover:bg-[#333]'
-              }`}
-            >
-              <FlagImage country={country} size={12} />
-              {country}
-              {quote != null && (
-                <span className={`text-[10px] ${isSelected ? 'text-orange-100' : 'text-[#FFB800]'}`}>
-                  {quote.toFixed(2)}
+      </div>
+      <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <div className="flex gap-2 p-3">
+          {ALL_COUNTRIES.map((country) => {
+            const isSelected = currentValue === country
+            const isTaken = !isSelected && taken.has(country)
+            const quote = getQuote(country, 'derde')
+            return (
+              <button
+                key={country}
+                onClick={() => onSelect(isSelected ? null : country)}
+                className={`relative flex-shrink-0 w-[72px] h-[72px] rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                  isSelected
+                    ? 'border-[#FF6B00] bg-[#FF6B00]/10'
+                    : isTaken
+                    ? 'border-[#553300] bg-[#1a1a1a] hover:border-[#886600]'
+                    : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                }`}
+              >
+                {isTaken && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FF6B00] opacity-70" />
+                )}
+                <span className={isSelected ? '' : 'opacity-60'}>
+                  <FlagImage country={country} size={24} />
                 </span>
-              )}
-            </button>
-          )
-        })}
+                <span className={`text-[10px] font-bold mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
+                  {abbrevCountry(country)}
+                </span>
+                {quote != null && (
+                  <span className={`text-[9px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
+                    {quote.toFixed(2)}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

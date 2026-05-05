@@ -3,18 +3,6 @@ import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { POULE_LETTERS } from '@/lib/knockoutHelpers'
-import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
-
-const ROUND_ORDER = [
-  { id: 'w1',     label: 'Winnaars', short: 'W' },
-  { id: 'w2',     label: 'Runners-up', short: 'R' },
-  { id: 'w3',     label: 'Beste 3e', short: '3' },
-  { id: 'r16',    label: 'Ronde 16', short: 'R16' },
-  { id: 'r8',     label: 'Kwart', short: 'KF' },
-  { id: 'r4',     label: 'Halve', short: 'HF' },
-  { id: 'finale', label: 'Finale', short: 'F' },
-  { id: 'winner', label: 'Winnaar', short: '🏆' },
-]
 
 function CountryChip({ country }: { country: string | null }) {
   if (!country) {
@@ -59,7 +47,6 @@ export function BracketView() {
         className="w-full flex items-center justify-between px-4 py-3 text-left"
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm">🏆</span>
           <span className="text-sm font-bold text-white">Bracket overzicht</span>
         </div>
         <div className="flex items-center gap-2">

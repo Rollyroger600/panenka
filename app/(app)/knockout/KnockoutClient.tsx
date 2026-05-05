@@ -9,12 +9,12 @@ import { BracketView } from '@/components/knockout/BracketView'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 
 const TABS = [
-  { id: 'ronde32', label: 'Ronde van 16' },
-  { id: 'r16',    label: 'Ronde van 8' },
-  { id: 'r8',     label: 'Kwartfinales' },
-  { id: 'r4',     label: 'Halve Finales' },
-  { id: 'finale', label: 'Finale' },
-  { id: 'winner', label: 'Winnaar' },
+  { id: 'ronde32', label: 'Ronde van 32', short: 'R 32' },
+  { id: 'r16',    label: 'Ronde van 16', short: 'R 16' },
+  { id: 'r8',     label: 'Kwartfinales',  short: '1/4' },
+  { id: 'r4',     label: 'Halve Finales', short: '1/2' },
+  { id: 'finale', label: 'Finale',        short: 'Fin' },
+  { id: 'winner', label: 'Winnaar',       short: 'Win' },
 ]
 
 const NON32_ROUNDS = KNOCKOUT_ROUNDS.filter((r) => r.uiTab !== 'ronde32')
@@ -37,24 +37,25 @@ export function KnockoutClient() {
         </div>
       )}
 
-      <BracketView />
-
       {/* Round tabs — centered */}
-      <div className="flex flex-wrap justify-center gap-1.5 mb-5">
+      <div className="flex gap-1.5 mb-5 bg-[#161616] rounded-xl p-1">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-colors ${
+            className={`flex-1 py-2 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all ${
               activeTab === tab.id
                 ? 'bg-[#FF6B00] text-white'
-                : 'bg-[#1e1e1e] text-white hover:text-[#FF6B00]'
+                : 'text-white hover:text-[#FF6B00]'
             }`}
           >
-            {tab.label}
+            <span className="sm:hidden">{tab.short}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
+
+      {activeTab !== 'ronde32' && <BracketView />}
 
       {!isLoaded ? (
         <SkeletonList count={4} />
