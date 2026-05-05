@@ -29,15 +29,17 @@ export interface KnockoutSlot {
   tok: number
 }
 
-// p0–p10 = 11 regular, t0–t3 = 4 talents
+// p0–p10 = 11 regular, t0–t3 = 4 talents, k0–k19 = scratchpad
 export const REGULAR_SLOTS = Array.from({ length: 11 }, (_, i) => `p${i}`)
 export const TALENT_SLOTS = Array.from({ length: 4 }, (_, i) => `t${i}`)
 export const ALL_SLOTS = [...REGULAR_SLOTS, ...TALENT_SLOTS]
+export const SCRATCHPAD_SLOTS = Array.from({ length: 20 }, (_, i) => `k${i}`)
 
 type PredictionsMap = Record<number, Prediction>
 type OranjeMap = Record<number, OranjeAnswer>
 export type KnockoutPicks = Record<string, KnockoutSlot>
 export type FantasySquad = Record<string, Player | null>
+export type Scratchpad = Record<string, Player | null>
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -64,6 +66,10 @@ interface GameState {
   setTeamName: (name: string) => void
   setActiveInfoSlot: (slotKey: string | null) => void
   initFantasy: (squad: FantasySquad, teamName: string) => void
+
+  scratchpad: Scratchpad
+  setScratchpadPlayer: (key: string, player: Player | null) => void
+  initScratchpad: (data: Scratchpad) => void
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -123,4 +129,9 @@ export const useGameStore = create<GameState>((set) => ({
   setActiveInfoSlot: (slotKey) =>
     set((s) => ({ activeInfoSlot: s.activeInfoSlot === slotKey ? null : slotKey })),
   initFantasy: (squad, teamName) => set({ fantasySquad: squad, teamName }),
+
+  scratchpad: {},
+  setScratchpadPlayer: (key, player) =>
+    set((s) => ({ scratchpad: { ...s.scratchpad, [key]: player } })),
+  initScratchpad: (data) => set({ scratchpad: data }),
 }))

@@ -5,19 +5,20 @@ import { loadFantasy, saveFantasy } from '@/app/actions/fantasy'
 import { useDeadline } from './useDeadline'
 
 export function useFantasyXV(participantName: string) {
-  const { fantasySquad, teamName, initFantasy, setSaveStatus } = useGameStore()
+  const { fantasySquad, teamName, scratchpad, initFantasy, initScratchpad, setSaveStatus } = useGameStore()
   const { isPast } = useDeadline()
   const [isLoaded, setIsLoaded] = useState(false)
   const initialized = useRef(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    loadFantasy().then(({ squad, teamName: savedName }) => {
-      initFantasy(squad, savedName || `FC ${participantName}`)
+    loadFantasy().then(({ squad, teamName: savedName, scratchpad: savedScratchpad }) => {
+      initFantasy(squad, savedName || '')
+      initScratchpad(savedScratchpad)
       setIsLoaded(true)
       initialized.current = true
     })
-  }, [initFantasy, participantName])
+  }, [initFantasy, initScratchpad, participantName])
 
   useEffect(() => {
     if (!initialized.current || isPast) return
@@ -25,7 +26,7 @@ export function useFantasyXV(participantName: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       try {
-        await saveFantasy(fantasySquad, teamName)
+        await saveFantasy(fantasySquad, teamName, scratchpad)
         setSaveStatus('saved')
         setTimeout(() => setSaveStatus('idle'), 2000)
       } catch {
@@ -33,7 +34,7 @@ export function useFantasyXV(participantName: string) {
       }
     }, 500)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [fantasySquad, teamName, isPast, setSaveStatus])
+  }, [fantasySquad, teamName, scratchpad, isPast, setSaveStatus])
 
   return { isLoaded }
 }

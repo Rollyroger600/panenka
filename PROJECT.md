@@ -521,7 +521,7 @@ Mexico:       2.10 | 1 | ... | 1.11 | 2.25 | 5.50 | 12.0 | 26.0 | 81
 
 Each rule row shows: status icon (✓ / ✗ / ! / —), rule text, detail (e.g. "UEFA: 4" or "2 conflicten").
 
-**Player list — 11 regular slots** (`p0` through `p10`):
+**Player list — 11 regular slots** (`p0` through `p10`), **4 talent slots** (`t0`–`t3`), **20 kladblok slots** (`k0`–`k19`):
 
 Each filled slot shows a row:
 ```
@@ -740,7 +740,13 @@ let currentModalSlot = null;          // {key, type} for player modal
 let modalFilters = {};                // pos, competition, confederation
 ```
 
-Slot keys: `p0`–`p10` (regular, 11 slots), `t0`–`t3` (talents, 4 slots).
+Slot keys: `p0`–`p10` (regular, 11 slots), `t0`–`t3` (talents, 4 slots), `k0`–`k19` (kladblok/scratchpad, 20 slots).
+
+```javascript
+let scratchpad = {};  // slotKey (k0–k19) → player object | null
+```
+
+Scratchpad persists alongside the squad in KV under the `fantasy:{initials}` key as `{ squad, teamName, scratchpad }`.
 
 ---
 
@@ -1003,3 +1009,51 @@ The following decisions were made during implementation that deviate from or ext
 - BracketView verplaatst naar **onder** het tabbladmenu (was erboven)
 - BracketView verborgen op het R 32 tabblad, zichtbaar op alle overige rondes
 - Beker-icoon (🏆) verwijderd uit de header en de winnaar-kolom van BracketView
+
+---
+
+### 2026-05-05 — Spelersdata rebuild & Kladblok feature (Claude Code)
+
+#### Spelersdata (`lib/data/players.ts`)
+- Volledig herbouwd vanuit sofifa Excel-bestand (`sheet181.xml` + `sheet184.xml` Nat_TR)
+- Nationaliteitsvertaling via dubbele EN+NL opzoeking in Nat_TR-tabblad (kolom B=EN, D=NL, E=Conf, F=3-lettercode)
+- 4 byte-level aliassen toegevoegd voor sofifa-specifieke schrijfwijzen (bijv. Saudi Arabia → Saoedi-Arabië)
+- **Twee-pass filtering:** pass 1 = overall ≥ 68 voor alle spelers; pass 2 = álle spelers van landen met < 20 resultaten na pass 1
+- Resultaat: **5882 spelers** (was 5732 met alleen threshold), **alle 48 WK-landen** aanwezig
+- Kleine landen die volledig zijn opgenomen: Tunesië (14), Qatar (14), Nieuw-Zeeland (13), Kaapverdië (12), Haïti (10), Panama (9), Egypte (7), Zuid-Afrika (7), Curaçao (6), Iran (6), Irak (4), Jordanië (2), Oezbekistan (2)
+
+#### Fantasy — Kladblok (`store/gameStore.ts`, `app/actions/fantasy.ts`, `hooks/useFantasyXV.ts`)
+- Kladblok-state toegevoegd: 20 slots (`k0`–`k19`), type `Scratchpad = Record<string, Player | null>`
+- Store-acties: `setScratchpadPlayer(key, player)`, `initScratchpad(data)`
+- KV-structuur uitgebreid: `FantasyKV = { squad, teamName, scratchpad? }`
+- `loadFantasy` en `saveFantasy` laden/slaan scratchpad op naast squad
+- `useFantasyXV` hook: scratchpad meegenomen in laad- en sla-cyclus en in `useEffect`-afhankelijkheden
+
+#### Fantasy — Kladblok UI (`components/fantasy/ScratchpadRow.tsx` — nieuw)
+- Visueel onderscheiden van squad: `border-dashed`, `bg-[#0d0d0d]`, vlag 60% opacity, gedempte tekstkleuren
+- Inline info-kaart bij klikken: zelfde 3×3 grid als squad, maar donkerder stijl
+- Knop **"↑ Zet in team"**: groen, plaatst speler in eerste lege squad-slot (voorkeur talent-slots voor U22-spelers)
+- Knop **"✕ Verwijder"**: verwijdert speler van kladblok
+- Uitgeschakeld bij vol squad (`disabled` + muted stijl)
+
+#### Fantasy — "Naar kladblok" knop (`components/fantasy/PlayerInfoCard.tsx`)
+- Optionele `onMoveToScratchpad?`-prop toegevoegd
+- Blauw knop ("↓ Naar kladblok") zichtbaar wanneer prop aanwezig is
+- Knop verborgen wanneer kladblok vol is (prop niet doorgegeven vanuit `PlayerRow`)
+
+#### Fantasy — squad-naar-kladblok (`components/fantasy/PlayerRow.tsx`)
+- `moveToScratchpad()`-functie: verplaatst speler naar eerste lege kladblok-slot, wist squad-slot
+- `scratchpadFull`-controle: "Naar kladblok" knop verborgen wanneer kladblok vol
+- `onMoveToScratchpad` doorgegeven aan `PlayerInfoCard`
+
+#### Fantasy — kladblok spelersmodal (`app/(app)/fantasy/FantasyClient.tsx`, `components/fantasy/PlayerModal.tsx`)
+- `PlayerModal` uitgebreid met optionele `onSelect?: (player: Player) => void` prop
+- Bij kladblok-modal: `onSelect` slaat speler op kladblok-slot zonder squad-validatie
+- `FantasyClient`: apart modal-slot (`scratchpadModalSlot`) voor kladblok-selectie
+- "+ Speler toevoegen aan kladblok"-knop verschijnt wanneer kladblok niet vol is
+
+#### Fantasy — UI-tweaks (`app/(app)/fantasy/FantasyClient.tsx`)
+- Sectietitels (Spelers · Talents · Kladblok): allemaal gecentreerd, zelfde stijl (`text-xl font-bold text-[#ccc] tracking-wide`)
+- Rij-tussenruimte verkleind: `gap-2` → `gap-1` in alle drie secties
+- Subtitels verwijderd uit de Fantasy-pagina
+- "Coach: [naam]"-label: `text-white` (was gedimde kleur)

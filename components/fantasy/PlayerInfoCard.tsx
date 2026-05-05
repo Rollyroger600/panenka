@@ -5,9 +5,10 @@ import type { Player } from '@/lib/data/players'
 interface Props {
   player: Player
   onRemove: () => void
+  onMoveToScratchpad?: () => void
 }
 
-export function PlayerInfoCard({ player, onRemove }: Props) {
+export function PlayerInfoCard({ player, onRemove, onMoveToScratchpad }: Props) {
   const quote = computePlayerQuote(player)
   const age = Math.floor(
     (new Date('2026-06-11').getTime() - new Date(player.dob).getTime()) / (365.25 * 24 * 3600 * 1000),
@@ -27,7 +28,7 @@ export function PlayerInfoCard({ player, onRemove }: Props) {
       <div className="flex items-center gap-2 mb-3">
         <FlagImage country={player.country} size={20} />
         <span className="text-sm font-bold text-white">{player.fullName}</span>
-        <span className="ml-auto text-sm font-bold text-[#FFB800]">★ {formatQuote(quote)}</span>
+        <span className="ml-auto text-sm font-bold text-white">Quote {formatQuote(quote)}</span>
       </div>
       <div className="grid grid-cols-3 gap-2 mb-3">
         {cells.map(({ label, value }) => (
@@ -37,12 +38,22 @@ export function PlayerInfoCard({ player, onRemove }: Props) {
           </div>
         ))}
       </div>
-      <button
-        onClick={onRemove}
-        className="w-full py-1.5 rounded-lg bg-[#E74C3C]/10 text-[#E74C3C] text-xs font-bold hover:bg-[#E74C3C]/20 transition-colors"
-      >
-        ✕ Verwijder speler
-      </button>
+      <div className="flex gap-2">
+        {onMoveToScratchpad && (
+          <button
+            onClick={onMoveToScratchpad}
+            className="flex-1 py-1.5 rounded-lg bg-[#1a2a3a] text-[#4a9eff] border border-[#4a9eff]/20 text-xs font-bold hover:bg-[#1a2a3a]/80 transition-colors"
+          >
+            ↓ Naar kladblok
+          </button>
+        )}
+        <button
+          onClick={onRemove}
+          className="flex-1 py-1.5 rounded-lg bg-[#E74C3C]/10 text-[#E74C3C] text-xs font-bold hover:bg-[#E74C3C]/20 transition-colors"
+        >
+          ✕ Verwijder
+        </button>
+      </div>
     </div>
   )
 }

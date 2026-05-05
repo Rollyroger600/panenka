@@ -21,28 +21,32 @@ export function TeamNameEditor() {
 
   if (editing) {
     return (
-      <input
-        ref={inputRef}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => { if (e.key === 'Enter') commit() }}
-        autoFocus
-        className="text-2xl font-bold text-white bg-transparent border-b-2 border-[#FF6B00] outline-none w-full mb-4"
-        style={{ fontFamily: 'Chalky, cursive' }}
-      />
+      <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] px-4 py-3 mb-4">
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === 'Enter') commit() }}
+          autoFocus
+          className="text-lg text-white bg-transparent border-b border-[#FF6B00] outline-none w-full text-center"
+          style={{ fontFamily: 'Chalky, cursive' }}
+        />
+      </div>
     )
   }
 
   return (
-    <button onClick={startEdit} className="text-left mb-4 group">
+    <button
+      onClick={startEdit}
+      className="w-full rounded-xl bg-[#161616] border border-[#2a2a2a] px-4 py-3 mb-4 text-center"
+    >
       <span
-        className="text-2xl text-white group-hover:text-[#FF6B00] transition-colors"
+        className={`text-lg transition-colors ${teamName ? 'text-white' : 'text-[#555]'}`}
         style={{ fontFamily: 'Chalky, cursive' }}
       >
-        {teamName || 'Mijn Team'}
+        {teamName || 'Teamnaam kiezen'}
       </span>
-      <span className="ml-2 text-[#444] text-xs group-hover:text-[#666]">✏️</span>
     </button>
   )
 }

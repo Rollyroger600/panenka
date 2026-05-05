@@ -19,3 +19,7 @@ out/
 
 # Old/archive files
 OLD/
+
+# Build artifacts & temp files
+tsconfig.tsbuildinfo
+*_tmp.json

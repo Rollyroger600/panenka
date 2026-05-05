@@ -6,7 +6,7 @@ import { validateFantasyXV } from '@/lib/validation'
 export function RulesPanel() {
   const fantasySquad = useGameStore((s) => s.fantasySquad)
 
-  const { violations, countryMap, confedMap, clubMap } = useMemo(() => {
+  const { violations, countryMap, confedMap, clubMap, leagueMap, leagueKeyToName } = useMemo(() => {
     const players = ALL_SLOTS.map((k) => fantasySquad[k] ?? null)
     return validateFantasyXV(players)
   }, [fantasySquad])
@@ -36,6 +36,14 @@ export function RulesPanel() {
       detail: Object.entries(clubMap)
         .filter(([, names]) => names.length > 1)
         .map(([c, names]) => `${c}: ${names.length}`)
+        .join(', ') || null,
+    },
+    {
+      label: 'Max 3 spelers per competitie',
+      ok: !violations.some((v) => v.startsWith('Max 3 per competitie')),
+      detail: Object.entries(leagueMap)
+        .filter(([, names]) => names.length > 3)
+        .map(([key, names]) => `${leagueKeyToName[key] ?? key}: ${names.length}`)
         .join(', ') || null,
     },
   ]

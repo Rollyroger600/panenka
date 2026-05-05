@@ -1,0 +1,17 @@
+{
+  "name": "Panenka WK 2026",
+  "short_name": "Panenka",
+  "description": "WK 2026 poule app",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#000000"
+}
