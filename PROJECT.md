@@ -1105,3 +1105,27 @@ The following decisions were made during implementation that deviate from or ext
 - Bij volledig ingevulde poulefase: vlag + land + groepsbadge zichtbaar per W3-slot
 - "3e bepaald"-indicator in header van het inklapbare schema
 - `useMemo` op `predictions`-store-slice
+
+---
+
+### 2026-05-06 — Horizontaal scrollbaar bracket in ScheduleView (Claude Code)
+
+#### Bracket overzicht verwijderd (`app/(app)/knockout/KnockoutClient.tsx`)
+- `BracketView` verwijderd van R16 t/m Winnaar-tabbladen (import + render)
+- `ScheduleView` blijft; krijgt nu `activeTab`-prop doorgegeven
+
+#### 3-letter landafkortingen (`lib/data/countries.ts`)
+- `COUNTRY_ABB`-export toegevoegd: alle 48 WK 2026-landen met FIFA 3-letter codes (NED, GER, ARG, etc.)
+- Aliassen voor alternatieve schrijfwijzen (`VS` → `USA`, `Bosnië` → `BIH`)
+
+#### ScheduleView — volledig herschreven als horizontaal bracket (`components/knockout/ScheduleView.tsx`)
+- Accepteert `activeTab: string` prop; collapsible header ongewijzigd
+- Horizontaal scrollbaar (`overflow-x-auto`); 6 kolommen: R 32 · R 16 · 1/4 · 1/2 · Fin · Win
+- Vaste hoogte-constanten: `SLOT=24px`, `INNER=2px`, `MATCH_GAP=8px`, `GROUP_GAP=14px`, `GROUP_H=108px`, totale bracket-hoogte `962px`
+- `BRACKET_GROUPS`: 8 visuele groepen in bracket-volgorde (boven→onder), elk met 2 R32-wedstrijden
+- `TeamChip`: vlag (11px) + 3-letter afkorting; `?` bij lege pick; donker app-thema
+- `ColHeader`: actieve kolom gemarkeerd met oranje onderlijn en tekst
+- Inferentie per ronde-overgang via `infer(a, b, set)`: kijkt welke R32-deelnemer in de volgende ronde-set (r16_*/r8_*/r4_*/finale_*) staat — puur visueel, picks in RoundSection ongewijzigd
+- Bracket-data via `useMemo`: resolveert R32-teams uit w1/w2/w3-picks + w3Map; berekent r16A/r16B per group, qf per group, sfTeams (4), finalists (2), winner
+- Automatisch scrollen: bij uitklappen en bij tabwisseling springt de bijbehorende kolom gecentreerd in beeld
+- W3-slots: tonen resolvede landen zodra alle poulewedstrijden zijn ingevuld (bestaande w3Map-logica hergebruikt)
