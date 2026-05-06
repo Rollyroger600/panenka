@@ -100,6 +100,22 @@ export const FLAG_PATHS: Record<string, string> = {
   'Zwitserland': '/Landen/switzerland-flag-round-xl.png',
 }
 
+export const COUNTRY_ABB: Record<string, string> = {
+  'Algerije': 'ALG', 'Argentinië': 'ARG', 'Australië': 'AUS', 'België': 'BEL',
+  'Bosnië en Herzegovina': 'BIH', 'Bosnië': 'BIH', 'Brazilië': 'BRA', 'Canada': 'CAN',
+  'Colombia': 'COL', 'Curaçao': 'CUW', 'DR Congo': 'COD', 'Duitsland': 'GER',
+  'Ecuador': 'ECU', 'Egypte': 'EGY', 'Engeland': 'ENG', 'Frankrijk': 'FRA',
+  'Ghana': 'GHA', 'Haïti': 'HAI', 'Irak': 'IRQ', 'Iran': 'IRN',
+  'Ivoorkust': 'CIV', 'Japan': 'JPN', 'Jordanië': 'JOR', 'Kaapverdië': 'CPV',
+  'Kroatië': 'CRO', 'Marokko': 'MAR', 'Mexico': 'MEX', 'Nederland': 'NED',
+  'Nieuw-Zeeland': 'NZL', 'Noorwegen': 'NOR', 'Oezbekistan': 'UZB', 'Oostenrijk': 'AUT',
+  'Panama': 'PAN', 'Paraguay': 'PAR', 'Portugal': 'POR', 'Qatar': 'QAT',
+  'Saoedi-Arabië': 'SAU', 'Schotland': 'SCO', 'Senegal': 'SEN', 'Spanje': 'ESP',
+  'Tsjechië': 'CZE', 'Tunesië': 'TUN', 'Turkije': 'TUR', 'Uruguay': 'URU',
+  'Verenigde Staten': 'USA', 'VS': 'USA', 'Zuid-Afrika': 'RSA', 'Zuid-Korea': 'KOR',
+  'Zweden': 'SWE', 'Zwitserland': 'SUI',
+}
+
 export const CONFEDERATION: Record<string, string> = {
   'Algerije': 'CAF',
   'Argentinië': 'CONMEBOL',
