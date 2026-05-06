@@ -9,6 +9,7 @@ import {
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { ParticipantScore } from '@/app/leaderboard/types'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
+import { PARTICIPANTS } from '@/lib/participants'
 
 const NED_MATCHES = [
   { id: 10, label: 'NED – JPN (14 jun)' },
@@ -22,7 +23,7 @@ const Q_LABELS: Record<string, string> = {
   q5: 'Meeste km', q6: 'Meeste passes', q7: 'Meeste tackles', q8: 'Meeste schoten', q9: 'Buitenspel',
 }
 
-type Tab = 'matches' | 'knockout' | 'oranje' | 'scores'
+type Tab = 'matches' | 'knockout' | 'oranje' | 'scores' | 'links'
 
 interface Props {
   initialResults: Record<number, MatchResult>
@@ -97,6 +98,7 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
     { id: 'knockout', label: 'KO Resultaten' },
     { id: 'oranje',   label: 'Oranje' },
     { id: 'scores',   label: 'Scores' },
+    { id: 'links',    label: 'Uitnodigingslinks' },
   ]
 
   return (
@@ -233,6 +235,11 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
         </div>
       )}
 
+      {/* ── Uitnodigingslinks ──────────────────────────────────────────────── */}
+      {tab === 'links' && (
+        <LinksPanel />
+      )}
+
       {/* ── Scores ─────────────────────────────────────────────────────────── */}
       {tab === 'scores' && (
         <div>
@@ -265,6 +272,50 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── LinksPanel ─────────────────────────────────────────────────────────────────
+
+function LinksPanel() {
+  const [copied, setCopied] = useState<string | null>(null)
+  const base = typeof window !== 'undefined' ? window.location.origin : ''
+
+  function copyLink(token: string) {
+    navigator.clipboard.writeText(`${base}/?t=${token}`)
+    setCopied(token)
+    setTimeout(() => setCopied(null), 2000)
+  }
+
+  return (
+    <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+      <div className="px-4 py-2.5 bg-[#111]">
+        <p className="text-sm font-bold text-white">Persoonlijke uitnodigingslinks</p>
+        <p className="text-xs text-[#555] mt-0.5">Kopieer elke link en stuur via WhatsApp.</p>
+      </div>
+      <div className="divide-y divide-[#1e1e1e]">
+        {PARTICIPANTS.map((p) => {
+          const url = `${base}/?t=${p.token}`
+          const isCopied = copied === p.token
+          return (
+            <div key={p.initials} className="flex items-center gap-3 px-4 py-3">
+              <span className="text-sm font-bold text-white w-20 shrink-0">{p.name}</span>
+              <span className="text-xs text-[#555] flex-1 truncate font-mono">{url}</span>
+              <button
+                onClick={() => copyLink(p.token)}
+                className={`shrink-0 px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                  isCopied
+                    ? 'bg-[#2ECC71]/20 text-[#2ECC71]'
+                    : 'bg-[#252525] text-[#888] hover:text-white'
+                }`}
+              >
+                {isCopied ? '✓ Gekopieerd' : 'Kopieer'}
+              </button>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

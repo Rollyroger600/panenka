@@ -1057,3 +1057,51 @@ The following decisions were made during implementation that deviate from or ext
 - Rij-tussenruimte verkleind: `gap-2` → `gap-1` in alle drie secties
 - Subtitels verwijderd uit de Fantasy-pagina
 - "Coach: [naam]"-label: `text-white` (was gedimde kleur)
+
+---
+
+### 2026-05-06 — Persoonlijke uitnodigingslinks, toernooisschema & nummers-3-toewijzing (Claude Code)
+
+#### Authenticatie — persoonlijke uitnodigingslinks (`lib/participants.ts`, `app/actions/auth.ts`)
+- `token: string`-veld toegevoegd aan `Participant`-interface
+- 15 unieke 10-karakter tokens gegenereerd per deelnemer (URL-veilig, willekeurig)
+- `selectParticipant(token)` Server Action rewritten: valideert token server-side, stelt cookies in (`participant`, `participantName`), redirect naar `/poulefase`
+- Dropdown en naamgrid verwijderd — geen deelnemer kiest meer zelf een naam
+
+#### Landingspagina (`app/page.tsx`, `app/LoginButton.tsx`)
+- Omgebouwd naar Server Component: leest `searchParams.t`, controleert bestaand cookie, redirect bij geldige sessie
+- Welkomstkaart toont naam + tokenbudget bij geldige token; foutmelding bij ontbrekende link
+- `LoginButton.tsx` (nieuw): minimale Client Component voor de inlogknop met laadstatus
+- Alle teksten op de landingspagina gecentreerd (`items-center text-center`)
+
+#### Admin — uitnodigingslinks-paneel (`app/admin/AdminClient.tsx`)
+- Tabblad "Links" toegevoegd naast bestaande admin-tabs
+- `LinksPanel`-component: toont alle 15 deelnemersnamen met hun volledige uitnodigings-URL
+- Kopieerknop per link (clipboard API)
+
+#### Toernooisschema (`lib/data/bracketSchedule.ts` — nieuw)
+- R32-wedstrijden M73–M88 gedefinieerd met `home`/`away` als getypte `Qualifier` (w1 / w2 / w3)
+- `BRACKET_HALVES`: 4 brackets met bijbehorende KF- en SF-nummers
+- `R16_DATES`: datumstring per R16-wedstrijd (89–96)
+- `GROUP_INDEX`: mapping groepsletter (A–L) → slotindex (0–11)
+
+#### Toernooisschema UI (`components/knockout/ScheduleView.tsx` — nieuw)
+- Inklapbare component op R 16 t/m Winnaar-tabbladen (verborgen op Ronde van 32)
+- 4 bracket-helften elk met 2 R16-blokken; per blok 2 R32-wedstrijden
+- `QualChip`: vlag + naam + badge (oranje `1X`, grijs `2X`, goud `3X`) bij bekende picks; `?` placeholder bij onbekend
+- W3-slots: tonen pool-label in grijs totdat alle poulewedstrijden ingevuld zijn
+- Teller "X/24 gepickt" in header
+
+#### Nummers-3-toewijzing (`lib/data/thirdPlaceAssignment.ts` — nieuw)
+- Alle 495 combinaties uit FIFA Annexe C geïmplementeerd als readonly string-array (8 tekens per optie)
+- Kolom-volgorde: matches 79, 85, 81, 74, 82, 77, 87, 80 (officiële FIFA-toewijzingsvolgorde)
+- Runtime-verificatie: gooit Error als array niet precies 495 items bevat
+- Voorberekende `ASSIGNMENT_MAP`: gesorteerde groepssleutel → `{matchNr: groepsletter}`
+- `getThirdPlaceAssignment(groups)`: O(1) opzoekfunctie, geeft null bij ongeldige invoer
+- Smoke test bevestigd: rij 1, 45 en 495 matchen de FIFA-PDF exact
+
+#### ScheduleView — W3-resolutie (`components/knockout/ScheduleView.tsx`)
+- `computeW3Map()`: berekent `standings` via `computeStandings()`, controleert of alle 12 poules volledig gespeeld zijn (elk team `played === 3`), rangschikt nummers-3, roept `getThirdPlaceAssignment()` aan
+- Bij volledig ingevulde poulefase: vlag + land + groepsbadge zichtbaar per W3-slot
+- "3e bepaald"-indicator in header van het inklapbare schema
+- `useMemo` op `predictions`-store-slice

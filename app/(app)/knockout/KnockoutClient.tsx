@@ -6,6 +6,7 @@ import { Ronde32Section } from '@/components/knockout/Ronde32Section'
 import { RoundSection } from '@/components/knockout/RoundSection'
 import { SkeletonList } from '@/components/ui/Skeleton'
 import { BracketView } from '@/components/knockout/BracketView'
+import { ScheduleView } from '@/components/knockout/ScheduleView'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 
 const TABS = [
@@ -55,7 +56,12 @@ export function KnockoutClient() {
         ))}
       </div>
 
-      {activeTab !== 'ronde32' && <BracketView />}
+      {activeTab !== 'ronde32' && (
+        <>
+          <ScheduleView />
+          <BracketView />
+        </>
+      )}
 
       {!isLoaded ? (
         <SkeletonList count={4} />
