@@ -1,8 +1,7 @@
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import { AdminClient } from './AdminClient'
 import { AdminLogin } from './AdminLogin'
-import { loadResults, loadKoResults, loadOranjeResults } from '@/app/actions/admin'
+import { loadResults, loadKoResults, loadOranjeResults, loadOranjeVragenAdmin, loadOranjeCorrectAdmin } from '@/app/actions/admin'
 
 export default async function AdminPage() {
   const store = await cookies()
@@ -10,10 +9,12 @@ export default async function AdminPage() {
 
   if (!isAdmin) return <AdminLogin />
 
-  const [results, koResults, oranjeResults] = await Promise.all([
+  const [results, koResults, oranjeResults, oranjeVragen, oranjeCorrect] = await Promise.all([
     loadResults(),
     loadKoResults(),
     loadOranjeResults(),
+    loadOranjeVragenAdmin(),
+    loadOranjeCorrectAdmin(),
   ])
 
   return (
@@ -21,6 +22,8 @@ export default async function AdminPage() {
       initialResults={results}
       initialKoResults={koResults}
       initialOranjeResults={oranjeResults}
+      initialOranjeVragen={oranjeVragen}
+      initialOranjeCorrect={oranjeCorrect}
     />
   )
 }

@@ -4,6 +4,7 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { DeadlineBanner } from '@/components/layout/DeadlineBanner'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { SaveIndicator } from '@/components/ui/SaveIndicator'
+import { PopupToast } from '@/components/ui/PopupToast'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const store = await cookies()
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
 
       <SaveIndicator />
+      <PopupToast currentUserName={name} />
       <BottomNav />
     </div>
   )

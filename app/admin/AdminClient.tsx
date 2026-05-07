@@ -5,11 +5,15 @@ import { ALL_COUNTRIES } from '@/lib/data/countries'
 import { FlagImage } from '@/components/ui/FlagImage'
 import {
   saveResult, deleteResult, saveKoResults, saveOranjeResults, computeAndSaveScores,
+  loadOranjeVragenAdmin, updateOranjeVraag, loadOranjeCorrectAdmin, saveOranjeCorrect,
 } from '@/app/actions/admin'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { ParticipantScore } from '@/app/leaderboard/types'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 import { PARTICIPANTS } from '@/lib/participants'
+import type { OranjeVragenMap, OranjeCorrectMap, AntwoordType } from '@/lib/types/oranjeVragen'
+import { ANTWOORD_TYPE_LABELS, MINUUT_OPTIES } from '@/lib/types/oranjeVragen'
+import { WK_PLAYERS } from '@/lib/data/players'
 
 const NED_MATCHES = [
   { id: 10, label: 'NED – JPN (14 jun)' },
@@ -23,19 +27,23 @@ const Q_LABELS: Record<string, string> = {
   q5: 'Meeste km', q6: 'Meeste passes', q7: 'Meeste tackles', q8: 'Meeste schoten', q9: 'Buitenspel',
 }
 
-type Tab = 'matches' | 'knockout' | 'oranje' | 'scores' | 'links'
+type Tab = 'matches' | 'knockout' | 'vragen' | 'scores' | 'links'
 
 interface Props {
   initialResults: Record<number, MatchResult>
   initialKoResults: Record<string, string[]>
   initialOranjeResults: Record<number, OranjeResult>
+  initialOranjeVragen: OranjeVragenMap
+  initialOranjeCorrect: OranjeCorrectMap
 }
 
-export function AdminClient({ initialResults, initialKoResults, initialOranjeResults }: Props) {
+export function AdminClient({ initialResults, initialKoResults, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect }: Props) {
   const [tab, setTab] = useState<Tab>('matches')
   const [results, setResults] = useState(initialResults)
   const [koResults, setKoResults] = useState(initialKoResults)
   const [oranjeResults, setOranjeResults] = useState(initialOranjeResults)
+  const [oranjeVragen, setOranjeVragen] = useState<OranjeVragenMap>(initialOranjeVragen)
+  const [oranjeCorrect, setOranjeCorrect] = useState<OranjeCorrectMap>(initialOranjeCorrect)
   const [scores, setScores] = useState<Record<string, ParticipantScore> | null>(null)
   const [computing, setComputing] = useState(false)
   const [search, setSearch] = useState('')
@@ -93,10 +101,37 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
     setTab('scores')
   }
 
+  // ── Oranje vragen handlers ────────────────────────────────────────────────
+
+  async function handlePubliceer(matchId: number, initials: string, gepubliceerd: boolean) {
+    await updateOranjeVraag(matchId, initials, { gepubliceerd })
+    setOranjeVragen((prev) => ({
+      ...prev,
+      [matchId]: { ...prev[matchId], [initials.toLowerCase()]: { ...prev[matchId]?.[initials.toLowerCase()], gepubliceerd } },
+    }))
+  }
+
+  async function handleAdminType(matchId: number, initials: string, adminType: Exclude<AntwoordType, 'anders'>) {
+    await updateOranjeVraag(matchId, initials, { adminType })
+    setOranjeVragen((prev) => ({
+      ...prev,
+      [matchId]: { ...prev[matchId], [initials.toLowerCase()]: { ...prev[matchId]?.[initials.toLowerCase()], adminType } },
+    }))
+  }
+
+  async function handleCorrectAntwoord(matchId: number, initials: string, waarde: string | null) {
+    const next: OranjeCorrectMap = {
+      ...oranjeCorrect,
+      [matchId]: { ...(oranjeCorrect[matchId] ?? {}), [initials.toLowerCase()]: waarde },
+    }
+    setOranjeCorrect(next)
+    await saveOranjeCorrect(next)
+  }
+
   const TABS: { id: Tab; label: string }[] = [
     { id: 'matches',  label: `Uitslagen (${Object.keys(results).length}/72)` },
     { id: 'knockout', label: 'KO Resultaten' },
-    { id: 'oranje',   label: 'Oranje' },
+    { id: 'vragen',   label: 'Oranje Vragen' },
     { id: 'scores',   label: 'Scores' },
     { id: 'links',    label: 'Uitnodigingslinks' },
   ]
@@ -186,48 +221,101 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
         </div>
       )}
 
-      {/* ── Oranje results ─────────────────────────────────────────────────── */}
-      {tab === 'oranje' && (
-        <div className="flex flex-col gap-4">
+      {/* ── Oranje vragen (nieuw systeem) ──────────────────────────────────── */}
+      {tab === 'vragen' && (
+        <div className="flex flex-col gap-6">
           {NED_MATCHES.map(({ id, label }) => {
-            const ans = (oranjeResults[id] ?? {}) as unknown as Record<string, string | null>
             const nedMatch = MATCHES.find((m) => m.id === id)!
-            const opp = nedMatch.home === 'Nederland' ? nedMatch.away : nedMatch.home
+            const opponent = nedMatch.home === 'Nederland' ? nedMatch.away : nedMatch.home
+            const nedPlayers = WK_PLAYERS.filter((p) => p.country === 'Nederland').map((p) => p.name)
+            const oppPlayers = WK_PLAYERS.filter((p) => p.country === opponent).map((p) => p.name)
+            const matchVragen = oranjeVragen[id] ?? {}
+            const matchCorrect = oranjeCorrect[id] ?? {}
+
             return (
               <div key={id} className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-                <div className="px-4 py-2.5 bg-[#111]">
+                <div className="px-4 py-2.5 bg-[#111] flex items-center justify-between">
                   <span className="text-sm font-bold text-white">{label}</span>
+                  <span className="text-xs text-[#555]">
+                    {Object.values(matchVragen).filter((v) => v.gepubliceerd).length} / {Object.keys(matchVragen).length} gepubliceerd
+                  </span>
                 </div>
-                <div className="p-3 flex flex-col gap-3">
-                  {TOGGLE_QS.map((k) => (
-                    <div key={k} className="flex items-center justify-between">
-                      <span className="text-xs text-[#888]">{Q_LABELS[k]}</span>
-                      <div className="flex gap-1">
-                        {(['NED', 'OPP'] as const).map((opt) => (
-                          <button
-                            key={opt}
-                            onClick={() => setOranjeQ(id, k, ans[k] === opt ? null : opt)}
-                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                              ans[k] === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'
-                            }`}
-                          >
-                            {opt === 'OPP' ? opp.slice(0, 3).toUpperCase() : 'NED'}
-                          </button>
-                        ))}
+                <div className="divide-y divide-[#1e1e1e]">
+                  {PARTICIPANTS.map((p) => {
+                    const key = p.initials.toLowerCase()
+                    const vraag = matchVragen[key]
+                    const effectiefType = vraag?.adminType ?? (vraag?.type !== 'anders' ? vraag?.type : null)
+                    const correctWaarde = matchCorrect[key] ?? null
+
+                    return (
+                      <div key={key} className="px-4 py-3 flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[10px] font-bold text-[#555]">{p.name}</span>
+                            {vraag ? (
+                              <p className="text-sm text-white leading-snug">{vraag.tekst}</p>
+                            ) : (
+                              <p className="text-xs text-[#333] italic">Nog geen vraag ingediend</p>
+                            )}
+                          </div>
+                          {vraag && (
+                            <button
+                              onClick={() => handlePubliceer(id, key, !vraag.gepubliceerd)}
+                              className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                                vraag.gepubliceerd
+                                  ? 'bg-[#2ECC71]/20 text-[#2ECC71] border border-[#2ECC71]/30'
+                                  : 'bg-[#252525] text-[#555] hover:text-[#888]'
+                              }`}
+                            >
+                              {vraag.gepubliceerd ? '✓ Gepubliceerd' : 'Publiceer'}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Type info + 'anders' conversie */}
+                        {vraag && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                              vraag.type === 'anders' && !vraag.adminType
+                                ? 'bg-[#E74C3C]/20 text-[#E74C3C]'
+                                : 'bg-[#252525] text-[#888]'
+                            }`}>
+                              {ANTWOORD_TYPE_LABELS[vraag.adminType ?? vraag.type]}
+                            </span>
+                            {vraag.type === 'anders' && (
+                              <>
+                                {vraag.suggestie && (
+                                  <span className="text-[10px] text-[#555] italic">"{vraag.suggestie}"</span>
+                                )}
+                                <select
+                                  value={vraag.adminType ?? ''}
+                                  onChange={(e) => handleAdminType(id, key, e.target.value as Exclude<AntwoordType, 'anders'>)}
+                                  className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
+                                >
+                                  <option value="">→ Kies type</option>
+                                  {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'minuut'] as const).map((t) => (
+                                    <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
+                                  ))}
+                                </select>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Correct antwoord invoer */}
+                        {vraag && effectiefType && (
+                          <AdminCorrectInvoer
+                            type={effectiefType}
+                            waarde={correctWaarde}
+                            opponent={opponent}
+                            nedPlayers={nedPlayers}
+                            oppPlayers={oppPlayers}
+                            onChange={(v) => handleCorrectAntwoord(id, key, v)}
+                          />
+                        )}
                       </div>
-                    </div>
-                  ))}
-                  {PLAYER_QS.map((k) => (
-                    <div key={k} className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-[#888] flex-1">{Q_LABELS[k]}</span>
-                      <input
-                        value={ans[k] ?? ''}
-                        onChange={(e) => setOranjeQ(id, k, e.target.value || null)}
-                        placeholder="Spelernaam"
-                        className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-36 outline-none focus:border-[#FF6B00]"
-                      />
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )
@@ -274,6 +362,75 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
       )}
     </div>
   )
+}
+
+// ── AdminCorrectInvoer ────────────────────────────────────────────────────────
+
+function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChange }: {
+  type: Exclude<AntwoordType, 'anders'>
+  waarde: string | null
+  opponent: string
+  nedPlayers: string[]
+  oppPlayers: string[]
+  onChange: (v: string | null) => void
+}) {
+  if (type === 'ja_nee') {
+    return (
+      <div className="flex gap-1">
+        {(['ja', 'nee'] as const).map((opt) => (
+          <button key={opt} onClick={() => onChange(waarde === opt ? null : opt)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
+          >{opt === 'ja' ? 'Ja' : 'Nee'}</button>
+        ))}
+        {waarde && <span className="text-[10px] text-[#555] self-center ml-1">Correct: <b className="text-white">{waarde}</b></span>}
+      </div>
+    )
+  }
+  if (type === 'nl_opp') {
+    return (
+      <div className="flex gap-1">
+        {(['NL', 'OPP'] as const).map((opt) => (
+          <button key={opt} onClick={() => onChange(waarde === opt ? null : opt)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
+          >{opt === 'NL' ? 'Nederland' : opponent}</button>
+        ))}
+      </div>
+    )
+  }
+  if (type === 'speler_nl' || type === 'speler_opp') {
+    const spelers = type === 'speler_nl' ? nedPlayers : oppPlayers
+    return (
+      <select value={waarde ?? ''} onChange={(e) => onChange(e.target.value || null)}
+        className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] max-w-[200px]"
+      >
+        <option value="">— Correct antwoord</option>
+        {spelers.map((n) => <option key={n} value={n}>{n}</option>)}
+      </select>
+    )
+  }
+  if (type === 'percentage') {
+    return (
+      <div className="flex items-center gap-2">
+        <input type="number" min={0} max={100} value={waarde ?? ''} placeholder="0–100"
+          onChange={(e) => { const v = parseInt(e.target.value, 10); onChange(isNaN(v) ? null : String(Math.min(100, Math.max(0, v)))) }}
+          className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-20 outline-none focus:border-[#FF6B00] text-center [appearance:textfield]"
+        />
+        <span className="text-xs text-[#555]">% (deelnemers scoren bij ±5%)</span>
+      </div>
+    )
+  }
+  if (type === 'minuut') {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {MINUUT_OPTIES.map((opt) => (
+          <button key={opt} onClick={() => onChange(waarde === opt ? null : opt)}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
+          >{opt}</button>
+        ))}
+      </div>
+    )
+  }
+  return null
 }
 
 // ── LinksPanel ─────────────────────────────────────────────────────────────────

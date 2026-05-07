@@ -134,22 +134,16 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
     )
   }
 
-  const hasFilters = !!(filterConf || filterPos || filterCountry || filterLeague || (filterU22 && !talentOnly))
+  const hasFilters = !!(search.trim() || filterConf || filterPos || filterCountry || filterLeague || (filterU22 && !talentOnly))
 
   return (
     <>
       <div className="fixed inset-0 bg-black/60 z-40" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] flex flex-col bg-[#111] rounded-t-2xl border-t border-[#2a2a2a]">
-
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 rounded-full bg-[#333]" />
-        </div>
+      <div className="fixed top-24 left-0 right-0 bottom-20 z-50 flex flex-col bg-[#111] rounded-xl border border-[#2a2a2a]">
 
         {/* Search + close */}
         <div className="flex items-center gap-2 px-4 py-2 shrink-0">
           <input
-            autoFocus
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Zoek speler…"
@@ -287,8 +281,10 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
           {hasFilters && (
             <button
               onClick={() => {
+                setSearch('')
                 setFilterConf(null); setFilterPos(null)
                 setFilterCountry(null); setFilterLeague(null)
+                setOpenPanel(null)
                 if (!talentOnly) setFilterU22(false)
               }}
               className="text-[10px] text-[#FF6B00] hover:underline"
@@ -299,7 +295,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
         </div>
 
         {/* Player list */}
-        <div className="overflow-y-auto flex-1 px-4 pb-24">
+        <div className="overflow-y-auto flex-1 px-4 pb-4">
           {results.map((player) => {
             const isPicked = alreadyPicked.has(player.id)
             const quote = computePlayerQuote(player)

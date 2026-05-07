@@ -6,6 +6,7 @@ import { PARTICIPANTS } from '@/lib/participants'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
 import type { ParticipantScore } from '@/app/leaderboard/types'
+import type { OranjeVragenMap, OranjeVraag, OranjeCorrectMap, OranjeAntwoordenMap, AntwoordType } from '@/lib/types/oranjeVragen'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'panenka2026'
 
@@ -53,21 +54,53 @@ export async function saveOranjeResults(data: Record<number, OranjeResult>): Pro
   await kvSet('oranje_results', data)
 }
 
+// ── Oranje vragen (admin beheer) ─────────────────────────────────────────
+
+export async function loadOranjeVragenAdmin(): Promise<OranjeVragenMap> {
+  return (await kvGet<OranjeVragenMap>('oranje_vragen')) ?? {}
+}
+
+export async function updateOranjeVraag(
+  matchId: number,
+  initials: string,
+  updates: Partial<Pick<OranjeVraag, 'gepubliceerd' | 'adminType' | 'tekst'>>,
+): Promise<void> {
+  const all = await loadOranjeVragenAdmin()
+  const key = initials.toLowerCase()
+  if (!all[matchId]?.[key]) return
+  all[matchId][key] = { ...all[matchId][key], ...updates }
+  await kvSet('oranje_vragen', all)
+}
+
+export async function loadOranjeCorrectAdmin(): Promise<OranjeCorrectMap> {
+  return (await kvGet<OranjeCorrectMap>('oranje_correct')) ?? {}
+}
+
+export async function saveOranjeCorrect(data: OranjeCorrectMap): Promise<void> {
+  await kvSet('oranje_correct', data)
+}
+
+// ── Score berekening ──────────────────────────────────────────────────────
+
 export async function computeAndSaveScores(): Promise<Record<string, ParticipantScore>> {
-  const [results, koResults, oranjeResults] = await Promise.all([
+  const [results, koResults, oranjeResults, oranjeCorrect] = await Promise.all([
     loadResults(),
     loadKoResults(),
     loadOranjeResults(),
+    loadOranjeCorrectAdmin(),
   ])
+
+  const heeftNieuweSysteem = Object.keys(oranjeCorrect).length > 0
 
   const scores: Record<string, ParticipantScore> = {}
 
   await Promise.all(
     PARTICIPANTS.map(async (p) => {
-      const [predictions, knockoutPicks, oranjeAnswers] = await Promise.all([
+      const [predictions, knockoutPicks, oranjeAnswers, oranjeAntwoorden] = await Promise.all([
         kvGet<Record<number, Prediction>>(participantKey('predictions', p.initials)),
         kvGet<KnockoutPicks>(participantKey('knockout', p.initials)),
         kvGet<Record<number, OranjeAnswer>>(participantKey('oranje', p.initials)),
+        kvGet<OranjeAntwoordenMap>(participantKey('oranje_antwoorden', p.initials)),
       ])
 
       const breakdown = scoreParticipant(
@@ -77,6 +110,8 @@ export async function computeAndSaveScores(): Promise<Record<string, Participant
         results,
         koResults,
         oranjeResults,
+        heeftNieuweSysteem ? (oranjeAntwoorden ?? {}) : undefined,
+        heeftNieuweSysteem ? oranjeCorrect : undefined,
       )
 
       scores[p.initials.toLowerCase()] = {

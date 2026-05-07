@@ -49,3 +49,14 @@ body {
   color: #F0F0F0;
   font-family: Inter, system-ui, sans-serif;
 }
+
+@media (min-width: 768px) {
+  body {
+    background-image: url('/Background/Background_wide.png');
+  }
+}
+
+@keyframes popup-shrink {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
