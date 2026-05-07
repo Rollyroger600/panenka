@@ -1118,6 +1118,98 @@ The following decisions were made during implementation that deviate from or ext
 - `COUNTRY_ABB`-export toegevoegd: alle 48 WK 2026-landen met FIFA 3-letter codes (NED, GER, ARG, etc.)
 - Aliassen voor alternatieve schrijfwijzen (`VS` → `USA`, `Bosnië` → `BIH`)
 
+---
+
+### 2026-05-08 — Fantasy UX, achtergrond, popups & nieuw Oranje-vragenssysteem (Claude Code)
+
+#### Fantasy — PlayerModal: geen autofocus bij openen (`components/fantasy/PlayerModal.tsx`)
+- `autoFocus`-prop verwijderd van het zoekveld — toetsenbord opent niet meer automatisch bij "Speler toevoegen"
+
+#### Fantasy — PlayerModal: vaste hoogte (`components/fantasy/PlayerModal.tsx`)
+- Modal omgezet van bottom-sheet (`fixed bottom-0 max-h-[90vh]`) naar vaste rechthoek (`fixed top-24 left-0 right-0 bottom-20`)
+- Hoogte verandert niet meer afhankelijk van het aantal weergegeven spelers
+- Handle-bar verwijderd; lijst scrollbaar via `overflow-y-auto flex-1`
+- `pb-24` vervangen door `pb-4`
+
+#### Fantasy — Filters: wis-knop reset ook zoekveld (`components/fantasy/PlayerModal.tsx`)
+- "Wis filters"-knop reset nu ook de zoektekst en sluit het open filterpaneel
+- `hasFilters` controleert nu ook of `search.trim()` gevuld is
+
+#### Achtergrond — breed-scherm variant (`app/globals.css`)
+- CSS `@media (min-width: 768px)` toegevoegd: wisselt naar `Background/Background_wide.png` op niet-smartphone schermen
+- `@keyframes popup-shrink` toegevoegd (voor PopupToast voortgangsbalk)
+
+#### PopupToast — random in-app popups (`components/ui/PopupToast.tsx`, `lib/popups.ts`)
+- Nieuw: `lib/popups.ts` — berichtenconfiguratiebestand met `global`-lijst en pagina-specifieke lijsten (`/fantasy`, `/poulefase`, `/knockout`, `/oranje`)
+- `{naam}` in berichten wordt vervangen door een willekeurige andere deelnemersnaam (uit `PARTICIPANTS`)
+- Timing: eerste popup na 2–5 minuten; daarna elke 20–30 minuten; `popup_next_time` in localStorage
+- Popup verdwijnt na 5 seconden of bij klikken op ✕; oranje voortgangsbalk toont resterende tijd
+- Slide-in animatie (`translate-y-4 → 0`, `opacity-0 → 100`) via Tailwind transitions
+- `PopupToast` toegevoegd aan `app/(app)/layout.tsx` met `currentUserName`-prop
+
+#### Oranje — volledig nieuw vragenssysteem (vervangt 9 vaste vragen)
+
+##### Types (`lib/types/oranjeVragen.ts` — nieuw)
+- `AntwoordType`: `'ja_nee' | 'nl_opp' | 'speler_nl' | 'speler_opp' | 'percentage' | 'minuut' | 'anders'`
+- `OranjeVraag`: `{ tekst, type, suggestie?, adminType?, gepubliceerd }`
+- `OranjeVragenMap`, `OranjeAntwoordenMap`, `OranjeCorrectMap`, `MINUUT_OPTIES`, `ANTWOORD_TYPE_LABELS`
+
+##### Server actions (`app/actions/oranjeVragen.ts` — nieuw)
+- `loadOranjeVragen()` / `saveOranjeVraag(matchId, vraag)` — globale KV-sleutel `oranje_vragen`
+- `loadOranjeAntwoorden()` / `saveOranjeAntwoorden(data)` — per-deelnemer KV-sleutel `oranje_antwoorden:{initials}`
+- `loadOranjeCorrect()` — globale KV-sleutel `oranje_correct`
+
+##### Deadlines (`hooks/useDeadline.ts`)
+- `VRAAG_DEADLINE = new Date('2026-05-31T21:59:00Z')` toegevoegd (31 mei 23:59 CEST)
+- Hook retourneert nu ook `isVraagPast` en `vraagDeadline`
+
+##### VraagIndienenCard (`components/oranje/VraagIndienenCard.tsx` — nieuw)
+- Formulier per wedstrijd: tekstveld + 7 type-knoppen + optioneel suggestiefield bij `anders`
+- Opslaan-knop met `saving → saved` status; bijwerken mogelijk tot vraagdeadline
+- Na deadline: read-only weergave van ingediende vraag
+
+##### VragenBeantwoordenCard (`components/oranje/VragenBeantwoordenCard.tsx` — nieuw)
+- Toont alle gepubliceerde vragen per wedstrijd (alleen wat admin heeft gepubliceerd)
+- Antwoordinvoer per type: Toggle (ja_nee / nl_opp), Dropdown (speler_nl / speler_opp), Nummerinvoer +/−5 (percentage), 10-minutenvensterselector (minuut)
+- Progress-teller per wedstrijd; read-only modus na antwoorddeadline
+
+##### OranjeClient herschreven (`app/(app)/oranje/OranjeClient.tsx`)
+- 3 fasen op basis van deadlines: vraag indienen → vragen beantwoorden → alleen lezen
+- Debounced auto-save van antwoorden (500ms)
+- Progress: `X/3 vragen ingediend` (fase 1) of `X/Y antwoorden ingevuld` (fase 2+3)
+- Uitlegblok zichtbaar in fase 1
+- `app/(app)/oranje/page.tsx` geeft `mijnInitials` door via cookie
+
+##### Scoring (`lib/scoring.ts`)
+- Nieuwe functie `scoreOranjeNieuw()`: 0,5 punt per correct antwoord
+- `percentage`-type: correct als `|gegeven − correct| ≤ 5`
+- `minuut`-type: exacte venster-match
+- `scoreParticipant()` accepteert optionele `oranjeAntwoorden` + `oranjeCorrect`; gebruikt nieuw systeem als `oranje_correct` gevuld is, anders legacy fallback
+
+##### Admin (`app/actions/admin.ts`, `app/admin/AdminClient.tsx`, `app/admin/page.tsx`)
+- Nieuwe admin-acties: `loadOranjeVragenAdmin()`, `updateOranjeVraag()`, `loadOranjeCorrectAdmin()`, `saveOranjeCorrect()`
+- `computeAndSaveScores()` laadt ook `oranje_antwoorden:{initials}` en `oranje_correct`
+- Admin-tab "Oranje" vervangen door "Oranje Vragen":
+  - Per wedstrijd: alle 15 deelnemers met hun ingediende vraag
+  - Per vraag: Publiceer/Depubliceer-knop; voor `anders`-type: dropdown om te converteren naar geldig type
+  - Invoerveld voor correct antwoord per vraag na de wedstrijd (`AdminCorrectInvoer`)
+- `app/admin/page.tsx` laadt `initialOranjeVragen` + `initialOranjeCorrect`
+
+### 2026-05-08 — Oranje matchcard UI-verbeteringen (Claude Code)
+
+#### Oranje matchcard headers — identiek aan poulefase MatchCard (`components/oranje/VraagIndienenCard.tsx`, `components/oranje/VragenBeantwoordenCard.tsx`)
+- Header vervangen door exacte kopie van poulefase `MatchCard`-header: wedstrijdnummer als absoluut badge links, vlaggen + 3-letter landcodes gecentreerd, datum & stadion eronder in gedempte kleur
+- Kaartrand gewijzigd van `border-[#2a2a2a]` naar `border-[#FF6B00]/30`
+- `abbrevCountry()` en `FlagImage` toegevoegd aan beide kaarten
+
+#### Oranje — antwoordtype knoppen (`components/oranje/VraagIndienenCard.tsx`, `lib/types/oranjeVragen.ts`)
+- Knoppen gecentreerd via `justify-center`
+- Labels dynamisch via nieuwe `getAntwoordTypeLabel(type, opponent)`: toont landnaam i.p.v. "tegenstander" (bijv. "Nederland / Japan", "Speler Japan")
+- Label `anders` hernoemd naar "Alternatieve suggestie, te beoordelen door admin"
+
+#### Oranje — uitlegblok (`app/(app)/oranje/OranjeClient.tsx`)
+- Zin ④ aangepast: "0,5 punt" → "0,5 token op voor de KO fase"
+
 #### ScheduleView — volledig herschreven als horizontaal bracket (`components/knockout/ScheduleView.tsx`)
 - Accepteert `activeTab: string` prop; collapsible header ongewijzigd
 - Horizontaal scrollbaar (`overflow-x-auto`); 6 kolommen: R 32 · R 16 · 1/4 · 1/2 · Fin · Win
