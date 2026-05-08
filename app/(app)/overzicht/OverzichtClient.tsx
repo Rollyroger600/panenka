@@ -84,39 +84,39 @@ export function OverzichtClient({ initials, participantName }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-1 text-center">Overzicht</h1>
-      <p className="text-white text-sm mb-5 text-center">Jouw inzending, {participantName}</p>
+      <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Overzicht</h1>
+      <p className="font-accent font-light text-white text-xs mb-5 text-center">Jouw inzending, {participantName}</p>
 
       {!isLoaded ? (
         <SkeletonList count={4} />
       ) : (
         <>
-          <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] px-4 mb-4">
+          <div className="rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 mb-4">
             <StatRow label="Poulewedstrijden" value={stats.poule} total={72} />
-            <StatRow label="Oranje vragen" value={stats.oranje} total={27} color="#FF6B00" />
-            <StatRow label="Knockout landen" value={stats.ko} total={61} color="#FFB800" />
+            <StatRow label="Oranje vragen" value={stats.oranje} total={45} color="#FF6B00" />
+            <StatRow label="Knockout landen" value={stats.ko} total={63} color="#FFB800" />
             <StatRow label="Fantasy spelers" value={stats.fantasy} total={15} color="#2ECC71" />
           </div>
 
-          <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-4 mb-5">
+          <div className="rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] p-4 mb-5">
             <div className="text-xs text-[#888] uppercase tracking-widest mb-3">Token budget</div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-[#111] rounded-lg p-2">
                 <div className="text-[10px] text-[#555] uppercase mb-1">Basis</div>
-                <div className="text-lg font-bold text-white">335</div>
+                <div className="font-heading text-lg font-bold text-white">335</div>
               </div>
               <div className="bg-[#111] rounded-lg p-2">
                 <div className="text-[10px] text-[#555] uppercase mb-1">Bonus</div>
-                <div className="text-lg font-bold text-[#FF6B00]">+{total - 335}</div>
+                <div className="font-heading text-lg font-bold text-[#FF6B00]">+{total - 335}</div>
               </div>
               <div className="bg-[#111] rounded-lg p-2">
                 <div className="text-[10px] text-[#555] uppercase mb-1">Gebruikt</div>
-                <div className="text-lg font-bold text-white">{used}</div>
+                <div className="font-heading text-lg font-bold text-white">{used}</div>
               </div>
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className="text-sm text-[#888]">Resterend</span>
-              <span className={`text-xl font-bold ${remaining < 0 ? 'text-[#E74C3C]' : 'text-[#FF6B00]'}`}>
+              <span className={`font-heading text-xl font-bold ${remaining < 0 ? 'text-[#E74C3C]' : 'text-[#FF6B00]'}`}>
                 {remaining < 0 ? '⚠ ' : ''}{remaining} tokens
               </span>
             </div>

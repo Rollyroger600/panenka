@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { DeadlineBanner } from '@/components/layout/DeadlineBanner'
-import { AppHeader } from '@/components/layout/AppHeader'
+import { AppShell } from '@/components/layout/AppShell'
 import { SaveIndicator } from '@/components/ui/SaveIndicator'
 import { PopupToast } from '@/components/ui/PopupToast'
 
@@ -15,11 +15,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
       <DeadlineBanner />
-      <AppHeader name={name} initials={initials} />
-
-      <div className="max-w-[700px] mx-auto px-4 py-6">
-        {children}
-      </div>
+      <AppShell name={name} initials={initials}>
+        <div className="max-w-[700px] mx-auto px-4 py-6">
+          {children}
+        </div>
+      </AppShell>
 
       <SaveIndicator />
       <PopupToast currentUserName={name} />

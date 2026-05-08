@@ -32,7 +32,8 @@ export function FantasyClient({ participantName }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-4 text-center">Fantasy XV</h1>
+      <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Fantasy XV</h1>
+      <p className="font-accent font-light text-white text-xs mb-4 text-center">Stel je eigen droomteam samen</p>
       <TeamNameEditor />
 
       {isPast && (
@@ -44,7 +45,7 @@ export function FantasyClient({ participantName }: Props) {
       <RulesPanel />
 
       <div className="mb-2 text-center">
-        <span className="text-xl font-bold text-[#ccc] tracking-wide">Spelers</span>
+        <span className="font-heading text-xl font-bold text-[#ccc] tracking-wide">Spelers</span>
       </div>
       <div className="flex flex-col gap-1 mb-6">
         {REGULAR_SLOTS.map((key, idx) => {
@@ -58,7 +59,7 @@ export function FantasyClient({ participantName }: Props) {
       </div>
 
       <div className="mb-2 text-center">
-        <span className="text-xl font-bold text-[#ccc] tracking-wide">Talents</span>
+        <span className="font-heading text-xl font-bold text-[#ccc] tracking-wide">Talents</span>
       </div>
       <div className="flex flex-col gap-1 mb-6">
         {TALENT_SLOTS.map((key, idx) => {
@@ -73,14 +74,14 @@ export function FantasyClient({ participantName }: Props) {
 
       {/* Coach label */}
       <div className="mt-2 mb-8 text-center">
-        <span className="text-base text-white" style={{ fontFamily: 'Chalky, cursive' }}>
+        <span className="font-script text-2xl text-white">
           Coach: {participantName}
         </span>
       </div>
 
       {/* Kladblok */}
       <div className="mb-2 text-center">
-        <span className="text-xl font-bold text-[#ccc] tracking-wide">Kladblok</span>
+        <span className="font-heading text-xl font-bold text-[#ccc] tracking-wide">Kladblok</span>
       </div>
       <div className="flex flex-col gap-1 mb-6">
         {SCRATCHPAD_SLOTS.map((key) => {
@@ -100,6 +101,13 @@ export function FantasyClient({ participantName }: Props) {
         {isPast && SCRATCHPAD_SLOTS.every((k) => !scratchpad[k]) && (
           <p className="text-xs text-[#333] text-center py-2">Geen spelers op kladblok</p>
         )}
+      </div>
+
+      {/* Uitleg puntensysteem */}
+      <div className="mt-4 rounded-xl bg-[#111] border border-[#2a2a2a] p-4 text-xs text-[#555] space-y-1 mb-6">
+        <p className="font-bold text-[#666] mb-2">Hoe werkt de puntentelling?</p>
+        <p>Spelers verdienen punten met doelpunten en assists. Het totaal aan goals en assists wordt per speler vermenigvuldigd met de quotering van de betreffende speler (oranje getal rechts) en toegevoegd aan je puntentotaal.</p>
+        <p className="mt-2">De quotering wordt bepaald door de kwaliteit van de speler (rating EA FC), de kwaliteit van het land (FIFA ranking) en de verwachting van het land in het toernooi (gebaseerd op quoteringen voor behalen volgende ronde).</p>
       </div>
 
       {modalSlot && (

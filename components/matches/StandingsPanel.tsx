@@ -64,7 +64,7 @@ export function PouleGrid({
                   <span className="text-[9px] font-bold text-[#555] w-3 shrink-0">{i + 1}</span>
                   <div className="flex items-center gap-1 flex-1 min-w-0 ml-1">
                     <FlagImage country={row.country} size={14} />
-                    <span className="text-[10px] font-bold text-white truncate">
+                    <span className="font-accent font-light text-[10px] text-white truncate">
                       {abbrevCountry(row.country)}
                     </span>
                   </div>

@@ -39,7 +39,7 @@ export function OranjeMatchCard({ match, nedPlayers }: Props) {
   const filled = Object.values(answer).filter((v) => v !== null && v !== undefined).length
 
   return (
-    <div className="rounded-xl bg-[#161616] border border-[#FF6B00]/30 overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#FF6B00]/30 overflow-hidden mb-4" style={{ background: 'rgba(22,22,22,0.82)' }}>
       {/* Match header */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#1a1a1a]">
         <div className="flex items-center gap-2">

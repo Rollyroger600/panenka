@@ -41,7 +41,7 @@ export function BracketView() {
   const totalPicks = [...w1, ...w2, ...w3, ...r16, ...r8, ...r4, ...finale, ...winner].filter(Boolean).length
 
   return (
-    <div className="rounded-xl border border-[#2a2a2a] bg-[#161616] overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden mb-4" style={{ background: 'rgba(22,22,22,0.82)' }}>
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-4 py-3 text-left"

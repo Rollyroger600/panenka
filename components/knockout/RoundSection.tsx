@@ -79,8 +79,8 @@ export function RoundSection({ round }: Props) {
     new Set(slots.filter(s => s.key !== currentKey).map(s => s.slot.country).filter(Boolean) as string[])
 
   return (
-    <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-      <div className="px-4 py-3 bg-[#111] flex items-center justify-between">
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+      <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
         <span className="text-sm font-bold text-white">{round.label}</span>
         <span className="text-xs font-bold text-[#FF6B00]">{pickedCountries.size} / {round.slots}</span>
       </div>
@@ -103,11 +103,11 @@ export function RoundSection({ round }: Props) {
                     {slot.country ? (
                       <>
                         <FlagImage country={slot.country} size={28} />
-                        <span className="text-[11px] font-bold text-white mt-1 leading-none">
+                        <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">
                           {abbrevCountry(slot.country)}
                         </span>
                         {getQuote(slot.country, round.qkey) != null && (
-                          <span className="text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                          <span className="font-heading text-[10px] font-bold text-[#FF6B00] mt-0.5">
                             {getQuote(slot.country, round.qkey)!.toFixed(2)}
                           </span>
                         )}
@@ -196,11 +196,11 @@ function RoundCountryPicker({
                 <span className={isSelected ? '' : 'opacity-60'}>
                   <FlagImage country={country} size={24} />
                 </span>
-                <span className={`text-[10px] font-bold mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
+                <span className={`font-accent font-light text-[10px] mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
                   {abbrevCountry(country)}
                 </span>
                 {quote != null && (
-                  <span className={`text-[9px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
+                  <span className={`font-heading text-[9px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
                     {quote.toFixed(2)}
                   </span>
                 )}

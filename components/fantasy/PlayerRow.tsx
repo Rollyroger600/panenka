@@ -38,9 +38,8 @@ export function PlayerRow({ slotKey, slotIndex, player }: Props) {
     <>
       <button
         onClick={() => setActiveInfoSlot(slotKey)}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left ${
-          isOpen ? 'bg-[#252525]' : 'bg-[#161616] hover:bg-[#1e1e1e]'
-        } border ${hasViolation ? 'border-[#E74C3C]/40' : 'border-[#2a2a2a]'}`}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-[#1e1e1e] border ${hasViolation ? 'border-[#E74C3C]/40' : 'border-[#2a2a2a]'}`}
+        style={{ background: isOpen ? '#252525' : 'rgba(22,22,22,0.82)' }}
       >
         <span className="text-sm font-bold text-[#555] w-6 shrink-0 text-right">#{slotIndex}</span>
         <FlagImage country={player.country} size={28} className="shrink-0" />
@@ -49,7 +48,7 @@ export function PlayerRow({ slotKey, slotIndex, player }: Props) {
           <div className="text-xs text-[#666] truncate">{player.country} · {player.club}</div>
         </div>
         <span className="text-sm font-bold text-white shrink-0">{player.overall}</span>
-        <span className="text-xs font-bold text-[#FF6B00] bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-2 py-0.5 rounded-lg shrink-0">
+        <span className="font-heading text-xs font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">
           {formatQuote(quote)}
         </span>
       </button>

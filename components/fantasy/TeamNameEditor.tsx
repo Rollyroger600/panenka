@@ -21,7 +21,7 @@ export function TeamNameEditor() {
 
   if (editing) {
     return (
-      <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] px-4 py-3 mb-4">
+      <div className="rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 flex items-center justify-center">
         <input
           ref={inputRef}
           value={draft}
@@ -29,8 +29,7 @@ export function TeamNameEditor() {
           onBlur={commit}
           onKeyDown={(e) => { if (e.key === 'Enter') commit() }}
           autoFocus
-          className="text-lg text-white bg-transparent border-b border-[#FF6B00] outline-none w-full text-center"
-          style={{ fontFamily: 'Chalky, cursive' }}
+          className="font-script text-2xl text-white bg-transparent border-b border-[#FF6B00] outline-none w-full text-center"
         />
       </div>
     )
@@ -39,11 +38,10 @@ export function TeamNameEditor() {
   return (
     <button
       onClick={startEdit}
-      className="w-full rounded-xl bg-[#161616] border border-[#2a2a2a] px-4 py-3 mb-4 text-center"
+      className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 flex items-center justify-center"
     >
       <span
-        className={`text-lg transition-colors ${teamName ? 'text-white' : 'text-[#555]'}`}
-        style={{ fontFamily: 'Chalky, cursive' }}
+        className={`font-script text-2xl transition-colors ${teamName ? 'text-white' : 'text-[#555]'}`}
       >
         {teamName || 'Teamnaam kiezen'}
       </span>

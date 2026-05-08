@@ -25,17 +25,19 @@ export function Ronde32Section() {
   const [openPicker, setOpenPicker] = useState<string | null>(null)
 
   function applyAllSuggestions(suggestions: Suggestion[], bestThird: StandingRow[]) {
+    const hasExisting =
+      suggestions.some((_, i) => knockoutPicks[`w1_${i}`]?.country || knockoutPicks[`w2_${i}`]?.country) ||
+      Array.from({ length: W3_MAX_SLOTS }, (_, i) => knockoutPicks[`w3_${i}`]?.country).some(Boolean)
+
+    if (hasExisting && !window.confirm('Je hebt al keuzes gemaakt. Wil je alles overschrijven met de suggesties?')) return
+
     suggestions.forEach(({ w1, w2 }, i) => {
-      if (w1 && !knockoutPicks[`w1_${i}`]?.country) setKnockoutSlot(`w1_${i}`, { country: w1, tok: W1_MIN })
-      if (w2 && !knockoutPicks[`w2_${i}`]?.country) setKnockoutSlot(`w2_${i}`, { country: w2, tok: W1_MIN })
+      if (w1) setKnockoutSlot(`w1_${i}`, { country: w1, tok: W1_MIN })
+      if (w2) setKnockoutSlot(`w2_${i}`, { country: w2, tok: W1_MIN })
     })
-    let w3Slot = 0
-    for (const team of bestThird) {
-      while (w3Slot < W3_MAX_SLOTS && knockoutPicks[`w3_${w3Slot}`]?.country) w3Slot++
-      if (w3Slot >= W3_MAX_SLOTS) break
-      setKnockoutSlot(`w3_${w3Slot}`, { country: team.country, tok: W1_MIN })
-      w3Slot++
-    }
+    bestThird.forEach((team, i) => {
+      if (i < W3_MAX_SLOTS) setKnockoutSlot(`w3_${i}`, { country: team.country, tok: W1_MIN })
+    })
   }
 
   function getSlot(key: string) {
@@ -145,8 +147,8 @@ export function Ronde32Section() {
           : -1
 
         return (
-          <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-            <div className="px-4 py-3 bg-[#111] flex items-center justify-between">
+          <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+            <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
               <div>
                 <span className="text-sm font-bold text-white">Beste nummers 3</span>
                 <span className="ml-2 text-xs text-[#555]">8 beste derde-plaatsers</span>
@@ -172,9 +174,9 @@ export function Ronde32Section() {
                           {slot.country ? (
                             <>
                               <FlagImage country={slot.country} size={28} />
-                              <span className="text-[11px] font-bold text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
+                              <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
                               {getQuote(slot.country, 'derde') != null && (
-                                <span className="text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                                <span className="font-heading text-[10px] font-bold text-[#FF6B00] mt-0.5">
                                   {getQuote(slot.country, 'derde')!.toFixed(2)}
                                 </span>
                               )}
@@ -246,8 +248,8 @@ function SlotSection({
     : -1
 
   return (
-    <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-      <div className="px-4 py-3 bg-[#111] flex items-center justify-between">
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+      <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
         <div>
           <span className="text-sm font-bold text-white">{title}</span>
           <span className="ml-2 text-xs text-[#555]">{subtitle}</span>
@@ -273,9 +275,9 @@ function SlotSection({
                     {slot.country ? (
                       <>
                         <FlagImage country={slot.country} size={28} />
-                        <span className="text-[11px] font-bold text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
+                        <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
                         {qkey && getQuote(slot.country, qkey) != null && (
-                          <span className="text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                          <span className="font-heading text-[10px] font-bold text-[#FF6B00] mt-0.5">
                             {getQuote(slot.country, qkey)!.toFixed(2)}
                           </span>
                         )}
@@ -328,11 +330,11 @@ function SlotSection({
                         <span className={isSelected ? '' : 'opacity-60'}>
                           <FlagImage country={country} size={28} />
                         </span>
-                        <span className={`text-[11px] font-bold mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
+                        <span className={`font-accent font-light text-[11px] mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
                           {abbrevCountry(country)}
                         </span>
                         {quote != null && (
-                          <span className={`text-[10px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
+                          <span className={`font-heading text-[10px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
                             {quote.toFixed(2)}
                           </span>
                         )}
@@ -395,11 +397,11 @@ function W3CountryPicker({
                 <span className={isSelected ? '' : 'opacity-60'}>
                   <FlagImage country={country} size={24} />
                 </span>
-                <span className={`text-[10px] font-bold mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
+                <span className={`font-accent font-light text-[10px] mt-1 leading-none ${isSelected ? 'text-white' : 'text-[#888]'}`}>
                   {abbrevCountry(country)}
                 </span>
                 {quote != null && (
-                  <span className={`text-[9px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
+                  <span className={`font-heading text-[9px] font-bold mt-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#666]'}`}>
                     {quote.toFixed(2)}
                   </span>
                 )}

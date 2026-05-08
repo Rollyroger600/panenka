@@ -1195,6 +1195,69 @@ The following decisions were made during implementation that deviate from or ext
   - Invoerveld voor correct antwoord per vraag na de wedstrijd (`AdminCorrectInvoer`)
 - `app/admin/page.tsx` laadt `initialOranjeVragen` + `initialOranjeCorrect`
 
+### 2026-05-08 — Vaste breedte & FIFA-kritiek drawer (Claude Code)
+
+#### Content breedte — smartphone-breedte op alle schermen (`app/layout.tsx`)
+- Alle content gewikkeld in `max-w-[430px] mx-auto min-h-screen` container
+- App blijft er op brede schermen exact hetzelfde uitzien als op een smartphone; achtergrond vult de rest van het scherm
+
+#### FIFA-kritiek info-drawer (nieuw)
+- `components/layout/FifaInfoDrawer.tsx` — nieuw: slide-up drawer (90dvh) met thematische secties over de WK-organisatie (mensenrechten, corruptie, locatiekeuze, persoonlijk statement, wat kun je doen); teksten zijn placeholders die door de gebruiker worden ingevuld
+- `components/layout/AppShell.tsx` — nieuw: client-wrapper die `isOpen`-state beheert voor de drawer en `AppHeader` + `FifaInfoDrawer` combineert
+- `components/layout/AppHeader.tsx` — `onInfoClick?`-prop toegevoegd; subtiel ℹ-knop (40% opaciteit) toegevoegd naast de token-teller
+- `app/(app)/layout.tsx` — `AppHeader` vervangen door `AppShell`; server component blijft ongewijzigd
+
+---
+
+### 2026-05-08 — Typografie, transparantie & KO UX (Claude Code)
+
+#### Font-systeem opgeschoond
+
+- **Sporty Pro Shadow** (`font-accent font-bold`, weight 700): uitsluitend paginatitels (`h1`); alle andere `font-accent font-bold` vervangen door `font-heading`
+- **Sporty Pro Light** (`font-accent font-light`, weight 300): 3-lettercodes op matchcards, Oranje-kaarten, KO-tegels, ScheduleView, SuggestionsPanel en StandingsPanel
+- `sporty-pro-regular.woff2` (weight 400) vervangen door `sporty-pro-light.otf` in `globals.css` — bestand kan verwijderd worden
+- **Built Titling** (`font-heading`): token-teller, quote-badges, token-waarden Overzicht, KO-quoteringen, alle tekst in TokenPicker / ScorePicker / TotoButtons / matchcard-labels
+- "Talents" sectielabel: `font-script` → `font-heading` (gelijk aan Spelers / Kladblok)
+- Paginaondertitels: `font-accent font-light text-xs` op alle tabs; Fantasy XV-ondertitel "Stel je eigen droomteam samen" toegevoegd
+
+#### Matchcard-knoprij (`components/matches/MatchCard.tsx`, `TotoButtons.tsx`, `TokenPicker.tsx`, `ScorePicker.tsx`)
+
+- Knomlabels (Tokens · Toto · Quote · Uitslag): `text-[9px]` → `text-[11px]`
+- Uitslag-knop breder: `w-16` → `w-14`
+- Quoteringen onder 1 / X / 2 toto-knoppen verwijderd; overbodige `matchId`-prop en `MATCH_ODDS`-import in `TotoButtons` opgeruimd
+- Alle tekst (labels, knoppen, cijfers) in `TotoButtons`, `TokenPicker` en `ScorePicker`: `font-heading` toegevoegd
+
+#### TeamNameEditor (`components/fantasy/TeamNameEditor.tsx`)
+
+- Hoogte verlaagd: `py-3` → `py-2`
+- `flex items-center justify-center` toegevoegd voor verticale centrering tekst
+- Coach-label: `text-xl` → `text-2xl` (gelijk aan teamnaam)
+
+#### Poulefase — rondeheaders en tabknoppen
+
+- Rondeheaders: stijl gelijkgetrokken met "Spelers" in Fantasy — `font-heading text-xl font-bold text-[#ccc] tracking-wide text-center` (was kleine oranje uppercase)
+- Tab-knoppen Poulefase en Knockout: `text-[10px]` → `text-xs`
+- `TokenBanner` verwijderd uit het poulefase-tabblad
+
+#### Transparantie op alle containers
+
+- Alle primaire card-containers in Fantasy, Oranje, Overzicht, Knockout: `rgba(22,22,22,0.82)` (zelfde als MatchCard)
+- KO-secties (`Ronde32Section`, `RoundSection`, `BracketView`, `ScheduleView`): outer containers en card-headers transparant (`rgba(10,10,10,0.75)` voor headers)
+- Tab bars Poulefase en Knockout: `rgba(22,22,22,0.82)`
+
+#### KO ScheduleView — header vereenvoudigd (`components/knockout/ScheduleView.tsx`)
+
+- Header toont nu alleen gecentreerde tekst "Toernooischema" + pijltje
+- "3e bepaald"-indicator en "x/24 gepickt"-teller verwijderd; overbodige variabelen opgeruimd
+
+#### KO SuggestionsPanel (`components/knockout/SuggestionsPanel.tsx`)
+
+- Stijl gelijkgetrokken met ScheduleView: transparante container, witte tekst, gecentreerde header
+- `last:border-0` → `last:border-b-0` — groen linkerbalkje op laatste "beste nummer 3"-rij bleef nu correct zichtbaar
+- Bevestigingsdialoog bij "Stel alles in op basis van suggesties" wanneer er al picks aanwezig zijn; bij bevestiging worden alle slots overschreven (ook gevulde)
+
+---
+
 ### 2026-05-08 — Oranje matchcard UI-verbeteringen (Claude Code)
 
 #### Oranje matchcard headers — identiek aan poulefase MatchCard (`components/oranje/VraagIndienenCard.tsx`, `components/oranje/VragenBeantwoordenCard.tsx`)
@@ -1210,6 +1273,38 @@ The following decisions were made during implementation that deviate from or ext
 #### Oranje — uitlegblok (`app/(app)/oranje/OranjeClient.tsx`)
 - Zin ④ aangepast: "0,5 punt" → "0,5 token op voor de KO fase"
 
+---
+
+### 2026-05-08 — UI-polish: filters, header, fonts (Claude Code)
+
+#### Fantasy — filter-tegeltjes (`components/fantasy/PlayerModal.tsx`)
+- Alle filter-tiles verkleind van `w-14 h-14` naar `w-12 h-12` zodat 6 confederatie-tegeltjes naast elkaar passen op een 375px smartphone (6×48 + 5×8gap = 328px < 343px beschikbaar)
+- CONF-panel: `overflow-x-auto` verwijderd; alle 6 confederaties zichtbaar zonder scrollen
+- Niet-geselecteerde tiles: frosted glass stijl `bg-white/30 backdrop-blur border-[#666]` (van `bg-[#1a1a1a]`) zodat donkere logos zichtbaar zijn
+- Positie-iconen kleur: `#555` → `#222` voor zichtbaarheid op lichtere achtergrond
+
+#### App header — gradient fade (`components/layout/AppHeader.tsx`)
+- Achtergrond verplaatst naar apart absoluut element dat 3rem onder de header doorloopt
+- `mask-image: linear-gradient(to bottom, black 55%, transparent 100%)` op achtergrondlaag: blur stopt niet langer abrupt maar fadeout geleidelijk
+- Content (logo, naam) staat relatief boven de achtergrondlaag en wordt niet beïnvloed door mask
+
+#### Typografie — fonts consequent toegepast (Claude Code)
+- **Built Titling** (`font-heading`): paginatitels, filtertabs (Poulefase + Knockout), ronde-labels, wedstrijdnummer-badge, "Spelers"/"Kladblok" sectieheaders, FIFA-drawer titels
+- **Sporty Pro Shadow** (`font-accent font-bold`, weight 700): paginatitels (Poulewedstrijden, Knockout, Oranje, Fantasy XV, Overzicht)
+- **Sporty Pro Regular** (`font-accent`, weight 400): token-teller in header, quote-chips in matchcards, token-waarden in Overzicht
+- **Sporty Pro Light** (`font-accent font-light`, weight 300): 3-letter landcodes in match- en oranje-kaarten
+- **Chalk Board** (`font-script`): teamnaam, coach-label, "Talents" sectieheader; inline `style` vervangen door Tailwind `font-script` klasse
+- `globals.css`: `@font-face` bijgewerkt — Sporty Pro Light (`.otf`, weight 300), Regular (`.woff2`, weight 400), Shadow (`.otf`, weight 700); Chalky vervangen door Chalk Board (`.ttf`, `format('truetype')`)
+- **Datum & stadion** in matchcards: `font-heading font-light` (Built Titling Light)
+
+#### Matchcards — kleine tweaks (`components/matches/MatchCard.tsx`)
+- Spatie toegevoegd tussen `#` en wedstrijdnummer: `# {match.id}`
+
+#### Paginatitels — grootte & font
+- Alle paginatitels: `text-2xl` → `text-3xl`
+- Teamnaam: `text-lg` → `text-2xl`; coach-label: `text-base` → `text-xl`
+- "Oranje Voorspelling" hernoemd naar "Oranje"
+
 #### ScheduleView — volledig herschreven als horizontaal bracket (`components/knockout/ScheduleView.tsx`)
 - Accepteert `activeTab: string` prop; collapsible header ongewijzigd
 - Horizontaal scrollbaar (`overflow-x-auto`); 6 kolommen: R 32 · R 16 · 1/4 · 1/2 · Fin · Win
@@ -1221,3 +1316,27 @@ The following decisions were made during implementation that deviate from or ext
 - Bracket-data via `useMemo`: resolveert R32-teams uit w1/w2/w3-picks + w3Map; berekent r16A/r16B per group, qf per group, sfTeams (4), finalists (2), winner
 - Automatisch scrollen: bij uitklappen en bij tabwisseling springt de bijbehorende kolom gecentreerd in beeld
 - W3-slots: tonen resolvede landen zodra alle poulewedstrijden zijn ingevuld (bestaande w3Map-logica hergebruikt)
+
+---
+
+### 2026-05-08 — UI-polish: quoteringen, uitlegblokken & correcties (Claude Code)
+
+#### Oranje matchcard headers — `font-heading` gelijkgetrokken met MatchCard (`components/oranje/VraagIndienenCard.tsx`, `components/oranje/VragenBeantwoordenCard.tsx`)
+- `font-heading` toegevoegd aan het wedstrijdnummer-badge (was zonder)
+- Spatie toegevoegd tussen `#` en wedstrijdnummer: `#{id}` → `# {id}`
+- `font-heading` toegevoegd aan het streepje-separator tussen landen
+
+#### Fantasy — quote-badge stijl gelijkgetrokken met poulefase matchcards (`components/fantasy/PlayerRow.tsx`, `components/fantasy/PlayerModal.tsx`)
+- Badge: `font-heading` toegevoegd, border opacity verhoogd van `/30` naar vol (`border-[#FF6B00]`), achtergrondvulling (`bg-[#FF6B00]/10`) verwijderd
+- PlayerModal-lijst: badge toegevoegd (was alleen tekst zonder rand)
+
+#### Font-fix Built Titling (`app/globals.css`)
+- `@font-face` voor Built Titling verwees naar niet-bestaande `.woff2` bestanden; gecorrigeerd naar de aanwezige `.otf` bestanden (`built titling rg.otf` / `built titling lt.otf`)
+
+#### Fantasy — puntenstelsel uitlegblok (`app/(app)/fantasy/FantasyClient.tsx`)
+- Uitlegblok toegevoegd onderaan de pagina (na kladblok), zelfde stijl als Oranje-uitlegblok
+- Legt uit hoe spelers punten verdienen (goals × quote) en hoe de quote wordt berekend (EA FC rating, FIFA ranking, toernooiverwachting)
+
+#### Overzicht — maxima gecorrigeerd (`app/(app)/overzicht/OverzichtClient.tsx`)
+- Knockout landen: max 61 → **63**
+- Oranje vragen: max 27 → **45**

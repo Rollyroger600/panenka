@@ -49,7 +49,7 @@ export function RulesPanel() {
   ]
 
   return (
-    <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden mb-4" style={{ background: 'rgba(22,22,22,0.82)' }}>
       <div className="px-4 py-2.5 bg-[#111] flex items-center justify-between">
         <span className="text-xs font-bold text-[#888] uppercase tracking-widest">Regels</span>
         <span className="text-xs font-bold text-[#FF6B00]">{filled} / 15 spelers</span>

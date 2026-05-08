@@ -56,18 +56,18 @@ export function OranjeClient({ mijnInitials }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-1 text-center">Oranje Voorspelling</h1>
+      <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Oranje</h1>
 
       {!isVraagPast ? (
         <>
-          <p className="text-white text-sm mb-1 text-center">Dien jouw vraag in per wedstrijd</p>
+          <p className="font-accent font-light text-white text-xs mb-1 text-center">Dien jouw vraag in per wedstrijd</p>
           <p className="text-[#FF6B00] text-xs font-bold mb-5 text-center">
             {aantalIngediend} / 3 vragen ingediend · deadline 31 mei
           </p>
         </>
       ) : (
         <>
-          <p className="text-white text-sm mb-1 text-center">
+          <p className="font-accent font-light text-white text-xs mb-1 text-center">
             {isPast ? 'Deadline verstreken · alleen lezen' : 'Beantwoord alle vragen van de deelnemers'}
           </p>
           <p className="text-[#FF6B00] text-xs font-bold mb-5 text-center">

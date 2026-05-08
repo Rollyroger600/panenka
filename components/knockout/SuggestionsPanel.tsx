@@ -56,15 +56,15 @@ export function SuggestionsPanel({ onApplyAll }: Props) {
   if (!hasAnyUitslag) return null
 
   return (
-    <div className="rounded-xl border border-[#FF6B00]/30 overflow-hidden mb-4" style={{ background: 'rgba(255,107,0,0.05)' }}>
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden mb-4" style={{ background: 'rgba(22,22,22,0.82)' }}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3"
       >
-        <span className="text-sm font-bold text-[#FF6B00]">
+        <span className="text-sm font-bold text-white">
           Suggesties op basis van jouw voorspellingen
         </span>
-        <span className="text-[#FF6B00] text-xs">{open ? '▲' : '▼'}</span>
+        <span className="text-[#555] text-xs">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
@@ -89,12 +89,12 @@ export function SuggestionsPanel({ onApplyAll }: Props) {
               {bestThird.map((team, i) => (
                 <div
                   key={team.country}
-                  className="flex items-center px-2 py-1.5 border-b border-[#1e1e1e] last:border-0 bg-[#111] border-l-2 border-l-[#2ECC71]"
+                  className="flex items-center px-2 py-1.5 border-b border-[#1e1e1e] last:border-b-0 border-l-2 border-l-[#2ECC71]" style={{ background: 'rgba(22,22,22,0.82)' }}
                 >
                   <span className="text-[9px] font-bold text-[#555] w-3 shrink-0">{i + 1}</span>
                   <div className="flex items-center gap-1 flex-1 min-w-0 ml-1">
                     <FlagImage country={team.country} size={14} />
-                    <span className="text-[10px] font-bold text-white truncate">
+                    <span className="font-accent font-light text-[10px] text-white truncate">
                       {abbrevCountry(team.country)}
                     </span>
                   </div>

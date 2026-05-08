@@ -24,7 +24,7 @@ function ScoreColumn({ title, scores, matchId, selected, onSelect }: {
   const odds = MATCH_ODDS[matchId]
   return (
     <div className="flex-1">
-      <div className="text-[10px] text-[#555] font-bold uppercase tracking-wide mb-1 text-center">{title}</div>
+      <div className="font-heading text-[10px] text-[#555] font-bold uppercase tracking-wide mb-1 text-center">{title}</div>
       <div className="flex flex-col gap-0.5">
         {scores.map((score) => {
           const odd = odds?.scores[score]
@@ -39,9 +39,9 @@ function ScoreColumn({ title, scores, matchId, selected, onSelect }: {
                   : 'text-[#888] hover:bg-[#252525] hover:text-white'
               }`}
             >
-              <span className="font-bold">{score}</span>
+              <span className="font-heading font-bold">{score}</span>
               {odd !== undefined && (
-                <span className={`ml-1 ${isSelected ? 'text-[#2ECC71]' : 'text-[#FFB800]'}`}>
+                <span className={`font-heading ml-1 ${isSelected ? 'text-[#2ECC71]' : 'text-[#FFB800]'}`}>
                   {odd.toFixed(2)}
                 </span>
               )}

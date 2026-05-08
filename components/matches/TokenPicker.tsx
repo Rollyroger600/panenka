@@ -16,7 +16,7 @@ export function TokenPicker({ value, onChange, onClose, min = 1, max = 6 }: Prop
         <button
           key={n}
           onClick={() => { onChange(n); onClose() }}
-          className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${
+          className={`font-heading w-8 h-8 rounded-lg text-sm font-bold transition-colors ${
             value === n
               ? 'bg-[#FF6B00] text-white'
               : 'bg-[#252525] text-[#aaa] hover:bg-[#333]'
@@ -27,7 +27,7 @@ export function TokenPicker({ value, onChange, onClose, min = 1, max = 6 }: Prop
       ))}
       <button
         onClick={onClose}
-        className="w-8 h-8 rounded-lg text-xs text-[#555] hover:text-[#888]"
+        className="font-heading w-8 h-8 rounded-lg text-xs text-[#555] hover:text-[#888]"
       >
         ✕
       </button>

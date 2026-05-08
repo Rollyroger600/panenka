@@ -1,9 +1,7 @@
 'use client'
-import { MATCH_ODDS } from '@/lib/data/odds'
 import type { Toto } from '@/store/gameStore'
 
 interface Props {
-  matchId: number
   selected: Toto | null
   onChange: (toto: Toto) => void
 }
@@ -14,13 +12,10 @@ const OPTIONS: { key: Toto; label: string }[] = [
   { key: '2', label: '2' },
 ]
 
-export function TotoButtons({ matchId, selected, onChange }: Props) {
-  const odds = MATCH_ODDS[matchId]
-
+export function TotoButtons({ selected, onChange }: Props) {
   return (
     <div className="flex gap-1">
       {OPTIONS.map(({ key, label }) => {
-        const odd = odds ? (key === '1' ? odds.home : key === 'X' ? odds.draw : odds.away) : null
         const isSelected = selected === key
         return (
           <button
@@ -33,12 +28,7 @@ export function TotoButtons({ matchId, selected, onChange }: Props) {
             }`}
             style={!isSelected ? { color: '#7e7667' } : undefined}
           >
-            <span className="text-xs font-bold leading-none">{label}</span>
-            {odd !== null && (
-              <span className={`text-[9px] leading-none mt-0.5 ${isSelected ? 'text-orange-100' : 'text-[#FFB800]'}`}>
-                {odd.toFixed(2)}
-              </span>
-            )}
+            <span className="font-heading text-xs font-bold leading-none">{label}</span>
           </button>
         )
       })}

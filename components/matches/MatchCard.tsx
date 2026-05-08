@@ -13,7 +13,7 @@ interface Props { match: Match }
 type Panel = 'tokens' | 'score' | null
 
 const MUTED = '#7e7667'
-const LABEL = 'text-[9px] font-bold uppercase tracking-wider text-center'
+const LABEL = 'font-heading text-[11px] font-bold uppercase tracking-wider text-center'
 
 export function MatchCard({ match }: Props) {
   const { predictions, setPrediction } = useGameStore()
@@ -40,20 +40,20 @@ export function MatchCard({ match }: Props) {
       {/* Header */}
       <div className="relative flex flex-col items-center px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
         {/* Match number — square badge */}
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] text-sm font-bold text-white"
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] font-heading text-sm font-bold text-white"
           style={{ background: 'rgba(37,37,37,0.8)' }}>
-          #{match.id}
+          # {match.id}
         </div>
 
         {/* Teams */}
         <div className="flex items-center gap-2">
           <FlagImage country={match.home} size={24} />
-          <span className="text-sm font-bold text-white">{abbrevCountry(match.home)}</span>
-          <span className="font-bold" style={{ color: MUTED }}>-</span>
-          <span className="text-sm font-bold text-white">{abbrevCountry(match.away)}</span>
+          <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.home)}</span>
+          <span className="font-heading font-bold" style={{ color: MUTED }}>-</span>
+          <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.away)}</span>
           <FlagImage country={match.away} size={24} />
         </div>
-        <p className="text-[10px] uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
+        <p className="font-heading font-light text-[10px] uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
           {match.date} · {match.stadium}
         </p>
       </div>
@@ -66,7 +66,7 @@ export function MatchCard({ match }: Props) {
           <span className={LABEL} style={{ color: MUTED }}>Tokens</span>
           <button
             onClick={() => togglePanel('tokens')}
-            className={`h-9 w-10 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border ${
+            className={`font-heading h-9 w-10 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border ${
               pred.tokens !== null
                 ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
                 : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
@@ -82,14 +82,13 @@ export function MatchCard({ match }: Props) {
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Toto</span>
             <TotoButtons
-              matchId={match.id}
               selected={pred.toto}
               onChange={(toto) => setPrediction(match.id, { toto })}
             />
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Quote</span>
-            <span className={`h-9 w-9 flex items-center justify-center text-xs font-bold rounded-lg border ${
+            <span className={`h-9 w-9 flex items-center justify-center font-heading text-xs font-bold rounded-lg border ${
               totoOdd != null ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-[#3a3a3a]'
             }`}
               style={totoOdd == null ? { color: MUTED } : undefined}
@@ -105,7 +104,7 @@ export function MatchCard({ match }: Props) {
             <span className={LABEL} style={{ color: MUTED }}>Uitslag</span>
             <button
               onClick={() => togglePanel('score')}
-              className={`h-9 w-16 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border ${
+              className={`font-heading h-9 w-14 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border ${
                 pred.uitslag !== null
                   ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
                   : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
@@ -117,7 +116,7 @@ export function MatchCard({ match }: Props) {
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Quote</span>
-            <span className={`h-9 w-9 flex items-center justify-center text-xs font-bold rounded-lg border ${
+            <span className={`h-9 w-9 flex items-center justify-center font-heading text-xs font-bold rounded-lg border ${
               scoreOdd != null ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-[#3a3a3a]'
             }`}
               style={scoreOdd == null ? { color: MUTED } : undefined}
@@ -131,7 +130,7 @@ export function MatchCard({ match }: Props) {
       {/* Max score */}
       {maxScore !== null && (
         <div className="px-3 pb-2 flex justify-end">
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>
+          <span className="font-heading text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>
             Max. score{' '}
             <span className="text-[#FF6B00]">{maxScore.toFixed(1)} pts</span>
           </span>

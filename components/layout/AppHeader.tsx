@@ -5,9 +5,10 @@ import { TokenCount } from './TokenCount'
 interface Props {
   name: string
   initials: string
+  onInfoClick?: () => void
 }
 
-export function AppHeader({ name, initials }: Props) {
+export function AppHeader({ name, initials, onInfoClick }: Props) {
   const [compact, setCompact] = useState(false)
 
   useEffect(() => {
@@ -20,29 +21,44 @@ export function AppHeader({ name, initials }: Props) {
     <header
       className="sticky top-0 z-50 flex flex-col items-center overflow-visible transition-all duration-200"
       style={{
-        background: 'rgba(13,13,13,0.75)',
-        backdropFilter: 'blur(12px)',
         paddingTop: compact ? '0.4rem' : '0.75rem',
         paddingBottom: compact ? '0.4rem' : '0.6rem',
       }}
     >
+      {/* Blurred background — extends below header and fades via mask */}
+      <div
+        className="absolute left-0 right-0 pointer-events-none"
+        style={{
+          top: 0,
+          bottom: '-3rem',
+          background: 'rgba(13,13,13,0.75)',
+          backdropFilter: 'blur(12px)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+        }}
+      />
+
       <img
         src="/Logo/Artboard 1@4x.png"
         alt="Panenka"
-        className="transition-all duration-200"
+        className="transition-all duration-200 relative"
         style={{ height: compact ? '1.75rem' : '3rem' }}
       />
-      <div className="flex items-center gap-2 mt-1">
+      <div className="flex items-center gap-2 mt-1 relative">
         <span className="text-sm font-bold text-white">{name}</span>
         <span className="text-[#555]">|</span>
         <TokenCount initials={initials} />
+        {onInfoClick && (
+          <button
+            onClick={onInfoClick}
+            className="ml-1 text-xs leading-none opacity-40 hover:opacity-80 transition-opacity"
+            style={{ color: '#F0F0F0' }}
+            aria-label="Info over dit WK"
+          >
+            ℹ
+          </button>
+        )}
       </div>
-
-      {/* Gradient fade below header */}
-      <div
-        className="absolute left-0 right-0 top-full pointer-events-none"
-        style={{ height: '2rem', background: 'linear-gradient(to bottom, rgba(13,13,13,0.6), transparent)' }}
-      />
     </header>
   )
 }

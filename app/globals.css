@@ -1,31 +1,37 @@
 /* Self-hosted fonts — place .woff2 files in public/fonts/ */
 @font-face {
   font-family: 'Built Titling';
-  src: url('/fonts/BuiltTitling-Regular.woff2') format('woff2');
+  src: url('/fonts/built titling rg.otf') format('opentype');
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: 'Built Titling';
-  src: url('/fonts/BuiltTitling-Light.woff2') format('woff2');
+  src: url('/fonts/built titling lt.otf') format('opentype');
   font-weight: 300;
   font-display: swap;
 }
 @font-face {
   font-family: 'Sporty Pro';
-  src: url('/fonts/SportyPro-Shadow.woff2') format('woff2');
+  src: url('/fonts/sporty-pro-light.otf') format('opentype');
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sporty Pro';
+  src: url('/fonts/sporty-pro-light.otf') format('opentype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sporty Pro';
+  src: url('/fonts/sporty-pro-shadow.otf') format('opentype');
   font-weight: 700;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Sporty Pro';
-  src: url('/fonts/SportyPro-Light.woff2') format('woff2');
-  font-weight: 300;
-  font-display: swap;
-}
-@font-face {
   font-family: 'Chalky';
-  src: url('/fonts/Chalky.woff2') format('woff2');
+  src: url('/fonts/Chalk Board.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }

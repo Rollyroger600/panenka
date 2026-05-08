@@ -28,8 +28,8 @@ export function KnockoutClient() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-1 text-center">Knockout</h1>
-      <p className="text-white text-sm mb-4 text-center">Voorspel welke landen doorgaan per ronde</p>
+      <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Knockout</h1>
+      <p className="font-accent font-light text-white text-xs mb-4 text-center">Voorspel welke landen doorgaan per ronde</p>
 
       {isPast && (
         <div className="rounded-xl bg-[#1a1a1a] border border-[#333] p-3 mb-4 text-center text-xs text-white font-bold uppercase tracking-widest">
@@ -38,12 +38,12 @@ export function KnockoutClient() {
       )}
 
       {/* Round tabs — centered */}
-      <div className="flex gap-1.5 mb-5 bg-[#161616] rounded-xl p-1">
+      <div className="flex gap-1.5 mb-5 rounded-xl p-1" style={{ background: 'rgba(22,22,22,0.82)' }}>
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all ${
+            className={`flex-1 py-2 rounded-lg font-heading text-xs font-bold tracking-widest uppercase transition-all ${
               activeTab === tab.id
                 ? 'bg-[#FF6B00] text-white'
                 : 'text-white hover:text-[#FF6B00]'

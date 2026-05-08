@@ -181,10 +181,10 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
                     onClick={() => { setFilterCountry(selected ? null : country); setFilterConf(null) }}
                     className={`shrink-0 flex flex-col items-center gap-1`}
                   >
-                    <div className={`w-14 h-14 flex items-center justify-center rounded-xl border transition-colors ${
-                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#444]'
+                    <div className={`w-12 h-12 flex items-center justify-center rounded-xl border transition-colors ${
+                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#666] bg-white/30 backdrop-blur hover:border-[#888]'
                     }`}>
-                      <img src={FLAG_PATHS[country]} alt={country} width={36} height={36} className="rounded-full object-cover" />
+                      <img src={FLAG_PATHS[country]} alt={country} width={30} height={30} className="rounded-full object-cover" />
                     </div>
                     <span className={`text-[9px] font-bold ${selected ? 'text-[#FF6B00]' : 'text-[#555]'}`}>
                       {abbrevCountry(country)}
@@ -199,7 +199,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
         {/* CONF slicer */}
         {openPanel === 'conf' && (
           <div className="px-4 pb-3 shrink-0">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 justify-center">
+            <div className="flex gap-2 justify-center">
               {CONFEDERATIONS.map((conf) => {
                 const selected = filterConf === conf
                 return (
@@ -208,10 +208,10 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
                     onClick={() => { setFilterConf(selected ? null : conf); setFilterCountry(null) }}
                     className="shrink-0 flex flex-col items-center gap-1"
                   >
-                    <div className={`w-14 h-14 flex items-center justify-center rounded-xl border transition-colors ${
-                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#444]'
+                    <div className={`w-12 h-12 flex items-center justify-center rounded-xl border transition-colors ${
+                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#666] bg-white/30 backdrop-blur hover:border-[#888]'
                     }`}>
-                      <img src={CONF_LOGO[conf]} alt={conf} width={36} height={36} className="object-contain" />
+                      <img src={CONF_LOGO[conf]} alt={conf} width={30} height={30} className="object-contain" />
                     </div>
                     <span className={`text-[9px] font-bold ${selected ? 'text-[#FF6B00]' : 'text-[#555]'}`}>{conf}</span>
                   </button>
@@ -234,15 +234,15 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
                     onClick={() => { setFilterLeague(selected ? null : league) }}
                     className="shrink-0 flex flex-col items-center gap-1"
                   >
-                    <div className={`w-14 h-14 flex items-center justify-center rounded-xl border transition-colors ${
-                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#444]'
+                    <div className={`w-12 h-12 flex items-center justify-center rounded-xl border transition-colors ${
+                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#666] bg-white/30 backdrop-blur hover:border-[#888]'
                     }`}>
                       {logoId
-                        ? <img src={`/Competities/${logoId}.png`} alt={league} width={28} height={28} className="object-contain" />
+                        ? <img src={`/Competities/${logoId}.png`} alt={league} width={24} height={24} className="object-contain" />
                         : <span className="text-[9px] font-bold text-[#555]">{league.slice(0, 3).toUpperCase()}</span>
                       }
                     </div>
-                    <span className={`text-[9px] font-bold max-w-[48px] text-center leading-tight ${selected ? 'text-[#FF6B00]' : 'text-[#555]'}`}>{league}</span>
+                    <span className={`text-[9px] font-bold max-w-[44px] text-center leading-tight ${selected ? 'text-[#FF6B00]' : 'text-[#555]'}`}>{league}</span>
                   </button>
                 )
               })}
@@ -262,10 +262,10 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
                     onClick={() => { setFilterPos(selected ? null : group) }}
                     className="shrink-0 flex flex-col items-center gap-1"
                   >
-                    <div className={`w-14 h-14 flex items-center justify-center rounded-xl border transition-colors ${
-                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#444]'
+                    <div className={`w-12 h-12 flex items-center justify-center rounded-xl border transition-colors ${
+                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#666] bg-white/30 backdrop-blur hover:border-[#888]'
                     }`}>
-                      <PosIcon group={group} active={selected} size={32} />
+                      <PosIcon group={group} active={selected} size={28} />
                     </div>
                     <span className={`text-[9px] font-bold ${selected ? 'text-[#FF6B00]' : 'text-[#555]'}`}>{group}</span>
                   </button>
@@ -319,7 +319,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
                   </div>
                 </div>
                 <span className="text-[10px] font-bold text-[#555] bg-[#1e1e1e] px-1.5 py-0.5 rounded shrink-0">{group}</span>
-                <span className="text-xs font-bold text-[#FF6B00] shrink-0 w-10 text-right">{formatQuote(quote)}</span>
+                <span className="font-heading text-xs font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">{formatQuote(quote)}</span>
               </button>
             )
           })}
@@ -330,7 +330,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
 }
 
 function PosIcon({ group, active, size = 28 }: { group: string; active: boolean; size?: number }) {
-  const color = active ? '#FF6B00' : '#555'
+  const color = active ? '#FF6B00' : '#222'
   if (group === 'GK') return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
       <rect x="4" y="8" width="20" height="14" rx="2" stroke={color} strokeWidth="2"/>

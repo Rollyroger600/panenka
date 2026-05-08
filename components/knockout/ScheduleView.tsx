@@ -85,12 +85,12 @@ function TeamChip({ country }: { country: string | null }) {
           ? 'bg-[#161616] border-[#2a2a2a] text-[#ccc]'
           : 'bg-[#0d0d0d] border-[#1a1a1a] text-[#2a2a2a]'
       }`}
-      style={{ height: SLOT, minHeight: SLOT, maxHeight: SLOT, fontSize: 9, fontWeight: 700 }}
+      style={{ height: SLOT, minHeight: SLOT, maxHeight: SLOT, fontSize: 9 }}
     >
       {country ? (
         <>
           <FlagImage country={country} size={11} className="shrink-0" />
-          <span className="truncate leading-none">{abb}</span>
+          <span className="font-accent font-light truncate leading-none">{abb}</span>
         </>
       ) : (
         <span className="w-full text-center">?</span>
@@ -176,22 +176,15 @@ export function ScheduleView({ activeTab }: { activeTab: string }) {
     scr.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' })
   }, [open, activeTab])
 
-  const filledW1 = Array.from({ length: 12 }, (_, i) => knockoutPicks[`w1_${i}`]?.country).filter(Boolean).length
-  const filledW2 = Array.from({ length: 12 }, (_, i) => knockoutPicks[`w2_${i}`]?.country).filter(Boolean).length
-
   return (
-    <div className="rounded-xl border border-[#2a2a2a] bg-[#161616] overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden mb-4" style={{ background: 'rgba(22,22,22,0.82)' }}>
       {/* ── Collapsed header ── */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3"
       >
         <span className="text-sm font-bold text-white">Toernooisschema</span>
-        <div className="flex items-center gap-2">
-          {w3Map && <span className="text-[10px] text-[#FFB800] font-bold">3e bepaald</span>}
-          <span className="text-xs text-[#555]">{filledW1 + filledW2}/24 gepickt</span>
-          <span className="text-[#555] text-xs">{open ? '▲' : '▼'}</span>
-        </div>
+        <span className="text-[#555] text-xs">{open ? '▲' : '▼'}</span>
       </button>
 
       {/* ── Bracket ── */}

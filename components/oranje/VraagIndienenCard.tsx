@@ -40,21 +40,21 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
   const ingediend = !!bestaandeVraag
 
   return (
-    <div className="rounded-xl bg-[#161616] border border-[#FF6B00]/30 overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#FF6B00]/30 overflow-hidden mb-4" style={{ background: 'rgba(22,22,22,0.82)' }}>
       {/* Header */}
       <div className="relative flex flex-col items-center px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] text-sm font-bold text-white"
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] font-heading text-sm font-bold text-white"
           style={{ background: 'rgba(37,37,37,0.8)' }}>
-          #{match.id}
+          # {match.id}
         </div>
         <div className="flex items-center gap-2">
           <FlagImage country={match.home} size={24} />
-          <span className="text-sm font-bold text-white">{abbrevCountry(match.home)}</span>
-          <span className="font-bold text-[#7e7667]">-</span>
-          <span className="text-sm font-bold text-white">{abbrevCountry(match.away)}</span>
+          <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.home)}</span>
+          <span className="font-heading font-bold text-[#7e7667]">-</span>
+          <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.away)}</span>
           <FlagImage country={match.away} size={24} />
         </div>
-        <p className="text-[10px] uppercase tracking-widest mt-0.5 text-[#7e7667]">
+        <p className="font-heading font-light text-[10px] uppercase tracking-widest mt-0.5 text-[#7e7667]">
           {match.date} · {match.stadium}
         </p>
         {ingediend && (
