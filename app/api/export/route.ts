@@ -65,8 +65,6 @@ const FT_SHEET: Record<string, string> = {
   BS: 'FT_BS', WS: 'FT_WS', TvL: 'FT_TvL', TG: 'FT_TG', LV: 'FT_LV',
 }
 
-const NED_MATCH_IDS = [10, 33, 58]
-
 const ORANJE_SECTIONS = [
   { matchId: 10, headerRow: 6,  startRow: 7  },
   { matchId: 33, headerRow: 25, startRow: 26 },
@@ -88,7 +86,11 @@ export async function GET() {
     .at(-1)
 
   if (!xlsxFile) {
-    return new NextResponse('Master Excel niet gevonden in projectmap', { status: 404 })
+    const xlsxFiles = files.filter((f) => f.endsWith('.xlsx'))
+    return new NextResponse(
+      `Master Excel niet gevonden.\ncwd: ${cwd}\nAlle .xlsx bestanden: ${xlsxFiles.join(', ') || '(geen)'}`,
+      { status: 404 }
+    )
   }
 
   const filePath = path.join(cwd, xlsxFile)
@@ -128,7 +130,7 @@ export async function GET() {
   // ── Write per-participant data ──────────────────────────────────────────────
   for (const participant of PARTICIPANTS) {
     const { initials, name } = participant
-    const { predictions, knockoutPicks, fantasySquad, antwoorden } = participantData[initials]
+    const { predictions, knockoutPicks, fantasySquad } = participantData[initials]
 
     // ── Poule sheet ────────────────────────────────────────────────────────
     const pouleSheet = workbook.getWorksheet(POULE_SHEET[initials])
