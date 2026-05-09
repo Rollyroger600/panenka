@@ -60,19 +60,19 @@ export function OranjeClient({ mijnInitials }: Props) {
 
       {!isVraagPast ? (
         <>
-          <p className="font-accent font-light text-white text-xs mb-1 text-center">Dien jouw vraag in per wedstrijd</p>
-          <p className="text-[#FF6B00] text-xs font-bold mb-5 text-center">
+          <p className="font-accent font-light text-white text-xs mb-2 text-center">Dien jouw vraag in per wedstrijd</p>
+          <div className="rounded-xl border border-[#2a2a2a] px-4 py-2.5 mb-5 text-center text-xs text-white font-bold" style={{ background: 'rgba(22,22,22,0.82)' }}>
             {aantalIngediend} / 3 vragen ingediend · deadline 31 mei
-          </p>
+          </div>
         </>
       ) : (
         <>
-          <p className="font-accent font-light text-white text-xs mb-1 text-center">
+          <p className="font-accent font-light text-white text-xs mb-2 text-center">
             {isPast ? 'Deadline verstreken · alleen lezen' : 'Beantwoord alle vragen van de deelnemers'}
           </p>
-          <p className="text-[#FF6B00] text-xs font-bold mb-5 text-center">
+          <div className="rounded-xl border border-[#2a2a2a] px-4 py-2.5 mb-5 text-center text-xs text-white font-bold" style={{ background: 'rgba(22,22,22,0.82)' }}>
             {totalBeantwoord} / {totalGepubliceerd} antwoorden ingevuld
-          </p>
+          </div>
         </>
       )}
 

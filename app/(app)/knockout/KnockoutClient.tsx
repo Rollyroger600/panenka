@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useKnockoutPicks } from '@/hooks/useKnockoutPicks'
+import { usePredictions } from '@/hooks/usePredictions'
 import { useDeadline } from '@/hooks/useDeadline'
 import { Ronde32Section } from '@/components/knockout/Ronde32Section'
 import { RoundSection } from '@/components/knockout/RoundSection'
@@ -21,6 +22,7 @@ const NON32_ROUNDS = KNOCKOUT_ROUNDS.filter((r) => r.uiTab !== 'ronde32')
 
 export function KnockoutClient() {
   const { isLoaded } = useKnockoutPicks()
+  usePredictions()
   const { isPast } = useDeadline()
   const [activeTab, setActiveTab] = useState('ronde32')
 

@@ -24,7 +24,7 @@ function ScoreColumn({ title, scores, matchId, selected, onSelect }: {
   const odds = MATCH_ODDS[matchId]
   return (
     <div className="flex-1">
-      <div className="font-heading text-[10px] text-[#555] font-bold uppercase tracking-wide mb-1 text-center">{title}</div>
+      <div className="font-heading text-xs text-[#555] font-bold uppercase tracking-wide mb-1 text-center">{title}</div>
       <div className="flex flex-col gap-0.5">
         {scores.map((score) => {
           const odd = odds?.scores[score]
@@ -33,15 +33,15 @@ function ScoreColumn({ title, scores, matchId, selected, onSelect }: {
             <button
               key={score}
               onClick={() => onSelect(score)}
-              className={`flex items-center justify-between px-2 py-1 rounded text-xs transition-colors ${
+              className={`flex items-center justify-between px-3.5 py-1 rounded text-xs transition-colors ${
                 isSelected
-                  ? 'bg-[#2ECC71]/20 text-[#2ECC71]'
+                  ? 'bg-[#FF6B00]/20 text-[#FF6B00]'
                   : 'text-[#888] hover:bg-[#252525] hover:text-white'
               }`}
             >
               <span className="font-heading font-bold">{score}</span>
               {odd !== undefined && (
-                <span className={`font-heading ml-1 ${isSelected ? 'text-[#2ECC71]' : 'text-[#FFB800]'}`}>
+                <span className={`font-heading ml-0.5 ${isSelected ? 'text-[#FF6B00]' : 'text-[#7E7667]'}`}>
                   {odd.toFixed(2)}
                 </span>
               )}

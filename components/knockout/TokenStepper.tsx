@@ -17,7 +17,7 @@ export function TokenStepper({ value, min, max, onChange }: Props) {
       >
         −
       </button>
-      <span className="w-6 text-center text-sm font-bold text-[#FF6B00]">{value}</span>
+      <span className="font-heading w-6 text-center text-sm font-bold text-[#FF6B00]">{value}</span>
       <button
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}

@@ -49,7 +49,7 @@ export function OverzichtClient({ initials, participantName }: Props) {
   const { isLoaded: oranjeLoaded } = useOranjeVoorspelling()
   const { isLoaded: koLoaded } = useKnockoutPicks()
   const { isLoaded: fantasyLoaded } = useFantasyXV(participantName)
-  const { isPast } = useDeadline()
+  const { isPast, isVraagPast } = useDeadline()
 
   const { total, used, remaining } = useTokenBudget(initials)
   const { predictions, oranjeVoorspelling, knockoutPicks, fantasySquad } = useGameStore()
@@ -93,7 +93,7 @@ export function OverzichtClient({ initials, participantName }: Props) {
         <>
           <div className="rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 mb-4">
             <StatRow label="Poulewedstrijden" value={stats.poule} total={72} />
-            <StatRow label="Oranje vragen" value={stats.oranje} total={45} color="#FF6B00" />
+            <StatRow label="Oranje vragen" value={stats.oranje} total={isVraagPast ? 45 : 3} color="#FF6B00" />
             <StatRow label="Knockout landen" value={stats.ko} total={63} color="#FFB800" />
             <StatRow label="Fantasy spelers" value={stats.fantasy} total={15} color="#2ECC71" />
           </div>

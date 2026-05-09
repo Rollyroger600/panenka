@@ -176,7 +176,7 @@ export function Ronde32Section() {
                               <FlagImage country={slot.country} size={28} />
                               <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
                               {getQuote(slot.country, 'derde') != null && (
-                                <span className="font-heading text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                                <span className="font-heading text-xs font-bold text-[#FF6B00] mt-0.5">
                                   {getQuote(slot.country, 'derde')!.toFixed(2)}
                                 </span>
                               )}
@@ -277,7 +277,7 @@ function SlotSection({
                         <FlagImage country={slot.country} size={28} />
                         <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
                         {qkey && getQuote(slot.country, qkey) != null && (
-                          <span className="font-heading text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                          <span className="font-heading text-xs font-bold text-[#FF6B00] mt-0.5">
                             {getQuote(slot.country, qkey)!.toFixed(2)}
                           </span>
                         )}

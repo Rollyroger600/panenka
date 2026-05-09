@@ -46,7 +46,7 @@ export function PouleGrid({
                 Poule {poule}
               </span>
               <div className="flex gap-2.5">
-                <span className="text-[9px] font-bold text-white/80 w-4 text-right">G</span>
+                <span className="text-[9px] font-bold text-white/80 w-3 text-right">G</span>
                 <span className="text-[9px] font-bold text-white/80 w-5 text-right">DS</span>
                 <span className="text-[9px] font-bold text-white/80 w-4 text-right">Pt</span>
               </div>
@@ -62,14 +62,14 @@ export function PouleGrid({
                   }`}
                 >
                   <span className="text-[9px] font-bold text-[#555] w-3 shrink-0">{i + 1}</span>
-                  <div className="flex items-center gap-1 flex-1 min-w-0 ml-1">
+                  <div className="flex items-center gap-1 flex-1 min-w-[36px] ml-1">
                     <FlagImage country={row.country} size={14} />
-                    <span className="font-accent font-light text-[10px] text-white truncate">
+                    <span className="font-accent font-light text-[10px] text-white">
                       {abbrevCountry(row.country)}
                     </span>
                   </div>
                   <div className="flex gap-2.5 shrink-0">
-                    <span className="text-[10px] font-bold text-white w-4 text-right">{row.played}</span>
+                    <span className="text-[10px] font-bold text-white w-3 text-right">{row.played}</span>
                     <span className={`text-[10px] font-bold w-5 text-right ${
                       row.gd > 0 ? 'text-[#FF6B00]' : row.gd < 0 ? 'text-[#E74C3C]' : 'text-white'
                     }`}>

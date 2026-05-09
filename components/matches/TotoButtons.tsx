@@ -28,7 +28,7 @@ export function TotoButtons({ selected, onChange }: Props) {
             }`}
             style={!isSelected ? { color: '#7e7667' } : undefined}
           >
-            <span className="font-heading text-xs font-bold leading-none">{label}</span>
+            <span className="font-heading text-sm font-bold leading-none">{label}</span>
           </button>
         )
       })}

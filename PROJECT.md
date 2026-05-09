@@ -1340,3 +1340,53 @@ The following decisions were made during implementation that deviate from or ext
 #### Overzicht — maxima gecorrigeerd (`app/(app)/overzicht/OverzichtClient.tsx`)
 - Knockout landen: max 61 → **63**
 - Oranje vragen: max 27 → **45**
+
+---
+
+### 2026-05-09 — UI-polish: tekstgroottes, dropdown UX & toernooischema verbeteringen (Claude Code)
+
+#### Poulefase — tekstgroottes vergroot (`components/matches/MatchCard.tsx`, `TotoButtons.tsx`)
+- Datum & stadion: `text-[10px]` → `text-xs` (12px)
+- Kolomtitels (Tokens · Toto · Quote · Uitslag · Quote): `text-[11px]` → `text-sm` (14px)
+- Max score tekst: `text-[10px]` → `text-sm` (14px)
+- Knoppen (tokens, uitslag, quotes, toto-buttons): `text-xs` → `text-sm` (14px)
+
+#### ScorePicker — dropdown verbeteringen (`components/matches/ScorePicker.tsx`)
+- Kolomtitels: `text-[10px]` → `text-xs` (12px)
+- Zijpadding knoppen: `px-2` → `px-3.5` (14px)
+- Selectiekleur: groen (`#2ECC71`) → oranje (`#FF6B00`)
+- Quoteringskleur: goud (`#FFB800`) → gedempte toon (`#7E7667`)
+
+#### Knockout — quoteringen vergroot (`components/knockout/RoundSection.tsx`, `Ronde32Section.tsx`)
+- Quoteringstekst per land: `text-[10px]` → `text-xs` (12px)
+
+#### TokenStepper — Built Titling font (`components/knockout/TokenStepper.tsx`)
+- Token-getal: `font-heading` toegevoegd
+
+#### StandingsPanel — kolombreedte (`components/matches/StandingsPanel.tsx`)
+- Landkolom: `min-w-0` + `truncate` → `min-w-[36px]` zonder truncate (3-letter codes passen beter)
+- G-kolom: `w-4` → `w-3` (compacter)
+- Zelfde wijziging doorgevoerd in "Beste nummers 3"-tabel in SuggestionsPanel
+
+#### SuggestionsPanel — sticky + scrollbaar (`components/knockout/SuggestionsPanel.tsx`)
+- Uitklapinhoud scrollbaar: `overflow-y-auto max-h-[45vh]`
+- Content als absolute overlay gerenderd zodat de rest van de pagina niet verdrongen wordt
+- Toggle-knop sticky (`sticky top-20 z-20`) zodat deze altijd bereikbaar is bij scrollen
+- KnockoutClient laadt nu ook `usePredictions()` zodat suggesties zichtbaar zijn zonder eerst de Poule-tab te bezoeken
+
+#### ScheduleView — reeks verbeteringen (`components/knockout/ScheduleView.tsx`)
+- Uitklapinhoud scrollbaar: `overflow-y-auto max-h-[45vh]`
+- Inhoud vergroot: SLOT 24 → 30px; vlaggen 11 → 14px; tekst 9 → 11px; kolomtitels 9 → 11px
+- Lege chip: rand `#1a1a1a` → `#333`; vraagteken `#2a2a2a` → `#555` (leesbaarder)
+- Inactieve kolomtitels: tekst `#444` → `#777`; onderlijn `#222` → `#444`
+- Chip-containers: `rounded-sm` → `rounded-md` (afgeronde hoeken)
+- Kolomafstand: `gap: 4` → `gap: 12` (COL_GAP)
+- Verticaal scrollen bij tabwisseling: eerste chip van actieve kolom gecentreerd in beeld
+- Connector-lijntjes toegevoegd (`<BracketLines />` SVG overlay): laat zien welk land naar de volgende ronde gaat; vork-patroon (twee horizontalen + vertikaal + uitgang) per ronde-overgang
+
+#### Oranje — statistiekregel restyled (`app/(app)/oranje/OranjeClient.tsx`)
+- Oranje tekst (`text-[#FF6B00]`) vervangen door donkere container met witte tekst (zelfde stijl als toernooischema-container)
+
+#### Overzicht — dynamisch maximum Oranje vragen (`app/(app)/overzicht/OverzichtClient.tsx`)
+- Vóór 31 mei: max Oranje vragen = 3 (één vraag indienen per wedstrijd)
+- Na 31 mei: max Oranje vragen = 45 (alle gepubliceerde vragen beantwoorden)

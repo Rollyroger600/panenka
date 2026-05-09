@@ -107,7 +107,7 @@ export function RoundSection({ round }: Props) {
                           {abbrevCountry(slot.country)}
                         </span>
                         {getQuote(slot.country, round.qkey) != null && (
-                          <span className="font-heading text-[10px] font-bold text-[#FF6B00] mt-0.5">
+                          <span className="font-heading text-xs font-bold text-[#FF6B00] mt-0.5">
                             {getQuote(slot.country, round.qkey)!.toFixed(2)}
                           </span>
                         )}

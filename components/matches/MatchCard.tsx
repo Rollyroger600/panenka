@@ -13,7 +13,7 @@ interface Props { match: Match }
 type Panel = 'tokens' | 'score' | null
 
 const MUTED = '#7e7667'
-const LABEL = 'font-heading text-[11px] font-bold uppercase tracking-wider text-center'
+const LABEL = 'font-heading text-sm font-bold uppercase tracking-wider text-center'
 
 export function MatchCard({ match }: Props) {
   const { predictions, setPrediction } = useGameStore()
@@ -53,7 +53,7 @@ export function MatchCard({ match }: Props) {
           <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.away)}</span>
           <FlagImage country={match.away} size={24} />
         </div>
-        <p className="font-heading font-light text-[10px] uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
+        <p className="font-heading font-light text-xs uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
           {match.date} · {match.stadium}
         </p>
       </div>
@@ -66,7 +66,7 @@ export function MatchCard({ match }: Props) {
           <span className={LABEL} style={{ color: MUTED }}>Tokens</span>
           <button
             onClick={() => togglePanel('tokens')}
-            className={`font-heading h-9 w-10 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border ${
+            className={`font-heading h-9 w-10 rounded-lg text-sm font-bold transition-colors flex items-center justify-center border ${
               pred.tokens !== null
                 ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
                 : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
@@ -88,7 +88,7 @@ export function MatchCard({ match }: Props) {
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Quote</span>
-            <span className={`h-9 w-9 flex items-center justify-center font-heading text-xs font-bold rounded-lg border ${
+            <span className={`h-9 w-9 flex items-center justify-center font-heading text-sm font-bold rounded-lg border ${
               totoOdd != null ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-[#3a3a3a]'
             }`}
               style={totoOdd == null ? { color: MUTED } : undefined}
@@ -104,7 +104,7 @@ export function MatchCard({ match }: Props) {
             <span className={LABEL} style={{ color: MUTED }}>Uitslag</span>
             <button
               onClick={() => togglePanel('score')}
-              className={`font-heading h-9 w-14 rounded-lg text-xs font-bold transition-colors flex items-center justify-center border ${
+              className={`font-heading h-9 w-14 rounded-lg text-sm font-bold transition-colors flex items-center justify-center border ${
                 pred.uitslag !== null
                   ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
                   : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
@@ -116,7 +116,7 @@ export function MatchCard({ match }: Props) {
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Quote</span>
-            <span className={`h-9 w-9 flex items-center justify-center font-heading text-xs font-bold rounded-lg border ${
+            <span className={`h-9 w-9 flex items-center justify-center font-heading text-sm font-bold rounded-lg border ${
               scoreOdd != null ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-[#3a3a3a]'
             }`}
               style={scoreOdd == null ? { color: MUTED } : undefined}
@@ -130,7 +130,7 @@ export function MatchCard({ match }: Props) {
       {/* Max score */}
       {maxScore !== null && (
         <div className="px-3 pb-2 flex justify-end">
-          <span className="font-heading text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>
+          <span className="font-heading text-sm font-bold uppercase tracking-widest" style={{ color: MUTED }}>
             Max. score{' '}
             <span className="text-[#FF6B00]">{maxScore.toFixed(1)} pts</span>
           </span>
