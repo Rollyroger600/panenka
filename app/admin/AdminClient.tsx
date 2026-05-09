@@ -101,6 +101,20 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
     setTab('scores')
   }
 
+  async function handleExport() {
+    const res = await fetch('/api/export')
+    if (!res.ok) { alert('Export mislukt: ' + (await res.text())); return }
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const disposition = res.headers.get('Content-Disposition') ?? ''
+    const match = disposition.match(/filename="([^"]+)"/)
+    a.href = url
+    a.download = match?.[1] ?? 'export.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   // ── Oranje vragen handlers ────────────────────────────────────────────────
 
   async function handlePubliceer(matchId: number, initials: string, gepubliceerd: boolean) {
@@ -140,13 +154,21 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
     <div className="min-h-screen bg-[#0D0D0D] text-white p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-[#FF6B00]">⚽ Admin — Panenka WK 2026</h1>
-        <button
-          onClick={handleCompute}
-          disabled={computing}
-          className="px-4 py-2 rounded-lg bg-[#FF6B00] text-white text-sm font-bold hover:bg-[#FF8C33] disabled:opacity-50 transition-colors"
-        >
-          {computing ? 'Bezig…' : '🔢 Bereken scores'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExport}
+            className="px-4 py-2 rounded-lg bg-[#1e1e1e] border border-[#333] text-white text-sm font-bold hover:bg-[#2a2a2a] transition-colors"
+          >
+            📥 Download Excel
+          </button>
+          <button
+            onClick={handleCompute}
+            disabled={computing}
+            className="px-4 py-2 rounded-lg bg-[#FF6B00] text-white text-sm font-bold hover:bg-[#FF8C33] disabled:opacity-50 transition-colors"
+          >
+            {computing ? 'Bezig…' : '🔢 Bereken scores'}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

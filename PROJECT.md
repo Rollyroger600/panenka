@@ -1390,3 +1390,33 @@ The following decisions were made during implementation that deviate from or ext
 #### Overzicht — dynamisch maximum Oranje vragen (`app/(app)/overzicht/OverzichtClient.tsx`)
 - Vóór 31 mei: max Oranje vragen = 3 (één vraag indienen per wedstrijd)
 - Na 31 mei: max Oranje vragen = 45 (alle gepubliceerde vragen beantwoorden)
+
+---
+
+### 2026-05-09 — Redis → Excel export (Claude Code)
+
+#### Exceljs geïnstalleerd (`package.json`)
+- `exceljs` toegevoegd als dependency voor het lezen en schrijven van `.xlsx`-bestanden inclusief opmaak
+
+#### Export API-route (`app/api/export/route.ts` — nieuw)
+- Beveiligd eindpunt (`GET /api/export`): controleert `admin`-cookie, retourneert 401 als niet ingelogd
+- Zoekt automatisch het meest recente bestand dat voldoet aan `*_WK 2026_Master.xlsx` in de projectroot — de datum in de bestandsnaam maakt niet uit
+- Laadt alle deelnemersdata parallel uit Redis (`predictions`, `knockout`, `fantasy`, `oranje_antwoorden`)
+- **Poule-tabblad per deelnemer** (`Poule_MG`, `Poule_BH`, …, `Poule_LV`):
+  - K1: naam deelnemer
+  - Wedstrijden 1–72: B = tokens, Q = toto, R = quote toto, S = uitslag, T = quote uitslag (quotes opgehaald uit `MATCH_ODDS`)
+  - Rijen: matches 1–24 → rijen 10–33; 25–48 → 35–58; 49–72 → 60–83
+  - KO-picks per ronde: tokens (W/AE/AK/AQ/AW/BC), landen (Z/AG/AM/AS/AY/BE), quotes (AA/AH/AN/AT/AZ/BF) — quotes via `KO_QUOTES[country][quoteField]`
+- **Fantasy-tabblad per deelnemer** (`FT_MG`, `FT_BH`, …, `FT_LV`):
+  - D13:D23 → 11 basisspelers (`player.name`)
+  - D24:D27 → 4 talenten (`player.name`)
+- **Gedeeld `Oranje_Voorspelling`-tabblad** (één voor alle deelnemers):
+  - Deelnemersinitials als kolomkoppen in rij 6/25/44 (kolommen E–S)
+  - Vraagteksten per wedstrijd in kolom D, auteur-initialen in kolom C
+  - Antwoorden per deelnemer per vraag in kolommen E–S
+  - 3 wedstrijden: matchId 10 (rijen 7–21), matchId 33 (26–40), matchId 58 (45–59)
+- Retourneert bestand als `export_{bestandsnaam}.xlsx` zonder het origineel te overschrijven
+
+#### Admin UI (`app/admin/AdminClient.tsx`)
+- Knop "📥 Download Excel" toegevoegd naast "Bereken scores" in de admin-header
+- Klikt → `fetch('/api/export')` → blob → automatische browserdownload met de juiste bestandsnaam
