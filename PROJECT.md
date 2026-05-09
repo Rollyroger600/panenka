@@ -1420,3 +1420,10 @@ The following decisions were made during implementation that deviate from or ext
 #### Admin UI (`app/admin/AdminClient.tsx`)
 - Knop "📥 Download Excel" toegevoegd naast "Bereken scores" in de admin-header
 - Klikt → `fetch('/api/export')` → blob → automatische browserdownload met de juiste bestandsnaam
+
+#### Vercel-fixes (`next.config.ts`, `260509_WK 2026_Master.xlsx`)
+- Vercel bundelt grote binaire bestanden niet automatisch mee in serverless functions (`process.cwd()` = `/var/task`, geen xlsx gevonden)
+- `260509_WK 2026_Master.xlsx` toegevoegd aan git-repo zodat Vercel het kan deployen
+- `outputFileTracingIncludes` toegevoegd aan `next.config.ts`: vertelt Next.js om `*_WK 2026_Master.xlsx` expliciet mee te bundelen in de `/api/export` function
+- Foutmelding uitgebreid met debug-info (`cwd` + gevonden xlsx-bestanden) voor diagnose
+- **Status:** fix gepusht (commit `ddd1bda`), werking op Vercel nog te bevestigen bij start volgende sessie
