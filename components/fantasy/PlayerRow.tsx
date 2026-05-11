@@ -2,7 +2,19 @@
 import { useGameStore, ALL_SLOTS, SCRATCHPAD_SLOTS } from '@/store/gameStore'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { PlayerInfoCard } from './PlayerInfoCard'
-import { computePlayerQuote, formatQuote } from '@/lib/helpers'
+import { computePlayerQuote, formatQuote, getPlayerTrend } from '@/lib/helpers'
+import type { OddsTrend } from '@/lib/data/knockoutQuotes_trends'
+
+function TrendIndicator({ trend }: { trend: OddsTrend }) {
+  if (!trend || trend === 'same') return null
+  return (
+    <span className={`absolute top-0 right-0 text-[7px] leading-none font-bold ${
+      trend === 'up' ? 'text-[#FF6B00]' : 'text-emerald-400'
+    }`}>
+      {trend === 'up' ? '▲' : '▼'}
+    </span>
+  )
+}
 import { validateFantasyXV } from '@/lib/validation'
 import { useMemo } from 'react'
 import type { Player } from '@/lib/data/players'
@@ -17,6 +29,7 @@ export function PlayerRow({ slotKey, slotIndex, player }: Props) {
   const { activeInfoSlot, setActiveInfoSlot, setFantasyPlayer, setScratchpadPlayer, fantasySquad, scratchpad } = useGameStore()
   const isOpen = activeInfoSlot === slotKey
   const quote = computePlayerQuote(player)
+  const trend = getPlayerTrend(player.country)
 
   const hasViolation = useMemo(() => {
     const players = ALL_SLOTS.map((k) => fantasySquad[k] ?? null)
@@ -51,8 +64,9 @@ export function PlayerRow({ slotKey, slotIndex, player }: Props) {
             <div className="text-xs text-[#666] truncate">{player.country} · {player.club}</div>
           </div>
           <span className="text-sm font-bold text-white shrink-0">{player.overall}</span>
-          <span className="font-heading text-xs font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">
+          <span className="relative font-heading text-xs font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">
             {formatQuote(quote)}
+            <TrendIndicator trend={trend} />
           </span>
         </button>
         <button

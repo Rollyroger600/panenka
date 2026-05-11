@@ -845,6 +845,45 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-11 — Kambi KO-quoteringen scraper & Fantasy XV trendpijltjes (Claude Code)
+
+#### Nieuw: KO-outright scraper (`scripts/scrape-ko-odds.mjs` — nieuw)
+- Scraper geschreven die WK 2026 KO-outright quoteringen ophaalt via Kambi REST API (Unibet NL), groep-ID `2010133908`
+- **Winnaar/finale/r4/r8/r16**: 5× "Eindpositie" betOffers in event "WK 2026" — gesorteerd op gemiddelde odds (hoog→laag = moeilijkste→makkelijkste ronde)
+- **Poulewinnaar**: "Eindpositie Groep" per groep A–L (12 aparte events)
+- **Derde** (kwalificeert voor KO-fase): "Kwalificeert zich voor knockout-fase" (Ja-outcome) uit "{Land} Markten 2026" events
+- **Tweede** (nummer 2 in groep): berekend via formule `1 / (p_qualify − p_win)`, waar `p = 1/odds`; geclamped op [1.01, 501]
+- Schrijft `lib/data/knockoutQuotes.ts` (48 landen, alle 8 velden) en `lib/data/knockoutQuotes_trends.ts` (trendtracking t.o.v. vorige run)
+- Naamcorrectie NAME_MAP: `Bosnië-Herzegovina → Bosnië en Herzegovina`, `Saudi-Arabië → Saoedi-Arabië`
+
+#### `lib/data/knockoutQuotes.ts` — gegenereerd bestand (was: handmatig)
+- Overschreven door scraper; interface uitgebreid naar `number | null` (i.p.v. altijd `number`)
+- `tweede`-veld had altijd waarde `1` als placeholder; nu echte berekende waarden
+
+#### `lib/scoring.ts`
+- `quote`-lookup null-safe gemaakt: `quotes[field] ?? 1` i.p.v. directe vermenigvuldiging (TypeScript fix)
+
+#### `package.json` — nieuwe npm-scripts
+- `scrape-match-odds`: `node scripts/scrape-odds.mjs`
+- `scrape-ko-odds`: `node scripts/scrape-ko-odds.mjs`
+- `scrape`: beide scrapers na elkaar
+
+#### KO-pagina — trendpijltjes (`components/knockout/Ronde32Section.tsx`, `RoundSection.tsx`)
+- `KO_TRENDS` geïmporteerd; `getTrend(country, qkey)` helper toegevoegd
+- `TrendIndicator` component: `▲` oranje (odds gestegen) / `▼` groen (odds gedaald)
+- Pijltjes zichtbaar op geselecteerde landenkaartjes in W1/W2/W3 (R32) en R16 t/m Winnaar
+
+#### Fantasy XV — `verwacht`-factor nu live uit Kambi (`lib/helpers.ts`)
+- `computePlayerQuote` berekent `verwacht` niet meer uit hardgecodeerde `teamQuotes.ts` maar via: `1 + (KO_QUOTES[land].derde / 6.5)` — overeenkomstig de formule die de user eerder had opgesteld
+- Fallback `1.5` als Kambi-data ontbreekt voor een land
+- Nieuwe export `getPlayerTrend(country)`: geeft `KO_TRENDS[country].derde` terug
+
+#### Fantasy XV — trendpijltjes (`components/fantasy/PlayerRow.tsx`, `ScratchpadRow.tsx`, `PlayerModal.tsx`)
+- `TrendIndicator` en `getPlayerTrend` toegevoegd aan alle drie bestanden
+- Pijltje zichtbaar naast spelersquotering in squad-rij, kladblok-rij en zoekmodal
+
+---
+
 ### 2026-05-11 — UX verbeteringen overzicht, fantasy & KO (Claude Code)
 
 #### Overzicht tabblad (`app/(app)/overzicht/OverzichtClient.tsx`)

@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "scrape-match-odds": "node scripts/scrape-odds.mjs",
+    "scrape-ko-odds": "node scripts/scrape-ko-odds.mjs",
+    "scrape": "npm run scrape-match-odds && npm run scrape-ko-odds"
   },
   "dependencies": {
     "@upstash/redis": "^1.37.0",

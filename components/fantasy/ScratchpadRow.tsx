@@ -1,7 +1,19 @@
 'use client'
 import { useGameStore, REGULAR_SLOTS, TALENT_SLOTS } from '@/store/gameStore'
 import { FlagImage } from '@/components/ui/FlagImage'
-import { computePlayerQuote, formatQuote } from '@/lib/helpers'
+import { computePlayerQuote, formatQuote, getPlayerTrend } from '@/lib/helpers'
+import type { OddsTrend } from '@/lib/data/knockoutQuotes_trends'
+
+function TrendIndicator({ trend }: { trend: OddsTrend }) {
+  if (!trend || trend === 'same') return null
+  return (
+    <span className={`absolute top-0 right-0 text-[7px] leading-none font-bold ${
+      trend === 'up' ? 'text-[#FF6B00]' : 'text-emerald-400'
+    }`}>
+      {trend === 'up' ? '▲' : '▼'}
+    </span>
+  )
+}
 import { useMemo } from 'react'
 import type { Player } from '@/lib/data/players'
 
@@ -14,6 +26,7 @@ export function ScratchpadRow({ slotKey, player }: Props) {
   const { activeInfoSlot, setActiveInfoSlot, setScratchpadPlayer, setFantasyPlayer, fantasySquad } = useGameStore()
   const isOpen = activeInfoSlot === slotKey
   const quote = computePlayerQuote(player)
+  const trend = getPlayerTrend(player.country)
 
   const isTalent = player.dob >= '2004-06-11'
 
@@ -47,8 +60,9 @@ export function ScratchpadRow({ slotKey, player }: Props) {
             <div className="text-xs text-[#444] truncate">{player.country} · {player.club}</div>
           </div>
           <span className="text-sm font-bold text-[#555] shrink-0">{player.overall}</span>
-          <span className="text-xs font-bold text-[#555] bg-[#1a1a1a] border border-[#333] px-2 py-0.5 rounded-lg shrink-0">
+          <span className="relative text-xs font-bold text-[#555] bg-[#1a1a1a] border border-[#333] px-2 py-0.5 rounded-lg shrink-0">
             {formatQuote(quote)}
+            <TrendIndicator trend={trend} />
           </span>
         </button>
         <button
@@ -64,7 +78,7 @@ export function ScratchpadRow({ slotKey, player }: Props) {
           <div className="flex items-center gap-2 mb-3">
             <FlagImage country={player.country} size={20} />
             <span className="text-sm font-bold text-[#999]">{player.fullName}</span>
-            <span className="ml-auto text-sm text-[#555]">Quote {formatQuote(quote)}</span>
+            <span className="relative ml-auto text-sm text-[#555]">Quote {formatQuote(quote)}<TrendIndicator trend={trend} /></span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
             {[

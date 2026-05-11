@@ -106,7 +106,7 @@ export function scoreParticipant(
     const quotes = KO_QUOTES[slot.country]
     if (!quotes) continue
     const field = QKEY_MAP[round.qkey]
-    const quote = field ? quotes[field] : 1
+    const quote = field ? (quotes[field] ?? 1) : 1
     knockout += slot.tok * quote
   }
 

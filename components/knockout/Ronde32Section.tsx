@@ -6,6 +6,8 @@ import { TokenStepper } from './TokenStepper'
 import { GROUP_TEAMS, POULE_LETTERS, getW3Excluded } from '@/lib/knockoutHelpers'
 import { ALL_COUNTRIES } from '@/lib/data/countries'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
+import { KO_TRENDS } from '@/lib/data/knockoutQuotes_trends'
+import type { OddsTrend } from '@/lib/data/knockoutQuotes_trends'
 import { SuggestionsPanel, type Suggestion } from './SuggestionsPanel'
 import { abbrevCountry } from '@/lib/helpers'
 import type { StandingRow } from '@/lib/standings'
@@ -15,6 +17,24 @@ function getQuote(country: string, qkey: string): number | null {
   if (!q) return null
   const key = qkey === 'winnaar_poule' ? 'poulewinnaar' : qkey
   return (q as unknown as Record<string, number>)[key] ?? null
+}
+
+function getTrend(country: string, qkey: string): OddsTrend {
+  const t = KO_TRENDS[country]
+  if (!t) return null
+  const key = qkey === 'winnaar_poule' ? 'poulewinnaar' : qkey
+  return (t as unknown as Record<string, OddsTrend>)[key] ?? null
+}
+
+function TrendIndicator({ trend }: { trend: OddsTrend }) {
+  if (!trend || trend === 'same') return null
+  return (
+    <span className={`absolute top-0 right-0 text-[7px] leading-none font-bold ${
+      trend === 'up' ? 'text-[#FF6B00]' : 'text-emerald-400'
+    }`}>
+      {trend === 'up' ? '▲' : '▼'}
+    </span>
+  )
 }
 
 const W1_MIN = 2; const W1_MAX = 9
@@ -177,8 +197,9 @@ export function Ronde32Section() {
                                 <FlagImage country={slot.country} size={28} />
                                 <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
                                 {getQuote(slot.country, 'derde') != null && (
-                                  <span className="font-heading text-xs font-bold text-[#FF6B00] mt-0.5">
+                                  <span className="relative font-heading text-xs font-bold text-[#FF6B00] mt-0.5 pr-2">
                                     {getQuote(slot.country, 'derde')!.toFixed(2)}
+                                    <TrendIndicator trend={getTrend(slot.country, 'derde')} />
                                   </span>
                                 )}
                               </>
@@ -288,8 +309,9 @@ function SlotSection({
                           <FlagImage country={slot.country} size={28} />
                           <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
                           {qkey && getQuote(slot.country, qkey) != null && (
-                            <span className="font-heading text-xs font-bold text-[#FF6B00] mt-0.5">
+                            <span className="relative font-heading text-xs font-bold text-[#FF6B00] mt-0.5 pr-2">
                               {getQuote(slot.country, qkey)!.toFixed(2)}
+                              <TrendIndicator trend={getTrend(slot.country, qkey)} />
                             </span>
                           )}
                         </>

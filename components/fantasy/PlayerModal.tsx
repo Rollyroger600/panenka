@@ -4,7 +4,19 @@ import { useGameStore, ALL_SLOTS, TALENT_SLOTS } from '@/store/gameStore'
 import { WK_PLAYERS } from '@/lib/data/players'
 import { FLAG_PATHS } from '@/lib/data/countries'
 import { FlagImage } from '@/components/ui/FlagImage'
-import { computePlayerQuote, formatQuote, abbrevCountry } from '@/lib/helpers'
+import { computePlayerQuote, formatQuote, abbrevCountry, getPlayerTrend } from '@/lib/helpers'
+import type { OddsTrend } from '@/lib/data/knockoutQuotes_trends'
+
+function TrendIndicator({ trend }: { trend: OddsTrend }) {
+  if (!trend || trend === 'same') return null
+  return (
+    <span className={`absolute top-0 right-0 text-[7px] leading-none font-bold ${
+      trend === 'up' ? 'text-[#FF6B00]' : 'text-emerald-400'
+    }`}>
+      {trend === 'up' ? '▲' : '▼'}
+    </span>
+  )
+}
 import type { Player } from '@/lib/data/players'
 
 const WK_START = new Date('2026-06-11')
@@ -324,7 +336,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
                   </div>
                 </div>
                 <span className="text-[10px] font-bold text-[#555] bg-[#1e1e1e] px-1.5 py-0.5 rounded shrink-0">{group}</span>
-                <span className="font-heading text-xs font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">{formatQuote(quote)}</span>
+                <span className="relative font-heading text-xs font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">{formatQuote(quote)}<TrendIndicator trend={getPlayerTrend(player.country)} /></span>
               </button>
             )
           })}

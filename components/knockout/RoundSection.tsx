@@ -5,6 +5,8 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import { TokenStepper } from './TokenStepper'
 import { ALL_COUNTRIES } from '@/lib/data/countries'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
+import { KO_TRENDS } from '@/lib/data/knockoutQuotes_trends'
+import type { OddsTrend } from '@/lib/data/knockoutQuotes_trends'
 import { abbrevCountry } from '@/lib/helpers'
 import { WINNER_PHRASES } from '@/lib/data/winnerPhrases'
 import type { KnockoutRound } from '@/lib/data/knockoutRounds'
@@ -13,6 +15,23 @@ function getQuote(country: string, qkey: string): number | null {
   const q = KO_QUOTES[country]
   if (!q) return null
   return (q as unknown as Record<string, number>)[qkey] ?? null
+}
+
+function getTrend(country: string, qkey: string): OddsTrend {
+  const t = KO_TRENDS[country]
+  if (!t) return null
+  return (t as unknown as Record<string, OddsTrend>)[qkey] ?? null
+}
+
+function TrendIndicator({ trend }: { trend: OddsTrend }) {
+  if (!trend || trend === 'same') return null
+  return (
+    <span className={`absolute top-0 right-0 text-[7px] leading-none font-bold ${
+      trend === 'up' ? 'text-[#FF6B00]' : 'text-emerald-400'
+    }`}>
+      {trend === 'up' ? '▲' : '▼'}
+    </span>
+  )
 }
 
 interface Props {
@@ -108,8 +127,9 @@ export function RoundSection({ round }: Props) {
                             {abbrevCountry(slot.country)}
                           </span>
                           {getQuote(slot.country, round.qkey) != null && (
-                            <span className="font-heading text-xs font-bold text-[#FF6B00] mt-0.5">
+                            <span className="relative font-heading text-xs font-bold text-[#FF6B00] mt-0.5 pr-2">
                               {getQuote(slot.country, round.qkey)!.toFixed(2)}
+                              <TrendIndicator trend={getTrend(slot.country, round.qkey)} />
                             </span>
                           )}
                         </>
