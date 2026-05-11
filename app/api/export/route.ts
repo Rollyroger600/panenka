@@ -2,15 +2,17 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import path from 'path'
 import fs from 'fs/promises'
-import ExcelJS from 'exceljs'
+import * as XLSX from 'xlsx'
 import { PARTICIPANTS } from '@/lib/participants'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 import { kvGet, participantKey } from '@/lib/kv/kv'
-import { REGULAR_SLOTS, TALENT_SLOTS } from '@/store/gameStore'
 import type { Prediction, KnockoutPicks, FantasySquad } from '@/store/gameStore'
 import type { OranjeAntwoordenMap, OranjeVragenMap } from '@/lib/types/oranjeVragen'
+
+const REGULAR_SLOTS = Array.from({ length: 11 }, (_, i) => `p${i}`)
+const TALENT_SLOTS = Array.from({ length: 4 }, (_, i) => `t${i}`)
 
 // Maps round qkey → KO_QUOTES field (copied from lib/scoring.ts)
 const QKEY_TO_QUOTE_FIELD: Record<string, keyof (typeof KO_QUOTES)[string]> = {
@@ -71,6 +73,12 @@ const ORANJE_SECTIONS = [
   { matchId: 58, headerRow: 44, startRow: 45 },
 ]
 
+// Set a cell value in a SheetJS worksheet
+function cv(ws: XLSX.WorkSheet, addr: string, val: string | number | null | undefined) {
+  if (val == null) return
+  ws[addr] = { v: val, t: typeof val === 'number' ? 'n' : 's' }
+}
+
 export async function GET() {
   const store = await cookies()
   if (store.get('admin')?.value !== 'true') {
@@ -94,8 +102,8 @@ export async function GET() {
   }
 
   const filePath = path.join(cwd, xlsxFile)
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.readFile(filePath)
+  const fileData = await fs.readFile(filePath)
+  const workbook = XLSX.read(fileData, { type: 'buffer', cellStyles: false })
 
   // Load global oranje vragen once
   const vragen = await kvGet<OranjeVragenMap>('oranje_vragen') ?? {}
@@ -133,9 +141,9 @@ export async function GET() {
     const { predictions, knockoutPicks, fantasySquad } = participantData[initials]
 
     // ── Poule sheet ────────────────────────────────────────────────────────
-    const pouleSheet = workbook.getWorksheet(POULE_SHEET[initials])
+    const pouleSheet = workbook.Sheets[POULE_SHEET[initials]]
     if (pouleSheet) {
-      pouleSheet.getCell('K1').value = name
+      cv(pouleSheet, 'K1', name)
 
       // Match predictions
       for (let matchId = 1; matchId <= 72; matchId++) {
@@ -144,22 +152,22 @@ export async function GET() {
         const row = rowForMatch(matchId)
         const odds = MATCH_ODDS[matchId]
 
-        if (pred.tokens != null) pouleSheet.getCell(`B${row}`).value = pred.tokens
+        if (pred.tokens != null) cv(pouleSheet, `B${row}`, pred.tokens)
 
         if (pred.toto) {
-          pouleSheet.getCell(`Q${row}`).value = pred.toto
+          cv(pouleSheet, `Q${row}`, pred.toto)
           if (odds) {
             const totoQuote = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
-            pouleSheet.getCell(`R${row}`).value = totoQuote
+            cv(pouleSheet, `R${row}`, totoQuote)
           }
         }
 
         if (pred.uitslag) {
-          pouleSheet.getCell(`S${row}`).value = pred.uitslag
+          cv(pouleSheet, `S${row}`, pred.uitslag)
           if (odds) {
             const key = normalizeScore(pred.uitslag)
             const scoreQuote = odds.scores[key]
-            if (scoreQuote != null) pouleSheet.getCell(`T${row}`).value = scoreQuote
+            if (scoreQuote != null) cv(pouleSheet, `T${row}`, scoreQuote)
           }
         }
       }
@@ -175,12 +183,12 @@ export async function GET() {
           if (!slot) continue
           const row = mapping.startRow + i
 
-          if (slot.tok) pouleSheet.getCell(`${mapping.tokCol}${row}`).value = slot.tok
+          if (slot.tok) cv(pouleSheet, `${mapping.tokCol}${row}`, slot.tok)
           if (slot.country) {
-            pouleSheet.getCell(`${mapping.landCol}${row}`).value = slot.country
+            cv(pouleSheet, `${mapping.landCol}${row}`, slot.country)
             const countryQuotes = KO_QUOTES[slot.country]
             if (countryQuotes && quoteField) {
-              pouleSheet.getCell(`${mapping.quoteCol}${row}`).value = countryQuotes[quoteField]
+              cv(pouleSheet, `${mapping.quoteCol}${row}`, countryQuotes[quoteField])
             }
           }
         }
@@ -188,28 +196,28 @@ export async function GET() {
     }
 
     // ── Fantasy sheet ──────────────────────────────────────────────────────
-    const ftSheet = workbook.getWorksheet(FT_SHEET[initials])
+    const ftSheet = workbook.Sheets[FT_SHEET[initials]]
     if (ftSheet && fantasySquad) {
       REGULAR_SLOTS.forEach((slotKey, i) => {
         const player = fantasySquad[slotKey]
-        if (player) ftSheet.getCell(`D${13 + i}`).value = player.name
+        if (player) cv(ftSheet, `D${13 + i}`, player.name)
       })
       TALENT_SLOTS.forEach((slotKey, i) => {
         const player = fantasySquad[slotKey]
-        if (player) ftSheet.getCell(`D${24 + i}`).value = player.name
+        if (player) cv(ftSheet, `D${24 + i}`, player.name)
       })
     }
   }
 
   // ── Oranje Voorspelling sheet ───────────────────────────────────────────────
-  const oranjeSheet = workbook.getWorksheet('Oranje_Voorspelling')
+  const oranjeSheet = workbook.Sheets['Oranje_Voorspelling']
   if (oranjeSheet) {
     for (const { matchId, headerRow, startRow } of ORANJE_SECTIONS) {
       const matchVragen = vragen[matchId] ?? {}
 
       // Participant initials as column headers
       PARTICIPANTS.forEach((p, i) => {
-        oranjeSheet.getCell(`${partCol(i)}${headerRow}`).value = p.initials
+        cv(oranjeSheet, `${partCol(i)}${headerRow}`, p.initials)
       })
 
       // One row per participant (as question author)
@@ -217,24 +225,24 @@ export async function GET() {
         const row = startRow + rowIdx
         const vraag = matchVragen[author.initials.toLowerCase()]
 
-        oranjeSheet.getCell(`C${row}`).value = author.initials
-        if (vraag) oranjeSheet.getCell(`D${row}`).value = vraag.tekst
+        cv(oranjeSheet, `C${row}`, author.initials)
+        if (vraag) cv(oranjeSheet, `D${row}`, vraag.tekst)
 
         // Each participant's answer to this question
         PARTICIPANTS.forEach((answerer, colIdx) => {
           const answer =
             participantData[answerer.initials].antwoorden[matchId]?.[author.initials.toLowerCase()]
-          oranjeSheet.getCell(`${partCol(colIdx)}${row}`).value = answer ?? null
+          if (answer != null) cv(oranjeSheet, `${partCol(colIdx)}${row}`, answer)
         })
       })
     }
   }
 
   // Return the modified workbook as a download
-  const buffer = await workbook.xlsx.writeBuffer()
+  const buffer: Buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
   const exportName = `export_${xlsxFile}`
 
-  return new NextResponse(buffer as ArrayBuffer, {
+  return new NextResponse(buffer, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="${exportName}"`,
