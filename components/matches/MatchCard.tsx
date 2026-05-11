@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { MATCH_ODDS } from '@/lib/data/odds'
+import { ODDS_TRENDS } from '@/lib/data/odds_trends'
+import type { OddsTrend } from '@/lib/data/odds_trends'
 import { abbrevCountry } from '@/lib/helpers'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { TotoButtons } from './TotoButtons'
@@ -15,15 +17,34 @@ type Panel = 'tokens' | 'score' | null
 const MUTED = '#7e7667'
 const LABEL = 'font-heading text-sm font-bold uppercase tracking-wider text-center'
 
+function TrendIndicator({ trend }: { trend: OddsTrend }) {
+  if (!trend || trend === 'same') return null
+  return (
+    <span
+      className={`absolute top-0.5 right-0.5 text-[7px] leading-none font-bold ${
+        trend === 'up' ? 'text-[#FF6B00]' : 'text-emerald-400'
+      }`}
+    >
+      {trend === 'up' ? '▲' : '▼'}
+    </span>
+  )
+}
+
 export function MatchCard({ match }: Props) {
   const { predictions, setPrediction } = useGameStore()
   const pred = predictions[match.id] ?? { toto: null, uitslag: null, tokens: null }
   const [openPanel, setOpenPanel] = useState<Panel>(null)
 
-  const odds = MATCH_ODDS[match.id]
+  const odds   = MATCH_ODDS[match.id]
+  const trends = ODDS_TRENDS[match.id]
+
   const totoOdd = pred.toto
     ? pred.toto === '1' ? odds?.home : pred.toto === 'X' ? odds?.draw : odds?.away
     : null
+  const totoTrend: OddsTrend = pred.toto
+    ? pred.toto === '1' ? (trends?.home ?? null) : pred.toto === 'X' ? (trends?.draw ?? null) : (trends?.away ?? null)
+    : null
+
   const scoreOdd = pred.uitslag && odds ? odds.scores[pred.uitslag] ?? null : null
   const maxScore =
     pred.tokens !== null && totoOdd != null && scoreOdd != null
@@ -88,12 +109,13 @@ export function MatchCard({ match }: Props) {
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Quote</span>
-            <span className={`h-9 w-9 flex items-center justify-center font-heading text-sm font-bold rounded-lg border ${
+            <span className={`relative h-9 w-9 flex items-center justify-center font-heading text-sm font-bold rounded-lg border ${
               totoOdd != null ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-[#3a3a3a]'
             }`}
               style={totoOdd == null ? { color: MUTED } : undefined}
             >
               {totoOdd != null ? totoOdd.toFixed(2) : '—'}
+              <TrendIndicator trend={totoTrend} />
             </span>
           </div>
         </div>

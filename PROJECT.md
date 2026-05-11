@@ -1482,6 +1482,35 @@ The following decisions were made during implementation that deviate from or ext
 - Foutmelding uitgebreid met debug-info (`cwd` + gevonden xlsx-bestanden) voor diagnose
 - **Status:** fix gepusht (commit `ddd1bda`), werking op Vercel nog te bevestigen bij start volgende sessie
 
+### 2026-05-11 — Echte Unibet-quoteringen & trendpijltjes (Claude Code)
+
+#### Kambi odds scraper (`scripts/scrape-odds.mjs` — nieuw)
+- Scraper geschreven die WK 2026-quoteringen ophaalt via de Kambi REST API (backend van Unibet NL)
+- Endpoint: `eu-offering-api.kambicdn.com/offering/v2018/ubnl/listView/football/world_cup_2026.json`
+- Haalt per event de **1X2-quotes** op (criterion "Reguliere Speeltijd") en de **correcte score-quotes** (criterion "Correcte Score") via een afzonderlijke betoffer-call per wedstrijd
+- Naam-normalisatie: `VS` → `Verenigde Staten`, `Haiti` → `Haïti`, `Bosnië-Herzegovina` → `Bosnië en Herzegovina`
+- Odds in Kambi-formaat (integer ×1000) worden omgezet naar decimaal (bijv. 1520 → 1.52)
+- Score-sleutels `"2-0"` → `"2 - 0"` (spaties toegevoegd); `"Overige"`-uitkomsten overgeslagen
+- **Trendvergelijking:** leest huidige `odds.ts` vóór overschrijven, berekent per wedstrijd of home/draw/away gestegen (`'up'`), gedaald (`'down'`) of gelijk is (`'same'`), drempel 0,01 om float-ruis te filteren
+- Uitvoer: 250ms vertraging per API-call; samenvatting toont aantal bijgewerkte wedstrijden, gewijzigde quotes en ontbrekende events
+- Gebruik: `node scripts/scrape-odds.mjs`; herbruikbaar voor dagelijkse updates — vorige run dient automatisch als trendbaseline
+
+#### `lib/data/odds.ts` — echte quoteringen
+- 49 wedstrijden bijgewerkt met echte Unibet-quoteringen (was random Excel-data): matches 1–37, 39–48 (ronde 1+2) + matches 51 en 69 (ronde 3, al beschikbaar)
+- Match 38 (België vs Iran) en matches 49–72 minus 51 en 69: **niet opgenomen** — app toont automatisch `—` via bestaande optional-chaining logica in `MatchCard` / `ScorePicker` / `scoring.ts`
+- Aantal correct score-combinaties per wedstrijd: 27–34 (afhankelijk van wat Kambi aanbiedt)
+
+#### `lib/data/odds_trends.ts` — nieuw, gegenereerd door scraper
+- Exporteert `OddsTrend = 'up' | 'down' | 'same' | null`, interface `MatchTrends { home, draw, away }`, `ODDS_UPDATED_AT` (ISO-timestamp) en `ODDS_TRENDS: Record<number, MatchTrends>`
+- Eerste run: alle trends `'same'` (geen vorige baseline); pijltjes worden zichtbaar na de tweede scraper-run
+
+#### `components/matches/MatchCard.tsx` — trendpijltjes
+- `TrendIndicator`-component toegevoegd: toont `▲` (oranje `#FF6B00`) of `▼` (groen `emerald-400`) als tiny superscript (`text-[7px]`) in de rechterbovenhoek van de toto-quote-badge
+- Pijltje volgt de geselecteerde toto-optie: `'1'` → home-trend, `'X'` → draw-trend, `'2'` → away-trend
+- Geen indicator bij `'same'` of `null`; quote-badge `relative` gemaakt voor absolute positionering
+
+---
+
 ### 2026-05-11 — Export debugged & werkend op Vercel (Claude Code)
 
 Doel: de Excel-exportknop werkend krijgen op Vercel. Er waren drie onafhankelijke bugs.
