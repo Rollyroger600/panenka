@@ -240,10 +240,11 @@ export async function GET() {
   }
 
   // Return the modified workbook as a download
-  const buffer: Buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+  const raw: Buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+  const body = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength) as ArrayBuffer
   const exportName = `export_${xlsxFile}`
 
-  return new NextResponse(buffer, {
+  return new NextResponse(body, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="${exportName}"`,
