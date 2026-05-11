@@ -1427,3 +1427,29 @@ The following decisions were made during implementation that deviate from or ext
 - `outputFileTracingIncludes` toegevoegd aan `next.config.ts`: vertelt Next.js om `*_WK 2026_Master.xlsx` expliciet mee te bundelen in de `/api/export` function
 - Foutmelding uitgebreid met debug-info (`cwd` + gevonden xlsx-bestanden) voor diagnose
 - **Status:** fix gepusht (commit `ddd1bda`), werking op Vercel nog te bevestigen bij start volgende sessie
+
+### 2026-05-11 — Export debugged & werkend op Vercel (Claude Code)
+
+Doel: de Excel-exportknop werkend krijgen op Vercel. Er waren drie onafhankelijke bugs.
+
+#### Bug 1: `'use client'`-module in server route (`app/api/export/route.ts`)
+- `REGULAR_SLOTS` en `TALENT_SLOTS` werden geïmporteerd uit `store/gameStore.ts`, dat `'use client'` bovenaan heeft
+- In een server route (App Router) levert dit onbetrouwbare exports op — de waarden kwamen als `undefined` aan, waardoor `REGULAR_SLOTS.forEach is not a function` crashte
+- **Fix:** constanten direct gedefinieerd in `route.ts` (niet geïmporteerd uit een client-module)
+
+#### Bug 2: ExcelJS crasht op `writeBuffer()` (`app/api/export/route.ts`)
+- ExcelJS 4.4.0 bevat een bug in `CfRuleXform.renderExpression()`: bij Excel-bestanden met conditionele opmaak die formule-expressies gebruiken, probeert het `model.formulae[0]` te lezen terwijl `formulae` `undefined` is
+- Dit leidde tot `TypeError: Cannot read properties of undefined (reading '0')` bij élke write, ook zonder datawijzigingen
+- **Fix:** volledig overgestapt op **SheetJS** (`xlsx`-pakket) dat het bestand round-trippen zonder de conditionele opmaak aan te raken. SheetJS leest alle XML-onderdelen as-is en wijzigt alleen de cellen die expliciet worden gezet
+- `exceljs` verwijderd uit dependencies; `xlsx@0.18.5` toegevoegd
+- Hulpfunctie `cv(ws, addr, val)` schrijft een celwaarde via SheetJS API
+
+#### Bug 3: TypeScript build-fout blokkeert alle Vercel-deploys (`app/api/export/route.ts`)
+- `XLSX.write()` retourneert `Buffer<ArrayBufferLike>`; TypeScript accepteert dit niet als `BodyInit` voor `new NextResponse()`
+- Dit veroorzaakte een build-fout (`Failed to compile`) waardoor Vercel stilletjes de oude versie bleef serveren — de foutmelding in de browser bleef leeg omdat het nieuwe JS nooit werd gedeployd
+- **Fix:** `raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength) as ArrayBuffer` — `.slice()` garandeert een echte `ArrayBuffer` zonder `SharedArrayBuffer`-ambiguïteit
+
+#### Overige verbeteringen
+- `handleExport` in `AdminClient.tsx`: foutmelding toont nu het HTTP-statusnummer (`HTTP 404`, `HTTP 500`, etc.) voor makkelijkere diagnose
+- `next.config.ts` `outputFileTracingIncludes`: naast de glob ook expliciete bestandsnamen om spaties in bestandsnamen betrouwbaar te bundelen
+- `maxDuration = 60` weer verwijderd (overschrijdt Hobby-plan limiet van 10s en veroorzaakte build-failures)
