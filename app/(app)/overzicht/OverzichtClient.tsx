@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { usePredictions } from '@/hooks/usePredictions'
 import { useOranjeVoorspelling } from '@/hooks/useOranjeVoorspelling'
 import { useKnockoutPicks } from '@/hooks/useKnockoutPicks'
@@ -7,7 +7,7 @@ import { useFantasyXV } from '@/hooks/useFantasyXV'
 import { useTokenBudget } from '@/hooks/useTokenBudget'
 import { useDeadline } from '@/hooks/useDeadline'
 import { useGameStore, ALL_SLOTS } from '@/store/gameStore'
-import { confirmPredictions, loadConfirmed } from '@/app/actions/overzicht'
+import { confirmPredictions } from '@/app/actions/overzicht'
 import { SkeletonList } from '@/components/ui/Skeleton'
 
 const NED_MATCH_IDS = [10, 33, 58]
@@ -18,14 +18,10 @@ interface Props {
   participantName: string
 }
 
-function StatRow({ label, value, total, color = '#FF6B00' }: {
-  label: string
-  value: number
-  total: number
-  color?: string
-}) {
+function StatRow({ label, value, total }: { label: string; value: number; total: number }) {
   const pct = total > 0 ? Math.min((value / total) * 100, 100) : 0
   const done = value === total
+  const barColor = done ? '#FF6B00' : value > 0 ? '#FFC49A' : 'transparent'
   return (
     <div className="py-3 border-b border-[#1a1a1a] last:border-0">
       <div className="flex items-center justify-between mb-1.5">
@@ -37,7 +33,7 @@ function StatRow({ label, value, total, color = '#FF6B00' }: {
       <div className="h-1 rounded-full bg-[#2a2a2a]">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: done ? '#FF6B00' : color }}
+          style={{ width: `${pct}%`, backgroundColor: barColor }}
         />
       </div>
     </div>
@@ -54,14 +50,10 @@ export function OverzichtClient({ initials, participantName }: Props) {
   const { total, used, remaining } = useTokenBudget(initials)
   const { predictions, oranjeVoorspelling, knockoutPicks, fantasySquad } = useGameStore()
 
-  const [confirmed, setConfirmed] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [confirming, setConfirming] = useState(false)
 
   const isLoaded = pouleLoaded && oranjeLoaded && koLoaded && fantasyLoaded
-
-  useEffect(() => {
-    loadConfirmed().then(setConfirmed)
-  }, [])
 
   const stats = useMemo(() => {
     const poule = Object.values(predictions).filter((p) => p.tokens !== null).length
@@ -75,11 +67,19 @@ export function OverzichtClient({ initials, participantName }: Props) {
     return { poule, oranje, ko, fantasy }
   }, [predictions, oranjeVoorspelling, knockoutPicks, fantasySquad])
 
+  const oranjeTotal = isVraagPast ? 45 : 3
+  const isComplete =
+    stats.poule === 72 &&
+    stats.oranje === oranjeTotal &&
+    stats.ko === 63 &&
+    stats.fantasy === 15
+
   async function handleConfirm() {
     setConfirming(true)
     await confirmPredictions()
-    setConfirmed(true)
     setConfirming(false)
+    setShowSuccess(true)
+    setTimeout(() => setShowSuccess(false), 3000)
   }
 
   return (
@@ -93,9 +93,9 @@ export function OverzichtClient({ initials, participantName }: Props) {
         <>
           <div className="rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 mb-4">
             <StatRow label="Poulewedstrijden" value={stats.poule} total={72} />
-            <StatRow label="Oranje vragen" value={stats.oranje} total={isVraagPast ? 45 : 3} color="#FF6B00" />
-            <StatRow label="Knockout landen" value={stats.ko} total={63} color="#FFB800" />
-            <StatRow label="Fantasy spelers" value={stats.fantasy} total={15} color="#FF6B00" />
+            <StatRow label="Oranje vragen" value={stats.oranje} total={oranjeTotal} />
+            <StatRow label="Knockout landen" value={stats.ko} total={63} />
+            <StatRow label="Fantasy spelers" value={stats.fantasy} total={15} />
           </div>
 
           <div className="rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] p-4 mb-5">
@@ -128,19 +128,26 @@ export function OverzichtClient({ initials, participantName }: Props) {
               <div className="text-[#555] font-bold">Deadline verstreken</div>
               <div className="text-[#444] text-xs mt-1">Geen wijzigingen meer mogelijk</div>
             </div>
-          ) : confirmed ? (
-            <div className="rounded-xl bg-[#FF6B00]/10 border border-[#FF6B00]/30 p-4 text-center">
-              <div className="text-[#FF6B00] text-2xl mb-1">✓</div>
-              <div className="text-[#FF6B00] font-bold">Inzending bevestigd!</div>
-            </div>
           ) : (
-            <button
-              onClick={handleConfirm}
-              disabled={confirming}
-              className="w-full py-4 rounded-xl font-bold text-base tracking-widest uppercase bg-[#FF6B00] text-white hover:bg-[#FF8C33] disabled:opacity-60 transition-colors"
-            >
-              {confirming ? 'Bezig…' : 'Bevestig inzending →'}
-            </button>
+            <>
+              {showSuccess && (
+                <div className="rounded-xl bg-[#FF6B00]/10 border border-[#FF6B00]/30 p-3 text-center mb-3">
+                  <div className="text-[#FF6B00] font-bold text-sm">✓ Wijzigingen ontvangen!</div>
+                </div>
+              )}
+              <button
+                onClick={handleConfirm}
+                disabled={confirming || !isComplete}
+                className="w-full py-4 rounded-xl font-bold text-base tracking-widest uppercase bg-[#FF6B00] text-white hover:bg-[#FF8C33] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {confirming ? 'Bezig…' : 'Bevestig inzending →'}
+              </button>
+              {!isComplete && (
+                <p className="text-center text-[#888] text-xs mt-2">
+                  Vul alle onderdelen volledig in om te kunnen bevestigen
+                </p>
+              )}
+            </>
           )}
 
           {!isPast && (

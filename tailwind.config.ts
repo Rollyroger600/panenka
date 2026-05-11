@@ -10,7 +10,7 @@ const config: Config = {
       fontFamily: {
         heading: ['"Built Titling"', 'sans-serif'],
         accent:  ['"Sporty Pro"', 'sans-serif'],
-        script:  ['Chalky', 'cursive'],
+        script:  ['var(--font-caveat)', 'cursive'],
         body:    ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {

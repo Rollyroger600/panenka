@@ -32,22 +32,32 @@ export function ScratchpadRow({ slotKey, player }: Props) {
 
   return (
     <>
-      <button
-        onClick={() => setActiveInfoSlot(slotKey)}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left border-dashed ${
-          isOpen ? 'bg-[#111] border-[#333]' : 'bg-[#0d0d0d] border-[#222] hover:border-[#333]'
-        } border`}
+      <div
+        className={`flex items-center rounded-xl border border-dashed ${
+          isOpen ? 'bg-[#111] border-[#333]' : 'bg-[#0d0d0d] border-[#222]'
+        }`}
       >
-        <FlagImage country={player.country} size={28} className="shrink-0 opacity-60" />
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-[#888] truncate">{player.name}</div>
-          <div className="text-xs text-[#444] truncate">{player.country} · {player.club}</div>
-        </div>
-        <span className="text-sm font-bold text-[#555] shrink-0">{player.overall}</span>
-        <span className="text-xs font-bold text-[#555] bg-[#1a1a1a] border border-[#333] px-2 py-0.5 rounded-lg shrink-0">
-          {formatQuote(quote)}
-        </span>
-      </button>
+        <button
+          onClick={() => setActiveInfoSlot(slotKey)}
+          className="flex-1 flex items-center gap-3 px-3 py-2.5 text-left min-w-0 hover:bg-white/5 rounded-l-xl transition-colors"
+        >
+          <FlagImage country={player.country} size={28} className="shrink-0 opacity-60" />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-[#888] truncate">{player.name}</div>
+            <div className="text-xs text-[#444] truncate">{player.country} · {player.club}</div>
+          </div>
+          <span className="text-sm font-bold text-[#555] shrink-0">{player.overall}</span>
+          <span className="text-xs font-bold text-[#555] bg-[#1a1a1a] border border-[#333] px-2 py-0.5 rounded-lg shrink-0">
+            {formatQuote(quote)}
+          </span>
+        </button>
+        <button
+          onClick={() => { setScratchpadPlayer(slotKey, null); setActiveInfoSlot(null) }}
+          className="px-3 py-2.5 text-[#444] hover:text-[#999] transition-colors shrink-0 text-base"
+        >
+          ✕
+        </button>
+      </div>
 
       {isOpen && (
         <div className="mx-1 mb-2 rounded-xl bg-[#0d0d0d] border border-dashed border-[#2a2a2a] p-3">
@@ -71,25 +81,17 @@ export function ScratchpadRow({ slotKey, player }: Props) {
               </div>
             ))}
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={moveToTeam}
-              disabled={!firstEmptySquadSlot}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                firstEmptySquadSlot
-                  ? 'bg-[#1a3a2a] text-[#4adf8a] border border-[#4adf8a]/20 hover:bg-[#1a3a2a]/80'
-                  : 'bg-[#1a1a1a] text-[#444] border border-[#2a2a2a] cursor-not-allowed'
-              }`}
-            >
-              ↑ Zet in team
-            </button>
-            <button
-              onClick={() => { setScratchpadPlayer(slotKey, null); setActiveInfoSlot(null) }}
-              className="flex-1 py-1.5 rounded-lg bg-[#1a1a1a] text-[#555] border border-[#2a2a2a] text-xs font-bold hover:bg-[#222] transition-colors"
-            >
-              ✕ Verwijder
-            </button>
-          </div>
+          <button
+            onClick={moveToTeam}
+            disabled={!firstEmptySquadSlot}
+            className={`w-full py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              firstEmptySquadSlot
+                ? 'bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/20 hover:bg-[#FF6B00]/20'
+                : 'bg-[#1a1a1a] text-[#444] border border-[#2a2a2a] cursor-not-allowed'
+            }`}
+          >
+            ↑ Zet in team
+          </button>
         </div>
       )}
     </>

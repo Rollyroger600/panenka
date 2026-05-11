@@ -29,7 +29,7 @@ export function TeamNameEditor() {
           onBlur={commit}
           onKeyDown={(e) => { if (e.key === 'Enter') commit() }}
           autoFocus
-          className="font-script text-2xl text-white bg-transparent border-b border-[#FF6B00] outline-none w-full text-center"
+          className="font-script text-[28px] text-white bg-transparent border-b border-[#FF6B00] outline-none w-full text-center"
         />
       </div>
     )
@@ -41,7 +41,7 @@ export function TeamNameEditor() {
       className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 flex items-center justify-center"
     >
       <span
-        className={`font-script text-2xl transition-colors ${teamName ? 'text-white' : 'text-[#555]'}`}
+        className={`font-script text-[28px] transition-colors ${teamName ? 'text-white' : 'text-[#555]'}`}
       >
         {teamName || 'Teamnaam kiezen'}
       </span>

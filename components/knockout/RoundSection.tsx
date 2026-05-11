@@ -90,32 +90,42 @@ export function RoundSection({ round }: Props) {
             <div className={`grid ${gridClass} gap-2 ${wrapperClass}`}>
               {row.map(({ key, label, slot }) => (
                 <div key={key} className="flex flex-col items-center gap-1">
-                  <button
-                    onClick={() => setOpenPicker(openPicker === key ? null : key)}
-                    className={`w-full aspect-square rounded-xl flex flex-col items-center justify-center border transition-colors ${
-                      slot.country
-                        ? 'border-[#FF6B00] bg-[#1e1e1e]'
-                        : openPicker === key
-                        ? 'border-[#555] bg-[#1e1e1e]'
-                        : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
-                    }`}
-                  >
-                    {slot.country ? (
-                      <>
-                        <FlagImage country={slot.country} size={28} />
-                        <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">
-                          {abbrevCountry(slot.country)}
-                        </span>
-                        {getQuote(slot.country, round.qkey) != null && (
-                          <span className="font-heading text-xs font-bold text-[#FF6B00] mt-0.5">
-                            {getQuote(slot.country, round.qkey)!.toFixed(2)}
+                  <div className="relative w-full aspect-square">
+                    <button
+                      onClick={() => setOpenPicker(openPicker === key ? null : key)}
+                      className={`w-full h-full rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                        slot.country
+                          ? 'border-[#FF6B00] bg-[#1e1e1e]'
+                          : openPicker === key
+                          ? 'border-[#555] bg-[#1e1e1e]'
+                          : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                      }`}
+                    >
+                      {slot.country ? (
+                        <>
+                          <FlagImage country={slot.country} size={28} />
+                          <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">
+                            {abbrevCountry(slot.country)}
                           </span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-xl font-bold" style={{ color: '#333' }}>{label}</span>
+                          {getQuote(slot.country, round.qkey) != null && (
+                            <span className="font-heading text-xs font-bold text-[#FF6B00] mt-0.5">
+                              {getQuote(slot.country, round.qkey)!.toFixed(2)}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-xl font-bold" style={{ color: '#333' }}>{label}</span>
+                      )}
+                    </button>
+                    {slot.country && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); clearKnockoutSlot(key); setOpenPicker(null) }}
+                        className="absolute top-1 right-1 text-[#444] hover:text-[#999] transition-colors text-[11px] leading-none w-4 h-4 flex items-center justify-center"
+                      >
+                        ✕
+                      </button>
                     )}
-                  </button>
+                  </div>
                   <TokenStepper
                     value={slot.tok}
                     min={round.minTokens}

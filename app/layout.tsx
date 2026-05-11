@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
+import { Caveat } from 'next/font/google'
 import './globals.css'
+
+const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' })
 
 export const metadata: Metadata = {
   title: 'Panenka — WK 2026',
@@ -18,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="nl">
-      <body>
+      <body className={caveat.variable}>
         <div className="max-w-[430px] mx-auto min-h-screen">{children}</div>
       </body>
     </html>

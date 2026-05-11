@@ -845,6 +845,36 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-11 — UX verbeteringen overzicht, fantasy & KO (Claude Code)
+
+#### Overzicht tabblad (`app/(app)/overzicht/OverzichtClient.tsx`)
+- Bevestigingsknop altijd zichtbaar (was: verdween na eerste klik); na bevestigen toont tijdelijke toast "✓ Wijzigingen ontvangen!" die na 3 seconden automatisch verdwijnt
+- Knop alleen klikbaar als alle vier secties volledig zijn ingevuld (poule 72/72, oranje 3 of 45, knockout 63/63, fantasy 15/15); anders `disabled` met hint-tekst
+- Progress bars drie staten: grijs (leeg) / licht oranje `#FFC49A` (deels) / oranje `#FF6B00` (compleet) — geel verwijderd
+- `color` prop van `StatRow` verwijderd; `oranjeTotal` variabele hergebruikt voor zowel StatRow als isComplete-check
+- `confirmed`-state en `loadConfirmed()` verwijderd (niet meer nodig)
+
+#### Fantasy XV — lettertype & grootte (`app/layout.tsx`, `tailwind.config.ts`, `components/fantasy/TeamNameEditor.tsx`, `app/(app)/fantasy/FantasyClient.tsx`)
+- Caveat (Google Font) toegevoegd via `next/font/google` als CSS-variabele `--font-caveat`
+- `font-script` in tailwind.config.ts wijst nu naar `var(--font-caveat)` i.p.v. Chalky
+- Teamnaam en coach: handgeschreven stijl Chalky vervangen door Caveat
+- Tekstgrootte teamnaam en coach: `text-2xl` (24px) → `text-[28px]`
+
+#### Fantasy XV — kaart UX (`components/fantasy/PlayerInfoCard.tsx`, `PlayerRow.tsx`, `ScratchpadRow.tsx`)
+- Label-kleur in info-kaartje (Overall, Positie(s), etc.): `#555` → `#888`
+- "Naar kladblok"-knop: blauw → oranje (consistent met kleurschema)
+- Directe ✕ verwijder-knop toegevoegd rechts van quotering in `PlayerRow` (subtiel grijs, hover naar `#999`)
+- "Verwijder"-knop verwijderd uit `PlayerInfoCard`; `onRemove` prop verwijderd; "Naar kladblok" neemt volledige breedte
+- Zelfde ✕ knop en verwijder-logica toegepast op `ScratchpadRow`; "Verwijder"-knop uit kladblok info-kaartje verwijderd; "Zet in team" neemt volledige breedte
+- Kaart `<button>` omgebouwd naar `relative div` + inner button om nesting van buttons te vermijden
+
+#### KO tabblad — directe verwijder-knop (`components/knockout/RoundSection.tsx`, `Ronde32Section.tsx`)
+- Directe ✕ rechtsboven op geselecteerde landenkaartjes in `RoundSection` (R16 t/m finale)
+- Zelfde ✕ toegevoegd aan alle drie secties in `Ronde32Section`: poulewinnaars, nummers 2, beste nummers 3
+- Kaart `<button>` vervangen door `relative div` + inner button + absoluut gepositioneerde ✕ button
+
+---
+
 ### 2026-05-11 — Navigatie SVG-iconen & UI leesbaarheid (Claude Code)
 
 #### Navigatie — custom SVG-iconen (`components/icons/NavIcons.tsx` — nieuw, `components/layout/BottomNav.tsx`, `AppHeader.tsx`, `AppShell.tsx`)

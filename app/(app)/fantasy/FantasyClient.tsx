@@ -74,7 +74,7 @@ export function FantasyClient({ participantName }: Props) {
 
       {/* Coach label */}
       <div className="mt-2 mb-8 text-center">
-        <span className="font-script text-2xl text-white">
+        <span className="font-script text-[28px] text-white">
           Coach: {participantName}
         </span>
       </div>
