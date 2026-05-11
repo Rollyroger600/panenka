@@ -1,3 +1,5 @@
+export const maxDuration = 60
+
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import path from 'path'
@@ -80,6 +82,7 @@ function cv(ws: XLSX.WorkSheet, addr: string, val: string | number | null | unde
 }
 
 export async function GET() {
+  try {
   const store = await cookies()
   if (store.get('admin')?.value !== 'true') {
     return new NextResponse('Unauthorized', { status: 401 })
@@ -248,4 +251,9 @@ export async function GET() {
       'Content-Disposition': `attachment; filename="${exportName}"`,
     },
   })
+  } catch (err) {
+    const msg = err instanceof Error ? err.stack ?? err.message : String(err)
+    console.error('export route fout:', msg)
+    return new NextResponse(`Interne fout:\n${msg}`, { status: 500 })
+  }
 }

@@ -103,7 +103,7 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
 
   async function handleExport() {
     const res = await fetch('/api/export')
-    if (!res.ok) { alert('Export mislukt: ' + (await res.text())); return }
+    if (!res.ok) { alert(`Export mislukt (HTTP ${res.status}):\n${await res.text() || '(geen foutmelding)'}`) ; return }
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
