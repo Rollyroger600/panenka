@@ -54,7 +54,7 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
           <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.away)}</span>
           <FlagImage country={match.away} size={24} />
         </div>
-        <p className="font-heading font-light text-[10px] uppercase tracking-widest mt-0.5 text-[#7e7667]">
+        <p className="font-heading font-light text-[12px] uppercase tracking-widest mt-0.5 text-[#7e7667]">
           {match.date} · {match.stadium}
         </p>
         {ingediend && (
@@ -74,7 +74,7 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
           <>
             {/* Vraagtekst */}
             <div>
-              <label className="text-[10px] text-[#555] uppercase tracking-wide font-bold block mb-1">
+              <label className="text-[10px] text-[#888] uppercase tracking-wide font-bold block mb-1">
                 Jouw vraag
               </label>
               <textarea
@@ -82,13 +82,13 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
                 onChange={(e) => setTekst(e.target.value)}
                 placeholder="Bijv. 'Wie scoort het eerste doelpunt?'"
                 rows={2}
-                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#444] outline-none focus:border-[#FF6B00] resize-none"
+                className="w-full bg-[#1e1e1e] border border-[#444] rounded-xl px-3 py-2 text-sm text-white placeholder-[#666] outline-none focus:border-[#FF6B00] resize-none"
               />
             </div>
 
             {/* Antwoordtype */}
             <div>
-              <label className="text-[10px] text-[#555] uppercase tracking-wide font-bold block mb-1.5">
+              <label className="text-[10px] text-[#888] uppercase tracking-wide font-bold block mb-1.5">
                 Antwoordtype
               </label>
               <div className="flex flex-wrap gap-1.5 justify-center">
@@ -99,7 +99,7 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${
                       type === t
                         ? 'bg-[#FF6B00] text-white'
-                        : 'bg-[#252525] text-[#666] hover:text-[#999]'
+                        : 'bg-[#231f1a] border border-[#3d3020] text-[#999] hover:text-[#ccc]'
                     }`}
                   >
                     {getAntwoordTypeLabel(t, opponent)}
@@ -111,14 +111,14 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
             {/* Suggestieveld voor 'anders' */}
             {type === 'anders' && (
               <div>
-                <label className="text-[10px] text-[#555] uppercase tracking-wide font-bold block mb-1">
+                <label className="text-[10px] text-[#888] uppercase tracking-wide font-bold block mb-1">
                   Jouw suggestie voor de admin
                 </label>
                 <input
                   value={suggestie}
                   onChange={(e) => setSuggestie(e.target.value)}
                   placeholder="Beschrijf hoe jouw vraag beantwoord kan worden"
-                  className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
+                  className="w-full bg-[#1e1e1e] border border-[#444] rounded-xl px-3 py-2 text-sm text-white placeholder-[#666] outline-none focus:border-[#FF6B00]"
                 />
               </div>
             )}
@@ -132,7 +132,7 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
                   ? 'bg-[#1a3a2a] text-[#4adf8a] border border-[#4adf8a]/20'
                   : tekst.trim()
                   ? 'bg-[#FF6B00] text-white hover:bg-[#e55e00]'
-                  : 'bg-[#1e1e1e] text-[#444] cursor-not-allowed'
+                  : 'bg-[#1e1e1e] border border-[#3a3a3a] text-[#666] cursor-not-allowed'
               }`}
             >
               {status === 'saving' ? 'Opslaan…' : status === 'saved' ? '✓ Opgeslagen' : ingediend ? 'Vraag bijwerken' : 'Vraag indienen'}

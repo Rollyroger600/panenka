@@ -30,14 +30,14 @@ function StatRow({ label, value, total, color = '#FF6B00' }: {
     <div className="py-3 border-b border-[#1a1a1a] last:border-0">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-sm text-[#ccc]">{label}</span>
-        <span className={`text-sm font-bold ${done ? 'text-[#2ECC71]' : 'text-white'}`}>
+        <span className={`text-sm font-bold ${done ? 'text-[#FF6B00]' : 'text-white'}`}>
           {done ? '✓ ' : ''}{value} <span className="text-[#444]">/ {total}</span>
         </span>
       </div>
       <div className="h-1 rounded-full bg-[#2a2a2a]">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: done ? '#2ECC71' : color }}
+          style={{ width: `${pct}%`, backgroundColor: done ? '#FF6B00' : color }}
         />
       </div>
     </div>
@@ -95,7 +95,7 @@ export function OverzichtClient({ initials, participantName }: Props) {
             <StatRow label="Poulewedstrijden" value={stats.poule} total={72} />
             <StatRow label="Oranje vragen" value={stats.oranje} total={isVraagPast ? 45 : 3} color="#FF6B00" />
             <StatRow label="Knockout landen" value={stats.ko} total={63} color="#FFB800" />
-            <StatRow label="Fantasy spelers" value={stats.fantasy} total={15} color="#2ECC71" />
+            <StatRow label="Fantasy spelers" value={stats.fantasy} total={15} color="#FF6B00" />
           </div>
 
           <div className="rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] p-4 mb-5">
@@ -129,10 +129,9 @@ export function OverzichtClient({ initials, participantName }: Props) {
               <div className="text-[#444] text-xs mt-1">Geen wijzigingen meer mogelijk</div>
             </div>
           ) : confirmed ? (
-            <div className="rounded-xl bg-[#2ECC71]/10 border border-[#2ECC71]/30 p-4 text-center">
-              <div className="text-[#2ECC71] text-2xl mb-1">✓</div>
-              <div className="text-[#2ECC71] font-bold">Inzending bevestigd!</div>
-              <div className="text-[#555] text-xs mt-1">Je kunt tot de deadline nog wijzigingen maken</div>
+            <div className="rounded-xl bg-[#FF6B00]/10 border border-[#FF6B00]/30 p-4 text-center">
+              <div className="text-[#FF6B00] text-2xl mb-1">✓</div>
+              <div className="text-[#FF6B00] font-bold">Inzending bevestigd!</div>
             </div>
           ) : (
             <button
@@ -146,8 +145,8 @@ export function OverzichtClient({ initials, participantName }: Props) {
 
           {!isPast && (
             <>
-              <p className="text-center text-[#444] text-xs mt-3">
-                Je kunt tot de deadline (9 jun 17:00) altijd nog wijzigingen maken
+              <p className="text-center text-[#888] text-xs mt-3">
+                Je kunt altijd nog wijzigingen maken
               </p>
               <div className="flex justify-center mt-3">
                 <a

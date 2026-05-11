@@ -61,7 +61,7 @@ export function VragenBeantwoordenCard({ match, vragen, antwoorden, mijnInitials
           <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.away)}</span>
           <FlagImage country={match.away} size={24} />
         </div>
-        <p className="font-heading font-light text-[10px] uppercase tracking-widest mt-0.5 text-[#7e7667]">
+        <p className="font-heading font-light text-[12px] uppercase tracking-widest mt-0.5 text-[#7e7667]">
           {match.date} · {match.stadium}
         </p>
         <span className="text-[10px] text-[#555] mt-0.5">

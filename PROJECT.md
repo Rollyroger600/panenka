@@ -845,6 +845,34 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-11 — Navigatie SVG-iconen & UI leesbaarheid (Claude Code)
+
+#### Navigatie — custom SVG-iconen (`components/icons/NavIcons.tsx` — nieuw, `components/layout/BottomNav.tsx`, `AppHeader.tsx`, `AppShell.tsx`)
+- FIFA-info knop verplaatst van header naar footer (BottomNav); drawer-state mee verplaatst
+- `NavIcons.tsx` aangemaakt met 6 inline SVG-componenten: `IconPoule`, `IconKO`, `IconOranje`, `IconFantasy`, `IconOverzicht`, `IconBeker` — allemaal met `currentColor` zodat oranje bij selectie automatisch werkt
+- KO-icoon gebruikt `stroke="currentColor"`; overige `fill="currentColor"`
+- Beker-icoon permanent oranje (`text-[#FF6B00]`), groter (`w-8 h-8`)
+- `AppHeader.tsx`: `onInfoClick`-prop en ℹ-knop verwijderd; `AppShell.tsx`: drawer-state en `FifaInfoDrawer` verwijderd
+
+#### Oranje tabblad — leesbaarheid (`components/oranje/VraagIndienenCard.tsx`, `VragenBeantwoordenCard.tsx`)
+- Labels "Jouw vraag" / "Antwoordtype": `#555` → `#888`
+- Placeholder: `#444` → `#666`
+- Input/textarea borders: `#2a2a2a` → `#444`
+- Disabled indien-knop: border toegevoegd, tekst `#444` → `#666`
+- Antwoordtype-buttons (inactief): warm donkerbruin achtergrond `#231f1a` + oranje-getinte rand `#3d3020`
+- Datum/stadion tekst: `10px` → `12px` (beide kaarten)
+- Uitleg-tekst: body `#555` → `#888`, koptekst `#666` → `#aaa`
+
+#### Fantasy tabblad — leesbaarheid (`app/(app)/fantasy/FantasyClient.tsx`)
+- Uitleg puntentelling: body `#555` → `#888`, koptekst `#666` → `#aaa`
+
+#### Overzicht tabblad (`app/(app)/overzicht/OverzichtClient.tsx`)
+- Alle groene accenten (`#2ECC71`) vervangen door oranje (`#FF6B00`): vinkjes, progress bars, "Inzending bevestigd"-kaart
+- Subtekst onder "Inzending bevestigd" verwijderd
+- Deadline-tekst: `#444` → `#888`; `(9 jun 17:00)` verwijderd
+
+---
+
 ### 2026-05-11 — Excel export verbeterd & Fantasy U22 auto-placement (Claude Code)
 
 #### Export — opmaakbehoud (`app/api/export/route.ts`, `package.json`, `types/xlsx-populate.d.ts` — nieuw)

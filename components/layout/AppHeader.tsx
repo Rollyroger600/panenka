@@ -5,10 +5,9 @@ import { TokenCount } from './TokenCount'
 interface Props {
   name: string
   initials: string
-  onInfoClick?: () => void
 }
 
-export function AppHeader({ name, initials, onInfoClick }: Props) {
+export function AppHeader({ name, initials }: Props) {
   const [compact, setCompact] = useState(false)
 
   useEffect(() => {
@@ -48,16 +47,6 @@ export function AppHeader({ name, initials, onInfoClick }: Props) {
         <span className="text-sm font-bold text-white">{name}</span>
         <span className="text-[#555]">|</span>
         <TokenCount initials={initials} />
-        {onInfoClick && (
-          <button
-            onClick={onInfoClick}
-            className="ml-1 text-xs leading-none opacity-40 hover:opacity-80 transition-opacity"
-            style={{ color: '#F0F0F0' }}
-            aria-label="Info over dit WK"
-          >
-            ℹ
-          </button>
-        )}
       </div>
     </header>
   )

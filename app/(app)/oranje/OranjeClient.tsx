@@ -111,8 +111,8 @@ export function OranjeClient({ mijnInitials }: Props) {
       })}
 
       {!isVraagPast && (
-        <div className="mt-4 rounded-xl bg-[#111] border border-[#2a2a2a] p-4 text-xs text-[#555] space-y-1">
-          <p className="font-bold text-[#666] mb-2">Hoe werkt het?</p>
+        <div className="mt-4 rounded-xl bg-[#111] border border-[#2a2a2a] p-4 text-xs text-[#888] space-y-1">
+          <p className="font-bold text-[#aaa] mb-2">Hoe werkt het?</p>
           <p>① Dien vóór 31 mei één vraag in per wedstrijd.</p>
           <p>② Na de deadline publiceert de admin de vragen.</p>
           <p>③ Beantwoord alle vragen vóór 9 juni.</p>

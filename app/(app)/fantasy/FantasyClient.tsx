@@ -104,8 +104,8 @@ export function FantasyClient({ participantName }: Props) {
       </div>
 
       {/* Uitleg puntensysteem */}
-      <div className="mt-4 rounded-xl bg-[#111] border border-[#2a2a2a] p-4 text-xs text-[#555] space-y-1 mb-6">
-        <p className="font-bold text-[#666] mb-2">Hoe werkt de puntentelling?</p>
+      <div className="mt-4 rounded-xl bg-[#111] border border-[#2a2a2a] p-4 text-xs text-[#888] space-y-1 mb-6">
+        <p className="font-bold text-[#aaa] mb-2">Hoe werkt de puntentelling?</p>
         <p>Spelers verdienen punten met doelpunten en assists. Het totaal aan goals en assists wordt per speler vermenigvuldigd met de quotering van de betreffende speler (oranje getal rechts) en toegevoegd aan je puntentotaal.</p>
         <p className="mt-2">De quotering wordt bepaald door de kwaliteit van de speler (rating EA FC), de kwaliteit van het land (FIFA ranking) en de verwachting van het land in het toernooi (gebaseerd op quoteringen voor behalen volgende ronde).</p>
       </div>
