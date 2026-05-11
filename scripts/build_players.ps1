@@ -51,7 +51,7 @@ function lookupNat($natName) {
 }
 
 # Parse sofifa sheet (sheet181.xml)
-# A=player_id, B=short_name, D=long_name, E=overall, F=player_positions
+# A=player_id, B=short_name, C=middle_name, D=long_name, E=overall, F=player_positions
 # G=age, H=dob(serial), I=league_id, J=league_name, M=club_name, O=nationality_name
 $sofXml = [xml][System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes("$tmpDir\xl\worksheets\sheet181.xml"))
 
@@ -63,6 +63,7 @@ foreach ($row in $sofXml.worksheet.sheetData.row) {
 
     $sofPlayerId = getStr ($row.c | Where-Object { $_.r -eq "A$rn" })
     $shortName   = getStr ($row.c | Where-Object { $_.r -eq "B$rn" })
+    $middleName  = getStr ($row.c | Where-Object { $_.r -eq "C$rn" })
     $longName    = getStr ($row.c | Where-Object { $_.r -eq "D$rn" })
     $overallStr  = getStr ($row.c | Where-Object { $_.r -eq "E$rn" })
     $posStr      = getStr ($row.c | Where-Object { $_.r -eq "F$rn" })
@@ -92,6 +93,7 @@ foreach ($row in $sofXml.worksheet.sheetData.row) {
         id = $sofId
         leagueId = $lgId
         name = $shortName
+        middleName = $middleName
         fullName = $longName
         country = $info.NL
         overall = $overall
@@ -120,6 +122,7 @@ $lines.Add('export interface Player {')
 $lines.Add('  id: number')
 $lines.Add('  leagueId: number')
 $lines.Add('  name: string')
+$lines.Add('  middleName: string')
 $lines.Add('  fullName: string')
 $lines.Add('  country: string')
 $lines.Add('  overall: number')
@@ -139,6 +142,7 @@ foreach ($p in $sorted) {
         "id: $($p.id), " +
         "leagueId: $($p.leagueId), " +
         "name: $(tsStr $p.name), " +
+        "middleName: $(tsStr $p.middleName), " +
         "fullName: $(tsStr $p.fullName), " +
         "country: $(tsStr $p.country), " +
         "overall: $($p.overall), " +

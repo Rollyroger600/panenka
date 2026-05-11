@@ -845,6 +845,32 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-11 — Excel export verbeterd & Fantasy U22 auto-placement (Claude Code)
+
+#### Export — opmaakbehoud (`app/api/export/route.ts`, `package.json`, `types/xlsx-populate.d.ts` — nieuw)
+- SheetJS (`xlsx`) vervangen door **xlsx-populate**: template-gebaseerde aanpak waarbij alleen celwaarden worden geschreven en alle bestaande opmaak (kleuren, borders, conditional formatting, merges) volledig intact blijft
+- ExcelJS geprobeerd maar verworpen: crashte op conditional formatting rules (`CfRuleXform.renderExpression`)
+- `types/xlsx-populate.d.ts` aangemaakt voor TypeScript type declarations (geen `@types/xlsx-populate` beschikbaar)
+
+#### Export — toto-labels (`app/api/export/route.ts`)
+- Toto-waarden `'1'`/`'2'`/`'X'` vervangen door leesbare teamnamen: `'1'` → thuisteam, `'2'` → uitteam, `'X'` → `'-'`
+- `MATCHES` geïmporteerd uit `lib/data/matches.ts`; `MATCH_BY_ID` lookup toegevoegd
+
+#### Export — fantasy spelersnamen (`app/api/export/route.ts`, `lib/data/players.ts`, `scripts/build_players.ps1`)
+- `build_players.ps1` uitgebreid: leest nu kolom C (`middle_name`) uit het sofifa-bronbestand als `middleName`
+- `Player` interface uitgebreid met `middleName: string`; `players.ts` geregenereerd (5671 spelers)
+- Export gebruikt nu `player.middleName` (bijv. "Thibaut Courtois") i.p.v. `player.name` ("T. Courtois")
+
+#### Export — beste nummers 3 quoteringen (`app/api/export/route.ts`)
+- Bug opgelost: `QKEY_TO_QUOTE_FIELD` voor `derde` verwees naar `'tweede'` (altijd 1.0); gecorrigeerd naar `'derde'`
+
+#### Fantasy — U22 auto-placement (`components/fantasy/PlayerModal.tsx`)
+- `select()` uitgebreid: U22-speler (dob ≥ 2004-06-11) gekozen voor een regular slot (`p*`) wordt automatisch geplaatst in het eerste lege talent slot (`t0`–`t3`)
+- Fallback: als alle talent slots vol zijn, gaat de speler naar het aangevraagde regular slot
+- Directe keuze voor talent slot of kladblok: onveranderd gedrag
+
+---
+
 ### 2026-05-04 — UI session (Claude Code)
 
 #### Lokale ontwikkelomgeving

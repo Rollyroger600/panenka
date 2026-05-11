@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import path from 'path'
 import fs from 'fs/promises'
-import * as XLSX from 'xlsx'
+import XlsxPopulate from 'xlsx-populate'
 import { PARTICIPANTS } from '@/lib/participants'
+import { MATCHES } from '@/lib/data/matches'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
@@ -18,7 +19,7 @@ const TALENT_SLOTS = Array.from({ length: 4 }, (_, i) => `t${i}`)
 const QKEY_TO_QUOTE_FIELD: Record<string, keyof (typeof KO_QUOTES)[string]> = {
   winnaar_poule: 'poulewinnaar',
   tweede:        'tweede',
-  derde:         'tweede',
+  derde:         'derde',
   r16:           'r16',
   r8:            'r8',
   r4:            'r4',
@@ -38,6 +39,8 @@ const KO_MAPPING: Record<string, { startRow: number; tokCol: string; landCol: st
   winner: { startRow: 10, tokCol: 'BC', landCol: 'BE', quoteCol: 'BF' },
 }
 
+const MATCH_BY_ID = Object.fromEntries(MATCHES.map((m) => [m.id, m]))
+
 // Match 1-24 → rows 10-33, 25-48 → rows 35-58, 49-72 → rows 60-83
 function rowForMatch(matchId: number): number {
   if (matchId <= 24) return matchId + 9
@@ -48,6 +51,15 @@ function rowForMatch(matchId: number): number {
 // Normalize "2-1" or "2 - 1" to the format used in MATCH_ODDS keys: "2 - 1"
 function normalizeScore(s: string): string {
   return s.replace(/\s*-\s*/, ' - ')
+}
+
+// Toto '1'/'X'/'2' → teamnaam of '-'
+function totoLabel(toto: string, matchId: number): string {
+  const match = MATCH_BY_ID[matchId]
+  if (!match) return toto
+  if (toto === '1') return match.home
+  if (toto === '2') return match.away
+  return '-'
 }
 
 // Column letter for oranje sheet: participant index 0-14 → columns E-S
@@ -73,10 +85,11 @@ const ORANJE_SECTIONS = [
   { matchId: 58, headerRow: 44, startRow: 45 },
 ]
 
-// Set a cell value in a SheetJS worksheet
-function cv(ws: XLSX.WorkSheet, addr: string, val: string | number | null | undefined) {
+// Set only the value of a cell, leaving all formatting intact
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function cv(sheet: any, addr: string, val: string | number | null | undefined) {
   if (val == null) return
-  ws[addr] = { v: val, t: typeof val === 'number' ? 'n' : 's' }
+  sheet.cell(addr).value(val)
 }
 
 export async function GET() {
@@ -104,7 +117,7 @@ export async function GET() {
 
   const filePath = path.join(cwd, xlsxFile)
   const fileData = await fs.readFile(filePath)
-  const workbook = XLSX.read(fileData, { type: 'buffer', cellStyles: false })
+  const workbook = await XlsxPopulate.fromDataAsync(fileData)
 
   // Load global oranje vragen once
   const vragen = await kvGet<OranjeVragenMap>('oranje_vragen') ?? {}
@@ -142,7 +155,7 @@ export async function GET() {
     const { predictions, knockoutPicks, fantasySquad } = participantData[initials]
 
     // ── Poule sheet ────────────────────────────────────────────────────────
-    const pouleSheet = workbook.Sheets[POULE_SHEET[initials]]
+    const pouleSheet = workbook.sheet(POULE_SHEET[initials])
     if (pouleSheet) {
       cv(pouleSheet, 'K1', name)
 
@@ -156,7 +169,7 @@ export async function GET() {
         if (pred.tokens != null) cv(pouleSheet, `B${row}`, pred.tokens)
 
         if (pred.toto) {
-          cv(pouleSheet, `Q${row}`, pred.toto)
+          cv(pouleSheet, `Q${row}`, totoLabel(pred.toto, matchId))
           if (odds) {
             const totoQuote = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
             cv(pouleSheet, `R${row}`, totoQuote)
@@ -197,21 +210,21 @@ export async function GET() {
     }
 
     // ── Fantasy sheet ──────────────────────────────────────────────────────
-    const ftSheet = workbook.Sheets[FT_SHEET[initials]]
+    const ftSheet = workbook.sheet(FT_SHEET[initials])
     if (ftSheet && fantasySquad) {
       REGULAR_SLOTS.forEach((slotKey, i) => {
         const player = fantasySquad[slotKey]
-        if (player) cv(ftSheet, `D${13 + i}`, player.name)
+        if (player) cv(ftSheet, `D${13 + i}`, player.middleName)
       })
       TALENT_SLOTS.forEach((slotKey, i) => {
         const player = fantasySquad[slotKey]
-        if (player) cv(ftSheet, `D${24 + i}`, player.name)
+        if (player) cv(ftSheet, `D${24 + i}`, player.middleName)
       })
     }
   }
 
   // ── Oranje Voorspelling sheet ───────────────────────────────────────────────
-  const oranjeSheet = workbook.Sheets['Oranje_Voorspelling']
+  const oranjeSheet = workbook.sheet('Oranje_Voorspelling')
   if (oranjeSheet) {
     for (const { matchId, headerRow, startRow } of ORANJE_SECTIONS) {
       const matchVragen = vragen[matchId] ?? {}
@@ -240,11 +253,10 @@ export async function GET() {
   }
 
   // Return the modified workbook as a download
-  const raw: Buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
-  const body = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength) as ArrayBuffer
+  const buffer = await workbook.outputAsync()
   const exportName = `export_${xlsxFile}`
 
-  return new NextResponse(body, {
+  return new NextResponse(buffer as unknown as ReadableStream, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="${exportName}"`,

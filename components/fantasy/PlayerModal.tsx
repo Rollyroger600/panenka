@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
-import { useGameStore, ALL_SLOTS } from '@/store/gameStore'
+import { useGameStore, ALL_SLOTS, TALENT_SLOTS } from '@/store/gameStore'
 import { WK_PLAYERS } from '@/lib/data/players'
 import { FLAG_PATHS } from '@/lib/data/countries'
 import { FlagImage } from '@/components/ui/FlagImage'
@@ -108,7 +108,12 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
     if (onSelect) {
       onSelect(player)
     } else {
-      setFantasyPlayer(slotKey, player)
+      let targetSlot = slotKey
+      if (!slotKey.startsWith('t') && IS_TALENT(player)) {
+        const emptyTalentSlot = TALENT_SLOTS.find((k) => !fantasySquad[k])
+        if (emptyTalentSlot) targetSlot = emptyTalentSlot
+      }
+      setFantasyPlayer(targetSlot, player)
       setActiveInfoSlot(null)
     }
     onClose()
