@@ -845,6 +845,42 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-12 — Max. score zichtbaar in KO-containers (Claude Code)
+
+#### KO pagina — max score per container (`components/knockout/RoundSection.tsx`, `Ronde32Section.tsx`)
+- Rechtsonder in elke KO-container wordt nu — zodra er minstens één slot gevuld is — de potentiële max. score getoond, identiek aan de stijl op de MatchCard: `Max. score X.X pts` in grijs met de score in oranje
+- Formule per slot: `tok × getQuote(country, qkey)`; de container toont de som van alle gevulde slots
+- Toegevoegd aan: **Poulewinnaars** (W1), **Nummers 2** (W2), **Beste nummers 3** (W3) in `Ronde32Section`; **R16, Kwartfinales, Halve finales, Finalisten, WK Winnaar** in `RoundSection`
+- Max score verschijnt als `maxScore > 0` (één geldig slot volstaat); verdwijnt automatisch bij leegmaken
+
+---
+
+### 2026-05-12 — KO-wedstrijdpredictions infrastructuur voorbereid (Claude Code)
+
+#### Match interface uitgebreid (`lib/data/matches.ts`)
+- Nieuw type `KoRound = 'rv32' | 'rv16' | 'kf' | 'hf' | 'brons' | 'finale'`
+- `Match` interface uitgebreid met optionele velden: `phase?: 'group' | 'knockout'`, `koRound?: KoRound`, `active?: boolean`
+
+#### 32 KO-wedstrijden toegevoegd als placeholder (`lib/data/matches.ts`)
+- Wedstrijden #73–#104 toegevoegd aan `MATCHES`-array met `phase: 'knockout'` en `active: false`
+- Structuur: #73–88 `rv32` (Ronde van 32, 16 wedstrijden), #89–96 `rv16` (Ronde van 16, 8 wedstrijden), #97–100 `kf` (Kwartfinales, 4 wedstrijden), #101–102 `hf` (Halve finales, 2 wedstrijden), #103 `brons` (3e/4e plaatsmatch), #104 `finale`
+- `home` en `away` staan op `'TBD'`; worden ingevuld + `active: true` gezet bij redeploy zodra bracket bekend is
+- Datum-placeholders op basis van verwacht WK 2026-schema (1–4 jul, 5–6 jul, 9–10 jul, 13–14 jul, 18 jul, 19 jul)
+- KV-structuur hoeft niet gewijzigd: `predictions:{initials}` werkt al met willekeurige match-IDs
+
+#### PoulefaseClient gefilterd op group-fase (`app/(app)/poulefase/PoulefaseClient.tsx`)
+- `groupMatches()` slaat matches met `phase === 'knockout'` over zodat KO-wedstrijden niet in de poulewedstrijden-weergave verschijnen
+
+#### Standings gefilterd op group-fase (`lib/standings.ts`)
+- Beide loops in `computeStandings()` skippen nu `phase === 'knockout'`-matches zodat er geen "KO"-groep in de poulestanden aangemaakt wordt
+
+#### Nog te doen (later)
+- UI bouwen voor KO-wedstrijdpredictions (zelfde MatchCard-component, gefilterd op `phase === 'knockout'`, per `koRound` gegroepeerd)
+- Per-ronde deadline opslaan in KV (`deadline:{koRound}`) — admin stelt in
+- `useDeadline` uitbreiden zodat het per `koRound` een aparte KV-deadline controleert
+
+---
+
 ### 2026-05-12 — Fantasy bijhouding, KO scoring & UI fixes (Claude Code)
 
 #### Fantasy XV — Admin statistieken tab (`app/admin/AdminClient.tsx`, `app/admin/page.tsx`, `app/actions/admin.ts`)

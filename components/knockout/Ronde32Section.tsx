@@ -163,6 +163,12 @@ export function Ronde32Section() {
         const openW3RowIndex = openPicker?.startsWith('w3_')
           ? w3Rows.findIndex(row => row.some(s => s.key === openPicker))
           : -1
+        const w3MaxScore = w3Slots.reduce((sum, { slot }) => {
+          if (!slot.country) return sum
+          const q = getQuote(slot.country, 'derde')
+          if (q === null) return sum
+          return sum + slot.tok * q
+        }, 0)
 
         return (
           <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
@@ -234,6 +240,14 @@ export function Ronde32Section() {
                 </div>
               ))}
             </div>
+            {w3MaxScore > 0 && (
+              <div className="px-3 pb-2 flex justify-end">
+                <span className="font-heading text-sm font-bold uppercase tracking-widest" style={{ color: '#7e7667' }}>
+                  Max. score{' '}
+                  <span className="text-[#FF6B00]">{w3MaxScore.toFixed(1)} pts</span>
+                </span>
+              </div>
+            )}
           </div>
         )
       })()}
@@ -266,6 +280,13 @@ function SlotSection({
 }) {
   const filled = slots.filter((s) => s.slot.country).length
   const openSlot = slots.find(s => s.key === openPicker) ?? null
+
+  const maxScore = slots.reduce((sum, { slot }) => {
+    if (!slot.country || !qkey) return sum
+    const q = getQuote(slot.country, qkey)
+    if (q === null) return sum
+    return sum + slot.tok * q
+  }, 0)
 
   // Group slots into rows of 4
   const rows: SlotDef[][] = []
@@ -376,6 +397,14 @@ function SlotSection({
           </div>
         ))}
       </div>
+      {maxScore > 0 && (
+        <div className="px-3 pb-2 flex justify-end">
+          <span className="font-heading text-sm font-bold uppercase tracking-widest" style={{ color: '#7e7667' }}>
+            Max. score{' '}
+            <span className="text-[#FF6B00]">{maxScore.toFixed(1)} pts</span>
+          </span>
+        </div>
+      )}
     </div>
   )
 }

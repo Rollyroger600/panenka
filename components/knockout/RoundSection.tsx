@@ -54,6 +54,13 @@ export function RoundSection({ round }: Props) {
 
   const pickedCountries = new Set(slots.map(s => s.slot.country).filter(Boolean) as string[])
 
+  const maxScore = slots.reduce((sum, { slot }) => {
+    if (!slot.country) return sum
+    const q = getQuote(slot.country, round.qkey)
+    if (q === null) return sum
+    return sum + slot.tok * q
+  }, 0)
+
   function pickCountry(key: string, country: string | null) {
     if (country === null) {
       clearKnockoutSlot(key)
@@ -175,6 +182,14 @@ export function RoundSection({ round }: Props) {
           </p>
         )}
       </div>
+      {maxScore > 0 && (
+        <div className="px-3 pb-2 flex justify-end">
+          <span className="font-heading text-sm font-bold uppercase tracking-widest" style={{ color: '#7e7667' }}>
+            Max. score{' '}
+            <span className="text-[#FF6B00]">{maxScore.toFixed(1)} pts</span>
+          </span>
+        </div>
+      )}
     </div>
   )
 }

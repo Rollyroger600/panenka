@@ -29,6 +29,7 @@ export function computeStandings(
 
   // Initialize all teams
   for (const match of MATCHES) {
+    if (match.phase === 'knockout') continue
     if (!groups[match.poule]) groups[match.poule] = {}
     for (const team of [match.home, match.away]) {
       if (!groups[match.poule][team]) {
@@ -42,6 +43,7 @@ export function computeStandings(
 
   // Apply predictions
   for (const match of MATCHES) {
+    if (match.phase === 'knockout') continue
     const pred = predictions[match.id]
     if (!pred?.uitslag) continue
     const score = parseScore(pred.uitslag)

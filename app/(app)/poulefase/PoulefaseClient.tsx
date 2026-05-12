@@ -12,6 +12,7 @@ interface Props { initials: string }
 function groupMatches() {
   const rounds: Record<number, typeof MATCHES> = {}
   for (const m of MATCHES) {
+    if (m.phase === 'knockout') continue
     rounds[m.round] ??= []
     rounds[m.round].push(m)
   }
