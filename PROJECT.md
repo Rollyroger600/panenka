@@ -1549,7 +1549,7 @@ The following decisions were made during implementation that deviate from or ext
 - `260509_WK 2026_Master.xlsx` toegevoegd aan git-repo zodat Vercel het kan deployen
 - `outputFileTracingIncludes` toegevoegd aan `next.config.ts`: vertelt Next.js om `*_WK 2026_Master.xlsx` expliciet mee te bundelen in de `/api/export` function
 - Foutmelding uitgebreid met debug-info (`cwd` + gevonden xlsx-bestanden) voor diagnose
-- **Status:** fix gepusht (commit `ddd1bda`), werking op Vercel nog te bevestigen bij start volgende sessie
+- **Status:** fix gepusht en werking op Vercel bevestigd (2026-05-12)
 
 ### 2026-05-11 — Echte Unibet-quoteringen & trendpijltjes (Claude Code)
 
@@ -1604,4 +1604,22 @@ Doel: de Excel-exportknop werkend krijgen op Vercel. Er waren drie onafhankelijk
 #### Overige verbeteringen
 - `handleExport` in `AdminClient.tsx`: foutmelding toont nu het HTTP-statusnummer (`HTTP 404`, `HTTP 500`, etc.) voor makkelijkere diagnose
 - `next.config.ts` `outputFileTracingIncludes`: naast de glob ook expliciete bestandsnamen om spaties in bestandsnamen betrouwbaar te bundelen
+
+---
+
+### 2026-05-12 — ✕-knoopjes zichtbaarder & FIFA-infopanel gevuld (Claude Code)
+
+#### ✕-knoopjes wissen selectie (`components/fantasy/PlayerRow.tsx`, `ScratchpadRow.tsx`, `components/knockout/RoundSection.tsx`, `Ronde32Section.tsx`)
+- Basiskleur van wis-knoopjes gewijzigd van `text-[#444]` naar `text-[#777]` — beter zichtbaar op donkere achtergrond
+- Hover gewijzigd van `text-[#999]` naar `text-white` voor duidelijker visuele feedback
+- Van toepassing op alle vijf locaties: Fantasy player rows, scratchpad rows, KO round slots (RoundSection + Ronde32Section W3/W1-W2)
+
+#### `components/layout/FifaInfoDrawer.tsx` — inhoud & layout volledig ingevuld
+- **Header:** titel gewijzigd naar "FIFA & de USA, a match made in hell"; layout gecentreerd (`justify-center`) met × knop `absolute right-5`
+- **Intro:** placeholder vervangen door definitieve tekst over de context van het WK
+- **Sectie "Amnesty International | Enkele feiten":** 8 citaten uit Amnesty International-rapport toegevoegd als string-array; elk citaat renderen als aparte `<p>`; bronvermelding "Amnesty International" onderaan
+- **Sectie "Waarom toch meedoen?":** verwijderd
+- **Sectie "Links":** titel gewijzigd; twee klikbare links toegevoegd via nieuw `links`-veld (`{ text, url }[]`): Amnesty International-rapport en Sports & Rights Alliance
+- **Rendering:** `text-center` op scroll-container; links als oranje `<a>` met `target="_blank"`; `source`- en `links`-velden optioneel per sectie
+- **TypeScript-fix:** sectie-type uitgebreid naar `{ title, body, source?, links? }`; string-delimiter probleem (curly quotes) opgelost via PowerShell-write met ASCII single quotes
 - `maxDuration = 60` weer verwijderd (overschrijdt Hobby-plan limiet van 10s en veroorzaakte build-failures)

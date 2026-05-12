@@ -71,7 +71,7 @@ export function PlayerRow({ slotKey, slotIndex, player }: Props) {
         </button>
         <button
           onClick={() => { setFantasyPlayer(slotKey, null); setActiveInfoSlot(null) }}
-          className="px-3 py-2.5 text-[#444] hover:text-[#999] transition-colors shrink-0 text-base"
+          className="px-3 py-2.5 text-[#777] hover:text-white transition-colors shrink-0 text-base"
         >
           ✕
         </button>

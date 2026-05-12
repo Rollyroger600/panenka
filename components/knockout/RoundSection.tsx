@@ -140,7 +140,7 @@ export function RoundSection({ round }: Props) {
                     {slot.country && (
                       <button
                         onClick={(e) => { e.stopPropagation(); clearKnockoutSlot(key); setOpenPicker(null) }}
-                        className="absolute top-1 right-1 text-[#444] hover:text-[#999] transition-colors text-[11px] leading-none w-4 h-4 flex items-center justify-center"
+                        className="absolute top-1 right-1 text-[#777] hover:text-white transition-colors text-[11px] leading-none w-4 h-4 flex items-center justify-center"
                       >
                         ✕
                       </button>
