@@ -60,7 +60,7 @@ export function ScratchpadRow({ slotKey, player }: Props) {
             <div className="text-xs text-[#444] truncate">{player.country} · {player.club}</div>
           </div>
           <span className="text-sm font-bold text-[#555] shrink-0">{player.overall}</span>
-          <span className="relative text-xs font-bold text-[#555] bg-[#1a1a1a] border border-[#333] px-2 py-0.5 rounded-lg shrink-0">
+          <span className="relative text-sm font-bold text-[#555] bg-[#1a1a1a] border border-[#333] px-2 py-0.5 rounded-lg shrink-0">
             {formatQuote(quote)}
             <TrendIndicator trend={trend} />
           </span>

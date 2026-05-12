@@ -845,6 +845,42 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-12 — KO & UI polish (Claude Code)
+
+#### DeadlineBanner (`components/layout/DeadlineBanner.tsx`, `public/icons/icon_stopwatch.svg` — nieuw)
+- Achtergrond vervangen door oranje onderbrand: `bg-[#FF6B00]` → `border-b border-[#FF6B00]` met oranje tekst op transparante achtergrond
+- ⏰ emoji vervangen door custom SVG stopwatch-icoon (geüpload door user als `icon_stopwatch.svg`)
+- SVG opgeslagen in `public/icons/icon_stopwatch.svg`; inline gerenderd als `<StopwatchIcon>` React-component met `fill="currentColor"` zodat het de oranje tekstkleur erft
+
+#### KO tabblad — sticky suggesties-knop (`components/knockout/SuggestionsPanel.tsx`)
+- `sticky top-20` → `sticky top-24` (16px extra ruimte onder header-opacity bij scrollen in R32)
+
+#### Poulefase — titelcentrering mobiel (`app/(app)/poulefase/PoulefaseClient.tsx`)
+- "Poulewedstrijden" was te breed voor smallere mobiele schermen (390px − 32px padding = 358px container) en overflowde rechts, waardoor het er niet-gecentreerd uitzag
+- `text-3xl` → `text-[min(1.875rem,7vw)]`: schaalt mee met viewport, blijft 30px op 430px+, krimpt op smallere schermen
+
+#### KO tabblad — rode verwijder-knoppen weg (`components/knockout/Ronde32Section.tsx`, `RoundSection.tsx`)
+- "✕ Verwijder"-knop in uitklapbare picker-header verwijderd (3 locaties); er is al een ✕ op de tegel zelf
+- `subtitle` prop volledig verwijderd uit `SlotSection` (was alleen nog in definitie aanwezig)
+
+#### KO tabblad — subteksten weg (`components/knockout/Ronde32Section.tsx`)
+- "12 groepswinnaars", "12 runners-up" en "8 beste derde-plaatsers" verwijderd uit sectie-headers
+
+#### KO tabblad — lege tegel leesbaarheid (`components/knockout/Ronde32Section.tsx`, `RoundSection.tsx`)
+- Lege tegel border: `border-[#2a2a2a]` → `border-[#444]`, hover: `hover:border-[#666]`
+- Poule-letter/nummer kleur: `#333` → `#777`
+- "Kies land" en "Groep X" header tekst: `text-[#555]` → `text-[#999]`
+
+#### KO tabblad — quoteringen gecentreerd (`components/knockout/Ronde32Section.tsx`, `RoundSection.tsx`)
+- `TrendIndicator` was `absolute top-0 right-0` in een `relative pr-2` span, waardoor `pr-2` de quotering uit het midden trok
+- Opgelost: TrendIndicator nu inline; quote-span van `relative pr-2` → `inline-flex items-center gap-0.5`
+
+#### Quoteringen groter — KO & Fantasy XV
+- KO: quote op landenkaartjes `text-xs` (12px) → `text-sm` (14px) in `Ronde32Section.tsx` en `RoundSection.tsx`
+- Fantasy XV: quote in `PlayerRow.tsx` en `ScratchpadRow.tsx` eveneens `text-xs` → `text-sm`
+
+---
+
 ### 2026-05-11 — Kambi KO-quoteringen scraper & Fantasy XV trendpijltjes (Claude Code)
 
 #### Nieuw: KO-outright scraper (`scripts/scrape-ko-odds.mjs` — nieuw)

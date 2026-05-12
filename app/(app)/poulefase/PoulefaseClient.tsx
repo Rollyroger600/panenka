@@ -43,7 +43,7 @@ export function PoulefaseClient({ initials }: Props) {
 
   return (
     <div>
-      <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Poulewedstrijden</h1>
+      <h1 className="font-accent font-bold text-[min(1.875rem,7vw)] text-white mb-1 text-center">Poulewedstrijden</h1>
       <p className="font-accent font-light text-white text-xs mb-4 text-center">72 wedstrijden · kies tokens, toto en uitslag</p>
 
       {isPast && (

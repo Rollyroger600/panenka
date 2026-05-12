@@ -29,7 +29,7 @@ function getTrend(country: string, qkey: string): OddsTrend {
 function TrendIndicator({ trend }: { trend: OddsTrend }) {
   if (!trend || trend === 'same') return null
   return (
-    <span className={`absolute top-0 right-0 text-[7px] leading-none font-bold ${
+    <span className={`text-[7px] leading-none font-bold ${
       trend === 'up' ? 'text-[#FF6B00]' : 'text-emerald-400'
     }`}>
       {trend === 'up' ? '▲' : '▼'}
@@ -105,7 +105,6 @@ export function Ronde32Section() {
       {/* W1 — Poulewinnaars */}
       <SlotSection
         title="Poulewinnaars"
-        subtitle="12 groepswinnaars"
         slots={POULE_LETTERS.map((poule, i) => {
           const key = `w1_${i}`
           const slot = getSlot(key)
@@ -128,7 +127,6 @@ export function Ronde32Section() {
       {/* W2 — Nummers 2 */}
       <SlotSection
         title="Nummers 2"
-        subtitle="12 runners-up"
         slots={POULE_LETTERS.map((poule, i) => {
           const key = `w2_${i}`
           const slot = getSlot(key)
@@ -171,7 +169,6 @@ export function Ronde32Section() {
             <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
               <div>
                 <span className="text-sm font-bold text-white">Beste nummers 3</span>
-                <span className="ml-2 text-xs text-[#555]">8 beste derde-plaatsers</span>
               </div>
               <span className="text-xs font-bold text-[#FF6B00]">{w3PickedCountries.size} / 8</span>
             </div>
@@ -189,7 +186,7 @@ export function Ronde32Section() {
                                 ? 'border-[#FF6B00] bg-[#1e1e1e]'
                                 : openPicker === key
                                 ? 'border-[#555] bg-[#1e1e1e]'
-                                : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                                : 'border-[#444] bg-[#1a1a1a] hover:border-[#666]'
                             }`}
                           >
                             {slot.country ? (
@@ -197,14 +194,14 @@ export function Ronde32Section() {
                                 <FlagImage country={slot.country} size={28} />
                                 <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
                                 {getQuote(slot.country, 'derde') != null && (
-                                  <span className="relative font-heading text-xs font-bold text-[#FF6B00] mt-0.5 pr-2">
+                                  <span className="inline-flex items-center gap-0.5 font-heading text-sm font-bold text-[#FF6B00] mt-0.5">
                                     {getQuote(slot.country, 'derde')!.toFixed(2)}
                                     <TrendIndicator trend={getTrend(slot.country, 'derde')} />
                                   </span>
                                 )}
                               </>
                             ) : (
-                              <span className="text-xl font-bold" style={{ color: '#333' }}>{label}</span>
+                              <span className="text-xl font-bold" style={{ color: '#777' }}>{label}</span>
                             )}
                           </button>
                           {slot.country && (
@@ -255,10 +252,9 @@ interface SlotDef {
 }
 
 function SlotSection({
-  title, subtitle, slots, openPicker, setOpenPicker, pickCountry, setTok, min, max, qkey,
+  title, slots, openPicker, setOpenPicker, pickCountry, setTok, min, max, qkey,
 }: {
   title: string
-  subtitle: string
   slots: SlotDef[]
   openPicker: string | null
   setOpenPicker: (k: string | null) => void
@@ -283,7 +279,6 @@ function SlotSection({
       <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
         <div>
           <span className="text-sm font-bold text-white">{title}</span>
-          <span className="ml-2 text-xs text-[#555]">{subtitle}</span>
         </div>
         <span className="text-xs font-bold text-[#FF6B00]">{filled} / {slots.length}</span>
       </div>
@@ -301,7 +296,7 @@ function SlotSection({
                           ? 'border-[#FF6B00] bg-[#1e1e1e]'
                           : openPicker === key
                           ? 'border-[#555] bg-[#1e1e1e]'
-                          : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                          : 'border-[#444] bg-[#1a1a1a] hover:border-[#666]'
                       }`}
                     >
                       {slot.country ? (
@@ -309,14 +304,14 @@ function SlotSection({
                           <FlagImage country={slot.country} size={28} />
                           <span className="font-accent font-light text-[11px] text-white mt-1 leading-none">{abbrevCountry(slot.country)}</span>
                           {qkey && getQuote(slot.country, qkey) != null && (
-                            <span className="relative font-heading text-xs font-bold text-[#FF6B00] mt-0.5 pr-2">
+                            <span className="inline-flex items-center gap-0.5 font-heading text-sm font-bold text-[#FF6B00] mt-0.5">
                               {getQuote(slot.country, qkey)!.toFixed(2)}
                               <TrendIndicator trend={getTrend(slot.country, qkey)} />
                             </span>
                           )}
                         </>
                       ) : (
-                        <span className="text-xl font-bold" style={{ color: '#333' }}>{label}</span>
+                        <span className="text-xl font-bold" style={{ color: '#777' }}>{label}</span>
                       )}
                     </button>
                     {slot.country && (
@@ -337,17 +332,9 @@ function SlotSection({
             {openRowIndex === rowIndex && openSlot && (
               <div className="mt-2 rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(10,10,10,0.75)' }}>
                 <div className="px-3 py-2 bg-[#111] flex items-center justify-between">
-                  <span className="text-[10px] text-[#555] uppercase tracking-widest">
+                  <span className="text-[10px] text-[#999] uppercase tracking-widest">
                     Groep {openSlot.label}
                   </span>
-                  {openSlot.slot.country && (
-                    <button
-                      onClick={() => pickCountry(openPicker!, null)}
-                      className="text-[10px] text-[#E74C3C] hover:text-[#ff6b6b] transition-colors"
-                    >
-                      ✕ Verwijder
-                    </button>
-                  )}
                 </div>
                 <div className="grid grid-cols-4 gap-2 p-3">
                   {openSlot.options.map((country) => {
@@ -363,7 +350,7 @@ function SlotSection({
                             ? 'border-[#FF6B00] bg-[#FF6B00]/10'
                             : isTaken
                             ? 'border-[#553300] bg-[#1a1a1a] hover:border-[#886600]'
-                            : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                            : 'border-[#444] bg-[#1a1a1a] hover:border-[#666]'
                         }`}
                       >
                         {isTaken && (
@@ -404,16 +391,8 @@ function W3CountryPicker({
 }) {
   return (
     <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(10,10,10,0.75)' }}>
-      <div className="px-3 py-2 bg-[#111] flex items-center justify-between">
-        <span className="text-[10px] text-[#555] uppercase tracking-widest">Kies land</span>
-        {currentValue && (
-          <button
-            onClick={() => onSelect(null)}
-            className="text-[10px] text-[#E74C3C] hover:text-[#ff6b6b] transition-colors"
-          >
-            ✕ Verwijder
-          </button>
-        )}
+      <div className="px-3 py-2 bg-[#111] flex items-center">
+        <span className="text-[10px] text-[#999] uppercase tracking-widest">Kies land</span>
       </div>
       <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <div className="flex gap-2 p-3">
@@ -430,7 +409,7 @@ function W3CountryPicker({
                     ? 'border-[#FF6B00] bg-[#FF6B00]/10'
                     : isTaken
                     ? 'border-[#553300] bg-[#1a1a1a] hover:border-[#886600]'
-                    : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                    : 'border-[#444] bg-[#1a1a1a] hover:border-[#666]'
                 }`}
               >
                 {isTaken && (

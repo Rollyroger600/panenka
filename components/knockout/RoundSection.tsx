@@ -26,7 +26,7 @@ function getTrend(country: string, qkey: string): OddsTrend {
 function TrendIndicator({ trend }: { trend: OddsTrend }) {
   if (!trend || trend === 'same') return null
   return (
-    <span className={`absolute top-0 right-0 text-[7px] leading-none font-bold ${
+    <span className={`text-[7px] leading-none font-bold ${
       trend === 'up' ? 'text-[#FF6B00]' : 'text-emerald-400'
     }`}>
       {trend === 'up' ? '▲' : '▼'}
@@ -117,7 +117,7 @@ export function RoundSection({ round }: Props) {
                           ? 'border-[#FF6B00] bg-[#1e1e1e]'
                           : openPicker === key
                           ? 'border-[#555] bg-[#1e1e1e]'
-                          : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                          : 'border-[#444] bg-[#1a1a1a] hover:border-[#666]'
                       }`}
                     >
                       {slot.country ? (
@@ -127,14 +127,14 @@ export function RoundSection({ round }: Props) {
                             {abbrevCountry(slot.country)}
                           </span>
                           {getQuote(slot.country, round.qkey) != null && (
-                            <span className="relative font-heading text-xs font-bold text-[#FF6B00] mt-0.5 pr-2">
+                            <span className="inline-flex items-center gap-0.5 font-heading text-sm font-bold text-[#FF6B00] mt-0.5">
                               {getQuote(slot.country, round.qkey)!.toFixed(2)}
                               <TrendIndicator trend={getTrend(slot.country, round.qkey)} />
                             </span>
                           )}
                         </>
                       ) : (
-                        <span className="text-xl font-bold" style={{ color: '#333' }}>{label}</span>
+                        <span className="text-xl font-bold" style={{ color: '#777' }}>{label}</span>
                       )}
                     </button>
                     {slot.country && (
@@ -191,16 +191,8 @@ function RoundCountryPicker({
 }) {
   return (
     <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(10,10,10,0.75)' }}>
-      <div className="px-3 py-2 bg-[#111] flex items-center justify-between">
-        <span className="text-[10px] text-[#555] uppercase tracking-widest">Kies land</span>
-        {currentValue && (
-          <button
-            onClick={() => onSelect(null)}
-            className="text-[10px] text-[#E74C3C] hover:text-[#ff6b6b] transition-colors"
-          >
-            ✕ Verwijder
-          </button>
-        )}
+      <div className="px-3 py-2 bg-[#111] flex items-center">
+        <span className="text-[10px] text-[#999] uppercase tracking-widest">Kies land</span>
       </div>
       <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <div className="flex gap-2 p-3">
@@ -217,7 +209,7 @@ function RoundCountryPicker({
                     ? 'border-[#FF6B00] bg-[#FF6B00]/10'
                     : isTaken
                     ? 'border-[#553300] bg-[#1a1a1a] hover:border-[#886600]'
-                    : 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                    : 'border-[#444] bg-[#1a1a1a] hover:border-[#666]'
                 }`}
               >
                 {isTaken && (

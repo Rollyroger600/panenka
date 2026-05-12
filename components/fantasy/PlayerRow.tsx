@@ -64,7 +64,7 @@ export function PlayerRow({ slotKey, slotIndex, player }: Props) {
             <div className="text-xs text-[#666] truncate">{player.country} · {player.club}</div>
           </div>
           <span className="text-sm font-bold text-white shrink-0">{player.overall}</span>
-          <span className="relative font-heading text-xs font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">
+          <span className="relative font-heading text-sm font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">
             {formatQuote(quote)}
             <TrendIndicator trend={trend} />
           </span>
