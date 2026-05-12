@@ -56,7 +56,7 @@ export function SuggestionsPanel({ onApplyAll }: Props) {
   if (!hasAnyUitslag) return null
 
   return (
-    <div className="sticky top-24 z-20 mb-4">
+    <div className="sticky top-24 z-20">
       {/* Toggle button */}
       <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.95)' }}>
         <button

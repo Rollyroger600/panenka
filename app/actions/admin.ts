@@ -1,7 +1,8 @@
 'use server'
 import { cookies } from 'next/headers'
 import { kvGet, kvSet, participantKey } from '@/lib/kv/kv'
-import { scoreParticipant } from '@/lib/scoring'
+import { scoreParticipant, scoreFantasy } from '@/lib/scoring'
+import type { FantasyStats } from '@/lib/scoring'
 import { PARTICIPANTS } from '@/lib/participants'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
@@ -80,14 +81,25 @@ export async function saveOranjeCorrect(data: OranjeCorrectMap): Promise<void> {
   await kvSet('oranje_correct', data)
 }
 
+// ── Fantasy statistieken ──────────────────────────────────────────────────
+
+export async function loadFantasyStats(): Promise<FantasyStats> {
+  return (await kvGet<FantasyStats>('fantasy_stats')) ?? {}
+}
+
+export async function saveFantasyStats(data: FantasyStats): Promise<void> {
+  await kvSet('fantasy_stats', data)
+}
+
 // ── Score berekening ──────────────────────────────────────────────────────
 
 export async function computeAndSaveScores(): Promise<Record<string, ParticipantScore>> {
-  const [results, koResults, oranjeResults, oranjeCorrect] = await Promise.all([
+  const [results, koResults, oranjeResults, oranjeCorrect, fantasyStats] = await Promise.all([
     loadResults(),
     loadKoResults(),
     loadOranjeResults(),
     loadOranjeCorrectAdmin(),
+    loadFantasyStats(),
   ])
 
   const heeftNieuweSysteem = Object.keys(oranjeCorrect).length > 0
@@ -96,11 +108,12 @@ export async function computeAndSaveScores(): Promise<Record<string, Participant
 
   await Promise.all(
     PARTICIPANTS.map(async (p) => {
-      const [predictions, knockoutPicks, oranjeAnswers, oranjeAntwoorden] = await Promise.all([
+      const [predictions, knockoutPicks, oranjeAnswers, oranjeAntwoorden, fantasyData] = await Promise.all([
         kvGet<Record<number, Prediction>>(participantKey('predictions', p.initials)),
         kvGet<KnockoutPicks>(participantKey('knockout', p.initials)),
         kvGet<Record<number, OranjeAnswer>>(participantKey('oranje', p.initials)),
         kvGet<OranjeAntwoordenMap>(participantKey('oranje_antwoorden', p.initials)),
+        kvGet<{ squad: Record<string, import('@/lib/data/players').Player | null> }>(participantKey('fantasy', p.initials)),
       ])
 
       const breakdown = scoreParticipant(
@@ -114,11 +127,17 @@ export async function computeAndSaveScores(): Promise<Record<string, Participant
         heeftNieuweSysteem ? oranjeCorrect : undefined,
       )
 
+      const fantasy = scoreFantasy(fantasyData?.squad ?? {}, fantasyStats)
+      const total = Math.round((breakdown.poulefase + breakdown.knockout + fantasy) * 100) / 100
+
       scores[p.initials.toLowerCase()] = {
         name: p.name,
         initials: p.initials,
-        fantasy: 0,
-        ...breakdown,
+        poulefase: breakdown.poulefase,
+        knockout: breakdown.knockout,
+        oranje: breakdown.oranje,
+        fantasy,
+        total,
       }
     }),
   )

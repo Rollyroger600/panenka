@@ -57,11 +57,11 @@ export function PlayerRow({ slotKey, slotIndex, player }: Props) {
           onClick={() => setActiveInfoSlot(slotKey)}
           className="flex-1 flex items-center gap-3 px-3 py-2.5 text-left min-w-0 hover:bg-white/5 rounded-l-xl transition-colors"
         >
-          <span className="text-sm font-bold text-[#555] w-6 shrink-0 text-right">#{slotIndex}</span>
+          <span className="text-sm font-bold text-[#888] w-6 shrink-0 text-right">#{slotIndex}</span>
           <FlagImage country={player.country} size={28} className="shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-bold text-white truncate">{player.name}</div>
-            <div className="text-xs text-[#666] truncate">{player.country} · {player.club}</div>
+            <div className="text-xs text-[#888] truncate">{player.country} · {player.club}</div>
           </div>
           <span className="text-sm font-bold text-white shrink-0">{player.overall}</span>
           <span className="relative font-heading text-sm font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0">

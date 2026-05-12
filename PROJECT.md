@@ -845,6 +845,44 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-12 — Fantasy bijhouding, KO scoring & UI fixes (Claude Code)
+
+#### Fantasy XV — Admin statistieken tab (`app/admin/AdminClient.tsx`, `app/admin/page.tsx`, `app/actions/admin.ts`)
+- Nieuwe admin-tab "Fantasy" met spelers zoekfunctie en stepper-invoer voor goals (⚽) en assists (🅰)
+- Goals/assists worden direct opgeslagen in Redis (`fantasy_stats`) na elke `+`/`−` klik
+- Overzicht van spelers met statistieken zichtbaar boven de zoekbalk
+- ✕-knop per speler om statistieken te wissen
+
+#### Fantasy XV — Scoringsfunctie (`lib/scoring.ts`)
+- Nieuw type `FantasyStats = Record<string, { goals: number; assists: number }>`
+- Nieuwe functie `scoreFantasy(squad, stats)`: `Σ (goals + assists) × computePlayerQuote(player)` per speler in squad (exclusief kladblok)
+- `computeAndSaveScores()` laadt nu fantasy squads + stats en berekent fantasy-score per deelnemer
+- Totaalformule bijgewerkt: `poulefase + knockout + fantasy` (Oranje is bonus-tokens, geen score)
+
+#### KO scoring — R32 consolatieregels (`lib/scoring.ts`)
+- **Nieuw**: land gaat door maar in andere R32-rol → altijd `tokens × quote_derde` als consolatie
+  - W1 (poulewinnaar) correct → `tokens × quote_poulewinnaar`
+  - W1 incorrect, maar land door als nr2/beste nr3 → `tokens × quote_derde`
+  - W2 (nummer 2) correct → `tokens × quote_tweede`
+  - W2 incorrect, maar land door als poulewinnaar/beste nr3 → `tokens × quote_derde`
+  - W3 (beste nr3), ongeacht correctheid → `tokens × quote_derde` als land doorgaat
+- **Bugfix**: `QKEY_MAP.derde` was incorrectly `'tweede'` → gecorrigeerd naar `'derde'`
+- R16 t/m Winnaar: ongewijzigd (alleen punten bij correcte voorspelling)
+
+#### Fantasy XV — Leesbaarheid PlayerRow (`components/fantasy/PlayerRow.tsx`)
+- Spelernummer `#N`: `text-[#555]` → `text-[#888]`
+- Ondertitel (land · club): `text-[#666]` → `text-[#888]`
+
+#### KO tabblad — label fix (`lib/data/knockoutRounds.ts`)
+- `'Ronde van 8'` → `'Ronde van 16'` (was incorrect gelabeld)
+
+#### KO tabblad — spacing R32 (`components/knockout/Ronde32Section.tsx`, `SuggestionsPanel.tsx`)
+- Suggesties-knop had te grote afstand tot container eronder vergeleken met Toernooischema-knop
+- `mb-4` verwijderd van `SuggestionsPanel` sticky wrapper; `gap-6` → `gap-4` in `Ronde32Section`
+- Beide knoppen nu consistent 16px afstand tot container eronder
+
+---
+
 ### 2026-05-12 — KO & UI polish (Claude Code)
 
 #### DeadlineBanner (`components/layout/DeadlineBanner.tsx`, `public/icons/icon_stopwatch.svg` — nieuw)

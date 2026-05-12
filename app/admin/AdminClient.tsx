@@ -6,7 +6,9 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import {
   saveResult, deleteResult, saveKoResults, saveOranjeResults, computeAndSaveScores,
   loadOranjeVragenAdmin, updateOranjeVraag, loadOranjeCorrectAdmin, saveOranjeCorrect,
+  saveFantasyStats,
 } from '@/app/actions/admin'
+import type { FantasyStats } from '@/lib/scoring'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { ParticipantScore } from '@/app/leaderboard/types'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
@@ -27,7 +29,7 @@ const Q_LABELS: Record<string, string> = {
   q5: 'Meeste km', q6: 'Meeste passes', q7: 'Meeste tackles', q8: 'Meeste schoten', q9: 'Buitenspel',
 }
 
-type Tab = 'matches' | 'knockout' | 'vragen' | 'scores' | 'links'
+type Tab = 'matches' | 'knockout' | 'vragen' | 'fantasy' | 'scores' | 'links'
 
 interface Props {
   initialResults: Record<number, MatchResult>
@@ -35,9 +37,10 @@ interface Props {
   initialOranjeResults: Record<number, OranjeResult>
   initialOranjeVragen: OranjeVragenMap
   initialOranjeCorrect: OranjeCorrectMap
+  initialFantasyStats: FantasyStats
 }
 
-export function AdminClient({ initialResults, initialKoResults, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect }: Props) {
+export function AdminClient({ initialResults, initialKoResults, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect, initialFantasyStats }: Props) {
   const [tab, setTab] = useState<Tab>('matches')
   const [results, setResults] = useState(initialResults)
   const [koResults, setKoResults] = useState(initialKoResults)
@@ -48,6 +51,8 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
   const [computing, setComputing] = useState(false)
   const [search, setSearch] = useState('')
   const [saving, setSaving] = useState<number | null>(null)
+  const [fantasyStats, setFantasyStats] = useState<FantasyStats>(initialFantasyStats)
+  const [fantasySearch, setFantasySearch] = useState('')
 
   const filteredMatches = useMemo(() => {
     const q = search.toLowerCase()
@@ -89,6 +94,22 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
     const updated = { ...oranjeResults, [matchId]: { ...current, [key]: value } }
     setOranjeResults(updated as Record<number, OranjeResult>)
     await saveOranjeResults(updated as Record<number, OranjeResult>)
+  }
+
+  // ── Fantasy stats handlers ────────────────────────────────────────────────
+
+  async function handleFantasyStat(playerName: string, field: 'goals' | 'assists', value: number) {
+    const current = fantasyStats[playerName] ?? { goals: 0, assists: 0 }
+    const updated = { ...fantasyStats, [playerName]: { ...current, [field]: value } }
+    setFantasyStats(updated)
+    await saveFantasyStats(updated)
+  }
+
+  async function handleFantasyRemove(playerName: string) {
+    const updated = { ...fantasyStats }
+    delete updated[playerName]
+    setFantasyStats(updated)
+    await saveFantasyStats(updated)
   }
 
   // ── Compute scores ────────────────────────────────────────────────────────
@@ -146,6 +167,7 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
     { id: 'matches',  label: `Uitslagen (${Object.keys(results).length}/72)` },
     { id: 'knockout', label: 'KO Resultaten' },
     { id: 'vragen',   label: 'Oranje Vragen' },
+    { id: 'fantasy',  label: `Fantasy (${Object.keys(fantasyStats).length})` },
     { id: 'scores',   label: 'Scores' },
     { id: 'links',    label: 'Uitnodigingslinks' },
   ]
@@ -345,6 +367,17 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
         </div>
       )}
 
+      {/* ── Fantasy statistieken ───────────────────────────────────────────── */}
+      {tab === 'fantasy' && (
+        <FantasyStatsTab
+          stats={fantasyStats}
+          search={fantasySearch}
+          onSearchChange={setFantasySearch}
+          onStatChange={handleFantasyStat}
+          onRemove={handleFantasyRemove}
+        />
+      )}
+
       {/* ── Uitnodigingslinks ──────────────────────────────────────────────── */}
       {tab === 'links' && (
         <LinksPanel />
@@ -495,6 +528,110 @@ function LinksPanel() {
           )
         })}
       </div>
+    </div>
+  )
+}
+
+// ── StatStepper ────────────────────────────────────────────────────────────────
+
+function StatStepper({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex items-center gap-1 shrink-0">
+      <span className="text-[10px] text-[#555] w-4">{label}</span>
+      <button
+        onClick={() => onChange(Math.max(0, value - 1))}
+        className="w-6 h-6 rounded-md bg-[#252525] text-[#888] text-xs font-bold hover:bg-[#333] hover:text-white transition-colors flex items-center justify-center"
+      >−</button>
+      <span className="w-5 text-center text-xs font-bold text-white">{value}</span>
+      <button
+        onClick={() => onChange(value + 1)}
+        className="w-6 h-6 rounded-md bg-[#252525] text-[#888] text-xs font-bold hover:bg-[#333] hover:text-white transition-colors flex items-center justify-center"
+      >+</button>
+    </div>
+  )
+}
+
+// ── FantasyStatsTab ────────────────────────────────────────────────────────────
+
+function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove }: {
+  stats: FantasyStats
+  search: string
+  onSearchChange: (v: string) => void
+  onStatChange: (name: string, field: 'goals' | 'assists', value: number) => void
+  onRemove: (name: string) => void
+}) {
+  const q = search.toLowerCase()
+  const filtered = q
+    ? WK_PLAYERS.filter((p) => p.name.toLowerCase().includes(q) || p.fullName.toLowerCase().includes(q) || p.country.toLowerCase().includes(q)).slice(0, 20)
+    : []
+
+  const withStats = Object.entries(stats)
+    .filter(([, s]) => s.goals > 0 || s.assists > 0)
+    .sort((a, b) => (b[1].goals + b[1].assists) - (a[1].goals + a[1].assists))
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Spelers met statistieken */}
+      {withStats.length > 0 && (
+        <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#111] flex items-center justify-between">
+            <span className="text-sm font-bold text-white">Statistieken ingevoerd</span>
+            <span className="text-xs text-[#FF6B00] font-bold">{withStats.length} speler{withStats.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="divide-y divide-[#1e1e1e]">
+            {withStats.map(([name, s]) => {
+              const player = WK_PLAYERS.find((p) => p.name === name)
+              return (
+                <div key={name} className="flex items-center gap-3 px-4 py-2.5">
+                  {player && <FlagImage country={player.country} size={16} />}
+                  <span className="text-sm font-bold text-white flex-1 truncate">{name}</span>
+                  {player && <span className="text-xs text-[#555]">{player.country}</span>}
+                  <span className="text-xs text-[#888]">⚽ {s.goals}</span>
+                  <span className="text-xs text-[#888]">🅰 {s.assists}</span>
+                  <button onClick={() => onRemove(name)} className="text-[10px] text-[#E74C3C] hover:text-[#E74C3C]/80 ml-1">✕</button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Zoek speler */}
+      <input
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Zoek speler op naam of land…"
+        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
+      />
+
+      {q && filtered.length === 0 && (
+        <p className="text-xs text-[#555] text-center py-2">Geen spelers gevonden</p>
+      )}
+
+      {filtered.length > 0 && (
+        <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+          <div className="divide-y divide-[#1e1e1e]">
+            {filtered.map((player) => {
+              const s = stats[player.name] ?? { goals: 0, assists: 0 }
+              return (
+                <div key={player.name} className="flex items-center gap-3 px-4 py-2.5">
+                  <FlagImage country={player.country} size={16} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-white truncate">{player.name}</div>
+                    <div className="text-[10px] text-[#555]">{player.country} · {player.club}</div>
+                  </div>
+                  <StatStepper label="⚽" value={s.goals} onChange={(v) => onStatChange(player.name, 'goals', v)} />
+                  <StatStepper label="🅰" value={s.assists} onChange={(v) => onStatChange(player.name, 'assists', v)} />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {!q && withStats.length === 0 && (
+        <p className="text-xs text-[#555] text-center py-4">Zoek een speler om statistieken in te voeren</p>
+      )}
     </div>
   )
 }

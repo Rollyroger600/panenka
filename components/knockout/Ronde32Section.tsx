@@ -99,7 +99,7 @@ export function Ronde32Section() {
   const w3PickedCountries = new Set(w3Picks.map((s) => s.country).filter(Boolean) as string[])
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <SuggestionsPanel onApplyAll={applyAllSuggestions} />
 
       {/* W1 — Poulewinnaars */}

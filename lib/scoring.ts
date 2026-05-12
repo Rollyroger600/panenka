@@ -1,8 +1,12 @@
 import { MATCH_ODDS } from './data/odds'
 import { KO_QUOTES } from './data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from './data/knockoutRounds'
+import { computePlayerQuote } from './helpers'
+import type { Player } from './data/players'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
 import type { OranjeCorrectMap, OranjeAntwoordenMap } from '@/lib/types/oranjeVragen'
+
+export type FantasyStats = Record<string, { goals: number; assists: number }>
 
 export interface MatchResult {
   toto: '1' | 'X' | '2'
@@ -26,13 +30,15 @@ export interface ScoreBreakdown {
 const QKEY_MAP: Record<string, keyof typeof KO_QUOTES[string]> = {
   winnaar_poule: 'poulewinnaar',
   tweede:        'tweede',
-  derde:         'tweede',   // no dedicated field; tweede = 1.0 for all teams
+  derde:         'derde',
   r16:           'r16',
   r8:            'r8',
   r4:            'r4',
   finale:        'finale',
   winnaar:       'winnaar',
 }
+
+const R32_IDS = ['w1', 'w2', 'w3'] as const
 
 const NED_MATCH_IDS = [10, 33, 58]
 const ORANJE_KEYS = ['q1','q2','q3','q4','q5','q6','q7','q8','q9'] as const
@@ -97,17 +103,32 @@ export function scoreParticipant(
   // ── Knockout ──────────────────────────────────────────────────────────────
   let knockout = 0
   for (const [key, slot] of Object.entries(knockoutPicks)) {
-    if (!slot.country || !slot.tok) continue
+    const country = slot.country
+    if (!country || !slot.tok) continue
     const roundId = key.split('_')[0]
     const round = KNOCKOUT_ROUNDS.find((r) => r.id === roundId)
     if (!round) continue
-    const advanced = koResults[roundId] ?? []
-    if (!advanced.includes(slot.country)) continue
-    const quotes = KO_QUOTES[slot.country]
+    const quotes = KO_QUOTES[country]
     if (!quotes) continue
-    const field = QKEY_MAP[round.qkey]
-    const quote = field ? (quotes[field] ?? 1) : 1
-    knockout += slot.tok * quote
+
+    if ((R32_IDS as readonly string[]).includes(roundId)) {
+      // R32: correct rol → specifieke quote; andere rol maar wel door → quote_derde
+      const correctAdvanced = (koResults[roundId] ?? []).includes(country)
+      if (correctAdvanced) {
+        const field = QKEY_MAP[round.qkey]
+        knockout += slot.tok * (quotes[field] ?? 1)
+      } else {
+        const advancedAnyRole = R32_IDS.some((rid) => (koResults[rid] ?? []).includes(country))
+        if (advancedAnyRole) {
+          knockout += slot.tok * (quotes.derde ?? 1)
+        }
+      }
+    } else {
+      // R16 t/m winnaar: alleen punten bij correcte voorspelling
+      if (!(koResults[roundId] ?? []).includes(country)) continue
+      const field = QKEY_MAP[round.qkey]
+      knockout += slot.tok * (quotes[field] ?? 1)
+    }
   }
 
   // ── Oranje ────────────────────────────────────────────────────────────────
@@ -133,4 +154,18 @@ export function scoreParticipant(
     oranje,
     total,
   }
+}
+
+export function scoreFantasy(
+  squad: Record<string, Player | null>,
+  stats: FantasyStats,
+): number {
+  let total = 0
+  for (const player of Object.values(squad)) {
+    if (!player) continue
+    const s = stats[player.name]
+    if (!s || (s.goals === 0 && s.assists === 0)) continue
+    total += (s.goals + s.assists) * computePlayerQuote(player)
+  }
+  return Math.round(total * 100) / 100
 }
