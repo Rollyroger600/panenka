@@ -44,6 +44,9 @@ export type Scratchpad = Record<string, Player | null>
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface GameState {
+  onboardingOpen: boolean
+  setOnboardingOpen: (v: boolean) => void
+
   saveStatus: SaveStatus
   setSaveStatus: (s: SaveStatus) => void
   predictions: PredictionsMap
@@ -73,6 +76,9 @@ interface GameState {
 }
 
 export const useGameStore = create<GameState>((set) => ({
+  onboardingOpen: false,
+  setOnboardingOpen: (v) => set({ onboardingOpen: v }),
+
   saveStatus: 'idle',
   setSaveStatus: (s) => set({ saveStatus: s }),
 

@@ -845,6 +845,37 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-13 — Onboarding intro-slides & UI tweaks (Claude Code)
+
+#### Footer hoogte (`components/layout/BottomNav.tsx`)
+- Nav-links padding verhoogd van `py-2.5` naar `py-4` voor hogere footer
+
+#### TO-DO tab leesbaarheid (`app/(app)/poulefase/PoulefaseClient.tsx`)
+- 'Alles ingevuld ✓' tekst helderder gemaakt: `text-[#555]` → `text-[#aaa]`
+
+#### Onboarding intro-slides — nieuw (`components/onboarding/`)
+- Nieuw: `OnboardingSlides.tsx` — 6-staps overlay met uitleg hoe de app werkt
+  - Slide 1: Welkom (logo + titel)
+  - Slide 2: Wedstrijden — demo-MatchCard (NED vs ARG), uitleg Tokens/Toto/Uitslag + puntentelling
+  - Slide 3: Knockout — demo KO-tegels (4 landen), uitleg Ronde 32 consolatieregels + quotelogica
+  - Slide 4: Oranje — deadline-flow (3 vragen → 45 invullen), 0,5 token per goed antwoord
+  - Slide 5: Fantasy — selectiecriteria, (goals + assists) × speler-quote, quoteopbouw
+  - Slide 6: Puntentelling — Wedstrijden + Knockout + Fantasy; Oranje geeft tokens
+  - Navigatie: terug/volgende knoppen + stip-indicator; sluit met "Let's go!"
+  - Styling conform FifaInfoDrawer: `z-[60]`, dark backdrop, slideUp animatie
+- Nieuw: `OnboardingController.tsx` — client component; checkt `localStorage.onboarding_seen`, toont slides na 1s vertraging bij eerste bezoek
+
+#### AppHeader (`components/layout/AppHeader.tsx`)
+- `?`-icoon knop toegevoegd naast naam/tokens; opent onboarding-slides altijd opnieuw
+
+#### Zustand store (`store/gameStore.ts`)
+- `onboardingOpen: boolean` en `setOnboardingOpen` actie toegevoegd
+
+#### App layout (`app/(app)/layout.tsx`)
+- `<OnboardingController />` gemount naast SaveIndicator/PopupToast
+
+---
+
 ### 2026-05-13 — Wedstrijden pagina redesign & MatchCard UX (Claude Code)
 
 #### Footer (`components/layout/BottomNav.tsx`)

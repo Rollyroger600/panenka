@@ -5,6 +5,7 @@ import { DeadlineBanner } from '@/components/layout/DeadlineBanner'
 import { AppShell } from '@/components/layout/AppShell'
 import { SaveIndicator } from '@/components/ui/SaveIndicator'
 import { PopupToast } from '@/components/ui/PopupToast'
+import { OnboardingController } from '@/components/onboarding/OnboardingController'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const store = await cookies()
@@ -23,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <SaveIndicator />
       <PopupToast currentUserName={name} />
+      <OnboardingController />
       <BottomNav />
     </div>
   )

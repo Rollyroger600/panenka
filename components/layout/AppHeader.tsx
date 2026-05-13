@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { TokenCount } from './TokenCount'
+import { useGameStore } from '@/store/gameStore'
 
 interface Props {
   name: string
@@ -9,6 +10,7 @@ interface Props {
 
 export function AppHeader({ name, initials }: Props) {
   const [compact, setCompact] = useState(false)
+  const setOnboardingOpen = useGameStore((s) => s.setOnboardingOpen)
 
   useEffect(() => {
     function onScroll() { setCompact(window.scrollY > 50) }
@@ -47,6 +49,14 @@ export function AppHeader({ name, initials }: Props) {
         <span className="text-sm font-bold text-white">{name}</span>
         <span className="text-[#555]">|</span>
         <TokenCount initials={initials} />
+        <button
+          onClick={() => setOnboardingOpen(true)}
+          className="w-6 h-6 rounded-full border border-[#333] flex items-center justify-center font-heading text-xs font-bold transition-colors hover:border-[#555] hover:text-[#aaa] ml-1"
+          style={{ color: '#555' }}
+          aria-label="Uitleg bekijken"
+        >
+          ?
+        </button>
       </div>
     </header>
   )

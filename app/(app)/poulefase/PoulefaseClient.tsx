@@ -132,7 +132,7 @@ export function PoulefaseClient({ initials }: Props) {
           {!isLoaded ? (
             <SkeletonList count={4} />
           ) : todoMatches.length === 0 ? (
-            <p className="text-center font-heading text-sm text-[#555] uppercase tracking-widest mt-8">
+            <p className="text-center font-heading text-sm text-[#aaa] uppercase tracking-widest mt-8">
               Alles ingevuld ✓
             </p>
           ) : (
