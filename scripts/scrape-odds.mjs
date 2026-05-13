@@ -121,13 +121,22 @@ function toScoreKey(label) { return label.replace('-', ' - '); }
 
 function toDecimal(kambiOdds) { return Math.round(kambiOdds / 10) / 100; }
 
-// Lees huidige odds.ts en parseer home/draw/away per wedstrijd-ID
+// Lees huidige odds.ts en parseer home/draw/away + scores per wedstrijd-ID
 function parsePrevOdds(filePath) {
   if (!existsSync(filePath)) return {};
   const byId = {};
   for (const line of readFileSync(filePath, 'utf8').split('\n')) {
     const m = line.match(/^\s+(\d+):\s*\{\s*home:\s*([\d.]+),\s*draw:\s*([\d.]+),\s*away:\s*([\d.]+)/);
-    if (m) byId[parseInt(m[1])] = { home: +m[2], draw: +m[3], away: +m[4] };
+    if (!m) continue;
+    const id = parseInt(m[1]);
+    const scores = {};
+    const scoresMatch = line.match(/scores:\s*\{([^}]*)\}/);
+    if (scoresMatch) {
+      for (const entry of scoresMatch[1].matchAll(/'([^']+)':\s*([\d.]+)/g)) {
+        scores[entry[1]] = parseFloat(entry[2]);
+      }
+    }
+    byId[id] = { home: +m[2], draw: +m[3], away: +m[4], scores };
   }
   return byId;
 }
@@ -217,10 +226,15 @@ async function main() {
 
     // Bereken trends t.o.v. vorige run
     const prev = prevOdds[match.id];
+    const scoreTrends = {};
+    for (const [score, odd] of Object.entries(scores)) {
+      scoreTrends[score] = calcTrend(prev?.scores?.[score], odd);
+    }
     trends[match.id] = {
       home: calcTrend(prev?.home, event.home),
       draw: calcTrend(prev?.draw, event.draw),
       away: calcTrend(prev?.away, event.away),
+      scores: scoreTrends,
     };
 
     console.log(` ✓ (${scoreCount} scores)`);
@@ -267,8 +281,9 @@ async function main() {
 
   for (const match of ALL_MATCHES) {
     if (!trends[match.id]) continue;
-    const { home, draw, away } = trends[match.id];
-    trendLines.push(`  ${match.id}: { home: ${JSON.stringify(home)}, draw: ${JSON.stringify(draw)}, away: ${JSON.stringify(away)} },`);
+    const { home, draw, away, scores: st } = trends[match.id];
+    const scoresStr = Object.entries(st ?? {}).map(([k, v]) => `'${k}': ${JSON.stringify(v)}`).join(', ');
+    trendLines.push(`  ${match.id}: { home: ${JSON.stringify(home)}, draw: ${JSON.stringify(draw)}, away: ${JSON.stringify(away)}, scores: { ${scoresStr} } },`);
   }
 
   trendLines.push(`}`, ``);

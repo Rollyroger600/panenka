@@ -46,7 +46,8 @@ export function MatchCard({ match }: Props) {
     ? pred.toto === '1' ? (trends?.home ?? null) : pred.toto === 'X' ? (trends?.draw ?? null) : (trends?.away ?? null)
     : null
 
-  const scoreOdd = pred.uitslag && odds ? odds.scores[pred.uitslag] ?? null : null
+  const scoreOdd   = pred.uitslag && odds ? odds.scores[pred.uitslag] ?? null : null
+  const scoreTrend: OddsTrend = pred.uitslag && trends?.scores ? (trends.scores[pred.uitslag] ?? null) : null
   const maxScore =
     totoOdd != null && scoreOdd != null
       ? effectiveTokens * totoOdd + effectiveTokens * scoreOdd
@@ -62,6 +63,21 @@ export function MatchCard({ match }: Props) {
           style={{ background: 'rgba(37,37,37,0.8)' }}>
           # {match.id}
         </div>
+
+        {/* Wis-knop — gespiegeld rechts */}
+        {(pred.toto !== null || pred.uitslag !== null) && (
+          <button
+            onClick={() => {
+              setPrediction(match.id, { toto: null, uitslag: null, tokens: 1 })
+              setOpenPanel(null)
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] font-heading text-xs font-bold text-[#666] hover:border-red-500/40 hover:text-red-400 transition-colors"
+            style={{ background: 'rgba(37,37,37,0.8)' }}
+            title="Wis keuzes"
+          >
+            wis
+          </button>
+        )}
 
         {/* Teams */}
         <div className="flex items-center gap-2">
@@ -128,12 +144,13 @@ export function MatchCard({ match }: Props) {
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Quote</span>
-            <span className={`h-9 w-9 flex items-center justify-center font-heading text-sm font-bold rounded-lg border ${
+            <span className={`relative h-9 w-9 flex items-center justify-center font-heading text-sm font-bold rounded-lg border ${
               scoreOdd != null ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-[#3a3a3a]'
             }`}
               style={scoreOdd == null ? { color: MUTED } : undefined}
             >
               {scoreOdd != null ? scoreOdd.toFixed(2) : '—'}
+              <TrendIndicator trend={scoreTrend} />
             </span>
           </div>
         </div>

@@ -10,12 +10,12 @@ import { ScheduleView } from '@/components/knockout/ScheduleView'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 
 const TABS = [
-  { id: 'ronde32', label: 'Ronde van 32', short: 'R 32' },
-  { id: 'r16',    label: 'Ronde van 16', short: 'R 16' },
-  { id: 'r8',     label: 'Kwartfinales',  short: '1/4' },
-  { id: 'r4',     label: 'Halve Finales', short: '1/2' },
-  { id: 'finale', label: 'Finale',        short: 'Fin' },
-  { id: 'winner', label: 'Winnaar',       short: 'Win' },
+  { id: 'ronde32', label: 'R 32' },
+  { id: 'r16',    label: 'R 16' },
+  { id: 'r8',     label: '1/4' },
+  { id: 'r4',     label: '1/2' },
+  { id: 'finale', label: 'Fin' },
+  { id: 'winner', label: 'Win' },
 ]
 
 const NON32_ROUNDS = KNOCKOUT_ROUNDS.filter((r) => r.uiTab !== 'ronde32')
@@ -51,8 +51,7 @@ export function KnockoutClient() {
                 : 'text-white hover:text-[#FF6B00]'
             }`}
           >
-            <span className="sm:hidden">{tab.short}</span>
-            <span className="hidden sm:inline">{tab.label}</span>
+            {tab.label}
           </button>
         ))}
       </div>

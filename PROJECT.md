@@ -845,6 +845,46 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-13 — ScorePicker per wedstrijd, wis-knop, achtergrond-fix & quoteringen (Claude Code)
+
+#### ScorePicker dynamisch per wedstrijd (`components/matches/ScorePicker.tsx`)
+- Hardcoded score-lijsten (`HOME_WIN_SCORES`, `DRAW_SCORES`, `AWAY_WIN_SCORES`) vervangen door dynamische groupering op basis van `MATCH_ODDS[matchId].scores`
+- Scores worden automatisch ingedeeld op thuis/gelijk/uit op basis van scorewaarden en gesorteerd op totaal doelpunten
+- Elke wedstrijd toont nu exact de uitslagen die Unibet aanbiedt
+
+#### Wis-knop op MatchCard (`components/matches/MatchCard.tsx`)
+- Wis-knop toegevoegd rechtsboven in de header, gespiegeld t.o.v. het wedstrijdnummer-badge
+- Knop alleen zichtbaar als toto of uitslag is ingevuld
+- Bij klikken: toto, uitslag én tokens worden gereset (tokens naar 1)
+
+#### Score-quote trend-indicator (`components/matches/MatchCard.tsx`, `lib/data/odds_trends.ts`, `scripts/scrape-odds.mjs`)
+- `MatchTrends` interface uitgebreid met optioneel `scores?: Record<string, OddsTrend>` veld
+- Scraper berekent nu ook trend per scorelijn t.o.v. vorige run (`parsePrevOdds` parseert ook scores-map)
+- `TrendIndicator` toegevoegd op de score-quote container in MatchCard (naast de toto-quote trend die er al was)
+
+#### Odds scraper run (`lib/data/odds.ts`, `lib/data/odds_trends.ts`)
+- 49 wedstrijden bijgewerkt; 15 met gewijzigde quoteringen
+- Match 69 (Colombia vs Portugal): geen scoremarkt op Kambi
+- Wedstrijden 38, 49–68, 70–72 nog niet beschikbaar op Unibet
+
+#### KO-tabbladen altijd korte tekst (`app/(app)/knockout/KnockoutClient.tsx`)
+- Lange labels (`Ronde van 32`, `Kwartfinales`, etc.) en responsive `sm:hidden`/`sm:inline` spans verwijderd
+- Tabbladen tonen nu altijd de korte variant: R 32, R 16, 1/4, 1/2, Fin, Win
+
+#### Paginatitel Wedstrijden (`app/(app)/poulefase/PoulefaseClient.tsx`)
+- `text-[min(1.875rem,7vw)]` vervangen door `text-3xl` — consistent met alle andere pagina's; arbitrary value liet line-height afwijken
+
+#### Achtergrond fixed-positie fix (`app/globals.css`)
+- `background-attachment: fixed` verwijderd van `body` (veroorzaakte schaalbugs op sommige mobiele browsers)
+- Vervangen door `body::before` pseudo-element met `position: fixed; inset: 0; z-index: -1` — zelfde visueel effect, consistent cross-browser
+- `@media (min-width: 768px)` media query mee verplaatst naar `body::before`
+
+#### Fantasy speler-quotering (`lib/helpers.ts`)
+- `computePlayerQuote`: factor `verwacht` gebruikt nu `KO_QUOTES[country].r16` i.p.v. `derde`
+- `getPlayerTrend`: trend-indicator volgt nu ook `KO_TRENDS[country].r16` i.p.v. `derde`
+
+---
+
 ### 2026-05-13 — Onboarding intro-slides & UI tweaks (Claude Code)
 
 #### Footer hoogte (`components/layout/BottomNav.tsx`)

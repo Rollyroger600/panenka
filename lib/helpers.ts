@@ -6,15 +6,15 @@ import type { OddsTrend } from './data/knockoutQuotes_trends'
 
 export function computePlayerQuote(player: Player): number {
   const tq = TEAM_QUOTES[player.country] ?? { teamQuote: 3.0 }
-  const derde = KO_QUOTES[player.country]?.derde
-  // verwacht = 1 + (derde / 6.5), fallback 1.5 als Kambi-data ontbreekt
-  const verwacht = derde != null ? 1 + derde / 6.5 : 1.5
+  const r16 = KO_QUOTES[player.country]?.r16
+  // verwacht = 1 + (r16 / 6.5), fallback 1.5 als Kambi-data ontbreekt
+  const verwacht = r16 != null ? 1 + r16 / 6.5 : 1.5
   return (100 / player.overall) ** 2 * tq.teamQuote * verwacht
 }
 
 // Trend voor spelersquote volgt de 'derde' (kwalificeert voor KO) trend
 export function getPlayerTrend(country: string): OddsTrend {
-  return KO_TRENDS[country]?.derde ?? null
+  return KO_TRENDS[country]?.r16 ?? null
 }
 
 export function abbrevName(fullName: string): string {

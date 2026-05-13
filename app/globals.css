@@ -47,17 +47,23 @@ body {
 
 body {
   background-color: #0D0D0D;
-  background-image: url('/Background/1a@4x.png');
-  background-size: cover;
-  background-attachment: fixed;
-  background-position: center top;
-  background-repeat: no-repeat;
   color: #F0F0F0;
   font-family: Inter, system-ui, sans-serif;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url('/Background/1a@4x.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
 @media (min-width: 768px) {
-  body {
+  body::before {
     background-image: url('/Background/Background_wide.png');
   }
 }

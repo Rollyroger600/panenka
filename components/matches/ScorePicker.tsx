@@ -9,10 +9,35 @@ interface Props {
   onSelect: (score: string) => void
 }
 
-// Scores are grouped by result type
-const HOME_WIN_SCORES = ['1 - 0', '2 - 0', '2 - 1', '3 - 0', '3 - 1', '3 - 2', '4 - 0', '4 - 1', '4 - 2', '4 - 3', '5 - 1', '5 - 2']
-const DRAW_SCORES = ['0 - 0', '1 - 1', '2 - 2', '3 - 3', '4 - 4']
-const AWAY_WIN_SCORES = ['0 - 1', '0 - 2', '1 - 2', '0 - 3', '1 - 3', '2 - 3', '0 - 4', '1 - 4', '2 - 4', '3 - 4', '0 - 5', '1 - 5', '2 - 5']
+function parseScore(s: string): [number, number] {
+  const [h, a] = s.split(' - ').map(Number)
+  return [h, a]
+}
+
+function sortScores(scores: string[]): string[] {
+  return scores.slice().sort((a, b) => {
+    const [ah, aa] = parseScore(a)
+    const [bh, ba] = parseScore(b)
+    const totalA = ah + aa
+    const totalB = bh + ba
+    if (totalA !== totalB) return totalA - totalB
+    return ah - bh
+  })
+}
+
+function groupScores(matchId: number) {
+  const scores = Object.keys(MATCH_ODDS[matchId]?.scores ?? {})
+  const home: string[] = []
+  const draw: string[] = []
+  const away: string[] = []
+  for (const s of scores) {
+    const [h, a] = parseScore(s)
+    if (h > a) home.push(s)
+    else if (h === a) draw.push(s)
+    else away.push(s)
+  }
+  return { home: sortScores(home), draw: sortScores(draw), away: sortScores(away) }
+}
 
 function ScoreColumn({ title, scores, matchId, selected, onSelect }: {
   title: string
@@ -54,12 +79,13 @@ function ScoreColumn({ title, scores, matchId, selected, onSelect }: {
 }
 
 export function ScorePicker({ matchId, toto, selected, onSelect }: Props) {
+  const { home, draw, away } = groupScores(matchId)
   return (
     <div className="mt-2 p-2 rounded-xl bg-[#111] border border-[#2a2a2a]">
       <div className="flex gap-2">
-        <ScoreColumn title="Thuis wint" scores={HOME_WIN_SCORES} matchId={matchId} selected={selected} onSelect={onSelect} />
-        <ScoreColumn title="Gelijk" scores={DRAW_SCORES} matchId={matchId} selected={selected} onSelect={onSelect} />
-        <ScoreColumn title="Uit wint" scores={AWAY_WIN_SCORES} matchId={matchId} selected={selected} onSelect={onSelect} />
+        <ScoreColumn title="Thuis wint" scores={home} matchId={matchId} selected={selected} onSelect={onSelect} />
+        <ScoreColumn title="Gelijk" scores={draw} matchId={matchId} selected={selected} onSelect={onSelect} />
+        <ScoreColumn title="Uit wint" scores={away} matchId={matchId} selected={selected} onSelect={onSelect} />
       </div>
     </div>
   )

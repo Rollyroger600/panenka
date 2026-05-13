@@ -4,29 +4,30 @@ export interface MatchTrends {
   home: OddsTrend
   draw: OddsTrend
   away: OddsTrend
+  scores?: Record<string, OddsTrend>
 }
 
-export const ODDS_UPDATED_AT = '2026-05-11T17:10:36.828Z'
+export const ODDS_UPDATED_AT = '2026-05-13T12:52:27.205Z'
 
 export const ODDS_TRENDS: Record<number, MatchTrends> = {
-  1: { home: "same", draw: "same", away: "same" },
-  2: { home: "same", draw: "same", away: "same" },
-  3: { home: "same", draw: "same", away: "same" },
-  4: { home: "same", draw: "same", away: "same" },
-  5: { home: "same", draw: "same", away: "same" },
-  6: { home: "same", draw: "same", away: "same" },
-  7: { home: "same", draw: "same", away: "same" },
-  8: { home: "same", draw: "same", away: "same" },
-  9: { home: "same", draw: "same", away: "same" },
-  10: { home: "same", draw: "same", away: "same" },
-  11: { home: "same", draw: "same", away: "same" },
-  12: { home: "same", draw: "same", away: "same" },
+  1: { home: "down", draw: "down", away: "up" },
+  2: { home: "down", draw: "up", away: "same" },
+  3: { home: "down", draw: "down", away: "up" },
+  4: { home: "same", draw: "down", away: "up" },
+  5: { home: "up", draw: "up", away: "down" },
+  6: { home: "same", draw: "up", away: "down" },
+  7: { home: "up", draw: "down", away: "down" },
+  8: { home: "down", draw: "down", away: "up" },
+  9: { home: "same", draw: "down", away: "up" },
+  10: { home: "up", draw: "down", away: "up" },
+  11: { home: "down", draw: "up", away: "down" },
+  12: { home: "up", draw: "down", away: "up" },
   13: { home: "same", draw: "same", away: "same" },
   14: { home: "same", draw: "same", away: "same" },
-  15: { home: "same", draw: "same", away: "same" },
+  15: { home: "up", draw: "up", away: "down" },
   16: { home: "same", draw: "same", away: "same" },
   17: { home: "same", draw: "same", away: "same" },
-  18: { home: "same", draw: "same", away: "same" },
+  18: { home: "same", draw: "up", away: "down" },
   19: { home: "same", draw: "same", away: "same" },
   20: { home: "same", draw: "same", away: "same" },
   21: { home: "same", draw: "same", away: "same" },
@@ -34,7 +35,7 @@ export const ODDS_TRENDS: Record<number, MatchTrends> = {
   23: { home: "same", draw: "same", away: "same" },
   24: { home: "same", draw: "same", away: "same" },
   25: { home: "same", draw: "same", away: "same" },
-  26: { home: "same", draw: "same", away: "same" },
+  26: { home: "down", draw: "up", away: "up" },
   27: { home: "same", draw: "same", away: "same" },
   28: { home: "same", draw: "same", away: "same" },
   29: { home: "same", draw: "same", away: "same" },
@@ -56,6 +57,6 @@ export const ODDS_TRENDS: Record<number, MatchTrends> = {
   46: { home: "same", draw: "same", away: "same" },
   47: { home: "same", draw: "same", away: "same" },
   48: { home: "same", draw: "same", away: "same" },
-  51: { home: "up", draw: "up", away: "down" },
-  69: { home: "down", draw: "down", away: "down" },
+  51: { home: "same", draw: "same", away: "same" },
+  69: { home: "same", draw: "same", away: "same" },
 }
