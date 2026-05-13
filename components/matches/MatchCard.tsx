@@ -7,12 +7,11 @@ import type { OddsTrend } from '@/lib/data/odds_trends'
 import { abbrevCountry } from '@/lib/helpers'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { TotoButtons } from './TotoButtons'
-import { TokenPicker } from './TokenPicker'
 import { ScorePicker } from './ScorePicker'
 import type { Match } from '@/lib/data/matches'
 
 interface Props { match: Match }
-type Panel = 'tokens' | 'score' | null
+type Panel = 'score' | null
 
 const MUTED = '#7e7667'
 const LABEL = 'font-heading text-sm font-bold uppercase tracking-wider text-center'
@@ -33,7 +32,9 @@ function TrendIndicator({ trend }: { trend: OddsTrend }) {
 export function MatchCard({ match }: Props) {
   const { predictions, setPrediction } = useGameStore()
   const pred = predictions[match.id] ?? { toto: null, uitslag: null, tokens: null }
+  const effectiveTokens = pred.tokens ?? 1
   const [openPanel, setOpenPanel] = useState<Panel>(null)
+  const isComplete = pred.toto !== null && pred.uitslag !== null
 
   const odds   = MATCH_ODDS[match.id]
   const trends = ODDS_TRENDS[match.id]
@@ -47,16 +48,12 @@ export function MatchCard({ match }: Props) {
 
   const scoreOdd = pred.uitslag && odds ? odds.scores[pred.uitslag] ?? null : null
   const maxScore =
-    pred.tokens !== null && totoOdd != null && scoreOdd != null
-      ? pred.tokens * totoOdd + pred.tokens * scoreOdd
+    totoOdd != null && scoreOdd != null
+      ? effectiveTokens * totoOdd + effectiveTokens * scoreOdd
       : null
 
-  function togglePanel(panel: Panel) {
-    setOpenPanel((p) => (p === panel ? null : panel))
-  }
-
   return (
-    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+    <div className={`rounded-xl border overflow-hidden ${isComplete ? 'border-[#FF6B00]' : 'border-[#2a2a2a]'}`} style={{ background: 'rgba(22,22,22,0.82)' }}>
 
       {/* Header */}
       <div className="relative flex flex-col items-center px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
@@ -80,31 +77,24 @@ export function MatchCard({ match }: Props) {
       </div>
 
       {/* Input row — spread full width */}
-      <div className="flex justify-between items-end px-2 pt-2 pb-2">
+      <div className="flex justify-between items-start px-2 pt-2 pb-2">
 
         {/* Tokens */}
         <div className="flex flex-col items-center gap-1">
           <span className={LABEL} style={{ color: MUTED }}>Tokens</span>
-          <button
-            onClick={() => togglePanel('tokens')}
-            className={`font-heading h-9 w-10 rounded-lg text-sm font-bold transition-colors flex items-center justify-center border ${
-              pred.tokens !== null
-                ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
-                : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
-            }`}
-            style={pred.tokens === null ? { color: MUTED } : undefined}
-          >
-            {pred.tokens ?? 'Kies'}
-          </button>
+          <div className="font-heading h-9 w-10 rounded-lg text-sm font-bold flex items-center justify-center border bg-[#FF6B00] border-[#FF6B00] text-white">
+            {effectiveTokens}
+          </div>
         </div>
 
         {/* Toto + Quote toto */}
-        <div className="flex items-end gap-1">
+        <div className="flex items-start gap-1">
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Toto</span>
             <TotoButtons
               selected={pred.toto}
               onChange={(toto) => setPrediction(match.id, { toto })}
+              odds={odds ? { home: odds.home, draw: odds.draw, away: odds.away } : undefined}
             />
           </div>
           <div className="flex flex-col items-center gap-1">
@@ -121,11 +111,11 @@ export function MatchCard({ match }: Props) {
         </div>
 
         {/* Uitslag + Quote uitslag */}
-        <div className="flex items-end gap-1">
+        <div className="flex items-start gap-1">
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Uitslag</span>
             <button
-              onClick={() => togglePanel('score')}
+              onClick={() => setOpenPanel((p) => (p === 'score' ? null : 'score'))}
               className={`font-heading h-9 w-14 rounded-lg text-sm font-bold transition-colors flex items-center justify-center border ${
                 pred.uitslag !== null
                   ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
@@ -149,26 +139,27 @@ export function MatchCard({ match }: Props) {
         </div>
       </div>
 
-      {/* Max score */}
-      {maxScore !== null && (
-        <div className="px-3 pb-2 flex justify-end">
+      {/* Steppers + Max score */}
+      <div className="px-2 pb-2 flex justify-between items-center">
+        <div className="w-10 flex gap-0.5">
+          <button
+            onClick={() => setPrediction(match.id, { tokens: Math.max(1, effectiveTokens - 1) })}
+            disabled={effectiveTokens <= 1}
+            className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
+          >−</button>
+          <button
+            onClick={() => setPrediction(match.id, { tokens: Math.min(6, effectiveTokens + 1) })}
+            disabled={effectiveTokens >= 6}
+            className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
+          >+</button>
+        </div>
+        {maxScore !== null && (
           <span className="font-heading text-sm font-bold uppercase tracking-widest" style={{ color: MUTED }}>
             Max. score{' '}
             <span className="text-[#FF6B00]">{maxScore.toFixed(1)} pts</span>
           </span>
-        </div>
-      )}
-
-      {/* Token picker */}
-      {openPanel === 'tokens' && (
-        <div className="px-3 pb-2">
-          <TokenPicker
-            value={pred.tokens}
-            onChange={(n) => setPrediction(match.id, { tokens: n })}
-            onClose={() => setOpenPanel(null)}
-          />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Score picker */}
       {openPanel === 'score' && (

@@ -845,6 +845,37 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-13 — Wedstrijden pagina redesign & MatchCard UX (Claude Code)
+
+#### Footer (`components/layout/BottomNav.tsx`)
+- Label 'Poule' hernoemd naar 'Wedstrijden'
+- Alle tekstlabels verwijderd uit de footer — alleen icoontjes zichtbaar
+
+#### Footer icoontjes (`components/icons/NavIcons.tsx`)
+- IconPoule vervangen door nieuw SVG (schoen/voetbal, `icon-poule.svg`)
+- IconKO vervangen door nieuw SVG (wereldbol, `icon-ko.svg`)
+- IconFantasy vervangen door nieuw SVG (mensen/sterren, `icon-fantasy.svg`)
+
+#### Wedstrijden pagina (`app/(app)/poulefase/PoulefaseClient.tsx`)
+- Paginatitel gewijzigd van 'Poulewedstrijden' naar 'Wedstrijden'
+- '72 wedstrijden ·' verwijderd uit ondertitel
+- Toggle-infrastructuur gebouwd voor Poulefase/Knockout fase (knop nog verborgen tot na start toernooi)
+- KO-fase tabs: R 32 · R 16 · 1/4 · 1/2 · FIN — KO-wedstrijden (phase: 'knockout') worden weergegeven via MatchCard
+- Tab 'Alle' verwijderd; starttab is nu Ronde 1
+- Tab 'TO-DO' toegevoegd na Ronde 3: toont wedstrijden waar toto of uitslag nog ontbreekt; bij volledig ingevuld verschijnt 'Alles ingevuld ✓'
+
+#### MatchCard (`components/matches/MatchCard.tsx`)
+- Oranje randje rondom kaart zodra toto én uitslag beide zijn ingevuld
+- Token container altijd oranje met wit getal (standaard 1 token); geen dropdown meer
+- Quoteringen (home/draw/away) zichtbaar onder de 1 · X · 2 toto-buttons
+- Stepper (− / +) in de onderste balk, gecentreerd onder de token container (zelfde breedte 40px)
+- Steppers en max. score staan in dezelfde rij — kaarthoogte blijft compact
+
+#### TotoButtons (`components/matches/TotoButtons.tsx`)
+- Optionele `odds` prop toegevoegd; quoteringen verschijnen onder elk toto-label
+- Afmetingen gestandaardiseerd naar 36×36 px (w-9 h-9), gelijk aan quote- en uitslag-containers
+- Token container: 40×36 px (w-10 h-9)
+
 ### 2026-05-12 — Max. score zichtbaar in KO-containers (Claude Code)
 
 #### KO pagina — max score per container (`components/knockout/RoundSection.tsx`, `Ronde32Section.tsx`)

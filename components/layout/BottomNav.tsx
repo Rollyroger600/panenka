@@ -6,7 +6,7 @@ import { FifaInfoDrawer } from './FifaInfoDrawer'
 import { IconPoule, IconKO, IconOranje, IconFantasy, IconOverzicht, IconBeker } from '@/components/icons/NavIcons'
 
 const TABS = [
-  { href: '/poulefase', label: 'Poule',     Icon: IconPoule },
+  { href: '/poulefase', label: 'Wedstrijden', Icon: IconPoule },
   { href: '/knockout',  label: 'KO',        Icon: IconKO },
   { href: '/oranje',    label: 'Oranje',    Icon: IconOranje },
   { href: '/fantasy',   label: 'Fantasy',   Icon: IconFantasy },
@@ -32,7 +32,6 @@ export function BottomNav() {
                 }`}
               >
                 <Icon className="w-6 h-6" />
-                <span className="text-[10px] font-bold uppercase tracking-wide">{label}</span>
               </Link>
             )
           })}
