@@ -845,6 +845,22 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-13 — Overzicht statusbar fix & onboarding uitbreiding (Claude Code)
+
+#### Overzicht statusbar (`app/(app)/overzicht/OverzichtClient.tsx`)
+- Poulетelling telt nu alleen wedstrijden waarbij zowel `toto` als `uitslag` zijn ingevuld (`toto !== null && uitslag !== null`); was `tokens !== null` waardoor gewiste wedstrijden nog steeds meegeteld werden
+
+#### Onboarding slides (`components/onboarding/OnboardingSlides.tsx`)
+- Nieuwe slide **Tokens** ingevoegd na Welkom: uitleg over tokenbudget, visuele header-demo (naam | tokens over | ?-knop), subtekst over zichtbaarheid in header
+- Slides Fantasy en Oranje omgewisseld (Fantasy nu vóór Oranje)
+- **DemoMatchCard**: "Groepsfase · Poulefase" vervangen door "15 jun · Rose Bowl"
+- **Tokens-slide**: pijl + label "Jouw resterend budget" verwijderd uit header-demo
+- **Wedstrijden-slide**: uitlegblok over Unibet-quoteringen en deadline 9 juni toegevoegd na de visual; puntentelling uitgesplitst in twee regels (toto / uitslag) met totaalformule en vraag "of ga je all-in?"
+- **Knockout-slide**: introductietekst bijgewerkt (poulewinnaars → R16 → winnaar); uitlegblok over quoteringen + deadline toegevoegd; puntentelling voorzien van titel "Puntentelling voorspelde landen" en twee scenario's (juiste plek vs. troostquote) zonder dikgedrukte labels
+- **Fantasy-slide**: selectiecriteria-blok toegevoegd (max 1 per land/club, max 3 per conf/competitie, min 4 U22); speler-demo Xavi Simons toegevoegd als PlayerRow + uitklapkaart (Overall, Positie, Club, etc.); criteria-blok toont drie factoren met concrete waarden plus formule `(100 / overall)² × teamQuote × (1 + r16 / 6.5)`; labels "(overall)" en "(teamQuote)" toegevoegd achter criteria
+
+---
+
 ### 2026-05-13 — ScorePicker per wedstrijd, wis-knop, achtergrond-fix & quoteringen (Claude Code)
 
 #### ScorePicker dynamisch per wedstrijd (`components/matches/ScorePicker.tsx`)

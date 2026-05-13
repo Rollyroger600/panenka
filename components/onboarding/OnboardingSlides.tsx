@@ -24,7 +24,7 @@ function DemoMatchCard() {
           <FlagImage country="Argentinië" size={24} />
         </div>
         <p className="font-heading font-light text-xs uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
-          Groepsfase · Poulefase
+          15 jun · Rose Bowl
         </p>
       </div>
 
@@ -121,7 +121,7 @@ const SLIDES = [
             <span style={{ color: '#FF6B00' }}>WK 2026</span>
           </h2>
           <p className="text-sm leading-relaxed" style={{ color: '#aaa' }}>
-            Voorspel wedstrijden, beleg tokens en strijd om de beste score.
+            Voorspel wedstrijden, zet tokens in en strijd met je fantasy team om de beste score.
             Deze korte uitleg laat zien hoe het werkt.
           </p>
         </div>
@@ -129,7 +129,49 @@ const SLIDES = [
     ),
   },
 
-  // 1 — Wedstrijden
+  // 1 — Tokens
+  {
+    content: () => (
+      <div className="flex flex-col gap-4">
+        <div>
+          <h2 className="font-heading text-base uppercase tracking-widest text-white mb-1">Tokens</h2>
+          <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
+            Iedere deelnemer heeft een budget aan tokens en kan zelf beslissen waar hij of zij de tokens wil inzetten.
+            Dit kan bij het voorspellen van de wedstrijden, of bij het voorspellen van doorgaande landen in de knockoutfase.
+          </p>
+        </div>
+
+        {/* Header demo */}
+        <div className="rounded-xl overflow-hidden border border-[#2a2a2a]" style={{ background: 'rgba(13,13,13,0.97)' }}>
+          <div className="flex flex-col items-center px-4 py-3">
+            <img
+              src="/Logo/Artboard 1@4x.png"
+              alt="Panenka"
+              style={{ height: '2rem', objectFit: 'contain' }}
+            />
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm font-bold text-white">Jan</span>
+              <span style={{ color: '#555' }}>|</span>
+              <span className="font-heading font-bold text-sm text-[#FF6B00]">214 tokens over</span>
+              <button
+                className="w-6 h-6 rounded-full border border-[#333] flex items-center justify-center font-heading text-xs font-bold ml-1"
+                style={{ color: '#555' }}
+              >?</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div className="rounded-xl border border-[#2a2a2a] px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.6)' }}>
+          <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
+            Je ziet je resterende tokens altijd bovenaan in de header, naast je naam.
+          </p>
+        </div>
+      </div>
+    ),
+  },
+
+  // 3 — Wedstrijden (was 1)
   {
     content: () => (
       <div className="flex flex-col gap-4">
@@ -139,17 +181,28 @@ const SLIDES = [
             Per wedstrijd vul je <span className="text-white font-bold">3 dingen</span> in:
           </p>
           <ul className="mt-2 space-y-1 text-xs" style={{ color: '#aaa' }}>
-            <li><span className="text-[#FF6B00] font-bold">Tokens</span> — jouw inzet op deze wedstrijd (1–6)</li>
+            <li><span className="text-[#FF6B00] font-bold">Tokens</span> — jouw inzet op deze wedstrijd (min 1–max 6)</li>
             <li><span className="text-[#FF6B00] font-bold">Toto</span> — wie wint? 1 / X / 2</li>
-            <li><span className="text-[#FF6B00] font-bold">Uitslag</span> — de exacte eindstand</li>
+            <li><span className="text-[#FF6B00] font-bold">Uitslag</span> — de exacte eindstand na 90 minuten</li>
           </ul>
         </div>
         <DemoMatchCard />
         <div className="rounded-xl border border-[#2a2a2a] px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.6)' }}>
           <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-            <span className="text-white font-bold">Puntentelling:</span>{' '}
-            Toto correct → <span className="text-[#FF6B00]">tokens × toto-quote</span>.{' '}
-            Uitslag ook correct → nóg eens <span className="text-[#FF6B00]">tokens × uitslag-quote</span>.
+            De quoteringen komen van Unibet en corresponderen met de gekozen toto en uitslag. Je kunt meer punten verdienen met een gewaagdere voorspelling, of juist op safe spelen. De quoteringen worden iedere dag geüpdatet tot de deadline op <span className="text-white font-bold">9 juni</span> — daarna staan ze vast voor iedereen.
+          </p>
+        </div>
+        <div className="rounded-xl border border-[#2a2a2a] px-3 py-2.5 space-y-1.5" style={{ background: 'rgba(10,10,10,0.6)' }}>
+          <p className="text-xs font-bold text-white">Puntentelling per wedstrijd:</p>
+          <p className="text-xs" style={{ color: '#aaa' }}>
+            Toto correct → <span className="text-[#FF6B00] font-bold">tokens × quote toto</span>
+          </p>
+          <p className="text-xs" style={{ color: '#aaa' }}>
+            Uitslag correct → <span className="text-[#FF6B00] font-bold">tokens × quote uitslag</span>
+          </p>
+          <p className="text-xs leading-relaxed mt-1" style={{ color: '#aaa' }}>
+            Totaal = <span className="text-white font-bold">(tokens × quote toto) + (tokens × quote uitslag)</span>.{' '}
+            Spreid je kansen tussen toto en uitslag, of ga je all-in?
           </p>
         </div>
       </div>
@@ -163,7 +216,7 @@ const SLIDES = [
         <div>
           <h2 className="font-heading text-base uppercase tracking-widest text-white mb-1">Knockout</h2>
           <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-            Voorspel welke landen doorstoten. Vul 12 poulewinnaars, 12 nummers 2 en 8 beste nummers 3 in.
+            Voorspel welke landen doorstoten naar de verschillende knockout rondes. Vul eerst 12 poulewinnaars, 12 nummers 2 en de 8 beste nummers 3 in. Daarna vul je de ronde van 16 in tot en met de voorspelde winnaar van het toernooi.
           </p>
         </div>
 
@@ -178,22 +231,131 @@ const SLIDES = [
           </div>
         </div>
 
+        <div className="rounded-xl border border-[#2a2a2a] px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.6)' }}>
+          <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
+            Je voorspelt per ronde alle landen die jij denkt dat doorgaan. Per land zet je tokens in en zie je de corresponderende quotering. Je kunt meer punten verdienen met het voorspellen van een underdog, of juist gaan voor de gevestigde namen. De quoteringen worden iedere dag geüpdatet tot de deadline op <span className="text-white font-bold">9 juni</span> — daarna staan ze vast voor iedereen.
+          </p>
+        </div>
         <div className="rounded-xl border border-[#2a2a2a] px-3 py-2.5 space-y-1.5" style={{ background: 'rgba(10,10,10,0.6)' }}>
+          <p className="text-xs font-bold text-white">Puntentelling voorspelde landen:</p>
           <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-            <span className="text-white font-bold">Correct in de juiste rol</span> → <span className="text-[#FF6B00]">tokens × KO-quote</span>.
+            Correct op de juiste plek → <span className="text-[#FF6B00] font-bold">tokens × corresponderende quotering</span>.
           </p>
           <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-            <span className="text-white font-bold">Troostquote:</span> land doorgestoten maar in een andere rol? Dan toch gedeeltelijk punten.
-          </p>
-          <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-            Quotes worden <span className="text-white font-bold">hoger</span> naarmate je verder komt — voor outsiders sneller dan voor favorieten.
+            Correct, maar niet op de juiste plek (bijv. een poulewinnaar die als nummer 2 doorgaat) → <span className="text-[#FF6B00] font-bold">tokens × quotering 'kwalificeert zich voor knockoutfase'</span>.
           </p>
         </div>
       </div>
     ),
   },
 
-  // 3 — Oranje
+  // 3 — Fantasy
+  {
+    content: () => (
+      <div className="flex flex-col gap-4">
+        <div>
+          <h2 className="font-heading text-base uppercase tracking-widest text-white mb-1">Fantasy</h2>
+          <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
+            Stel een WK-elftal samen op basis van selectiecriteria.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <div className="rounded-xl border border-[#2a2a2a] px-3 py-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
+            <p className="text-xs font-bold text-white mb-1.5">Selectiecriteria</p>
+            <ul className="space-y-0.5 text-xs" style={{ color: '#aaa' }}>
+              <li>· Max 1 speler per land</li>
+              <li>· Max 3 spelers per confederatie</li>
+              <li>· Max 1 speler per club</li>
+              <li>· Max 3 spelers per competitie</li>
+              <li>· Min 4 spelers U22</li>
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-[#2a2a2a] px-3 py-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
+            <p className="text-xs font-bold text-white mb-1">Hoe verdien je punten?</p>
+            <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
+              Elk doelpunt of assist van een speler levert op:{' '}
+              <span className="text-[#FF6B00] font-bold">(goals + assists) × speler-quote</span>
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+            {/* Player row */}
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              <span className="text-sm font-bold w-6 text-right shrink-0" style={{ color: '#888' }}>#7</span>
+              <FlagImage country="Nederland" size={28} />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-white truncate">X. Simons</div>
+                <div className="text-xs" style={{ color: '#888' }}>Nederland · RB Leipzig</div>
+              </div>
+              <span className="text-sm font-bold text-white mr-1">83</span>
+              <span className="text-sm font-bold px-2 py-0.5 rounded-lg border border-[#FF6B00] text-[#FF6B00]">2.15</span>
+            </div>
+            {/* Expanded info */}
+            <div className="mx-2 mb-2 rounded-xl border border-[#2a2a2a] p-3" style={{ background: '#111' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <FlagImage country="Nederland" size={18} />
+                <span className="text-sm font-bold text-white">Xavi Simons</span>
+                <span className="ml-auto text-sm font-bold text-white">Quote 2.15</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[
+                  { label: 'Overall', value: '83' },
+                  { label: 'Positie', value: 'MF' },
+                  { label: 'Leeftijd WK', value: '23' },
+                  { label: 'Club', value: 'RB Leipzig' },
+                  { label: 'Competitie', value: 'Bundesliga' },
+                  { label: 'Conf.', value: 'UEFA' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="rounded-lg px-2 py-1.5" style={{ background: '#1a1a1a' }}>
+                    <div className="text-[9px] uppercase" style={{ color: '#888' }}>{label}</div>
+                    <div className="text-xs font-bold truncate" style={{ color: '#ccc' }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-[#2a2a2a] px-3 py-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
+            <p className="text-xs font-bold text-white mb-1.5">Hoe wordt de speler-quote bepaald?</p>
+            <div className="space-y-1 text-xs" style={{ color: '#aaa' }}>
+              <div className="flex items-center justify-between">
+                <span>· Spelerkwaliteit (overall)</span>
+                <span className="text-white font-bold">Overall 83</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>· FIFA-ranking van het land (teamQuote)</span>
+                <span className="text-white font-bold">NED #7</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>· R16-quotering (Unibet)</span>
+                <span className="text-[#FF6B00] font-bold">1.72</span>
+              </div>
+              <div className="mt-1.5 pt-1.5 border-t border-[#2a2a2a] space-y-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#555' }}>Formule</div>
+                <div className="font-heading text-xs text-white leading-relaxed">
+                  (100 / overall)² × teamQuote × (1 + r16 / 6.5)
+                </div>
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-white">→ Spelerquote</span>
+                  <span className="text-[#FF6B00] font-bold">2.15</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-[#2a2a2a] px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.6)' }}>
+            <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
+              De totaalscore van je fantasy team is een opsomming van de punten van alle 15 spelers.
+            </p>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+
+  // 4 — Oranje
   {
     content: () => (
       <div className="flex flex-col gap-4">
@@ -227,45 +389,6 @@ const SLIDES = [
             <p className="text-xs font-bold text-[#FF6B00] mb-1">Tokens → Knockout</p>
             <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
               Verdiende tokens kun je inzetten in de knockoutfase.
-            </p>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-
-  // 4 — Fantasy
-  {
-    content: () => (
-      <div className="flex flex-col gap-4">
-        <div>
-          <h2 className="font-heading text-base uppercase tracking-widest text-white mb-1">Fantasy</h2>
-          <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-            Stel een WK-elftal samen op basis van selectiecriteria.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <div className="rounded-xl border border-[#2a2a2a] px-3 py-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
-            <p className="text-xs font-bold text-white mb-1">Hoe verdien je punten?</p>
-            <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-              Elk doelpunt of assist van een speler levert op:{' '}
-              <span className="text-[#FF6B00] font-bold">(goals + assists) × speler-quote</span>
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-[#2a2a2a] px-3 py-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
-            <p className="text-xs font-bold text-white mb-1">Hoe wordt de speler-quote bepaald?</p>
-            <ul className="mt-1 space-y-0.5 text-xs" style={{ color: '#aaa' }}>
-              <li>· Spelerkwaliteit</li>
-              <li>· FIFA-ranking van het land</li>
-              <li>· Quotering van het land voor de knockoutfase</li>
-            </ul>
-          </div>
-
-          <div className="rounded-xl border border-[#2a2a2a] px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.6)' }}>
-            <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-              <span className="text-white font-bold">Hoge quote</span> = grotere beloning, maar ook minder kans op goals & assists.
             </p>
           </div>
         </div>

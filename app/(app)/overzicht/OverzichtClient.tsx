@@ -56,7 +56,7 @@ export function OverzichtClient({ initials, participantName }: Props) {
   const isLoaded = pouleLoaded && oranjeLoaded && koLoaded && fantasyLoaded
 
   const stats = useMemo(() => {
-    const poule = Object.values(predictions).filter((p) => p.tokens !== null).length
+    const poule = Object.values(predictions).filter((p) => p.toto !== null && p.uitslag !== null).length
     const oranje = NED_MATCH_IDS.reduce((sum, id) => {
       const ans = oranjeVoorspelling[id]
       if (!ans) return sum
