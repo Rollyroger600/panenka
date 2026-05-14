@@ -1851,3 +1851,42 @@ Doel: de Excel-exportknop werkend krijgen op Vercel. Er waren drie onafhankelijk
 - **Rendering:** `text-center` op scroll-container; links als oranje `<a>` met `target="_blank"`; `source`- en `links`-velden optioneel per sectie
 - **TypeScript-fix:** sectie-type uitgebreid naar `{ title, body, source?, links? }`; string-delimiter probleem (curly quotes) opgelost via PowerShell-write met ASCII single quotes
 - `maxDuration = 60` weer verwijderd (overschrijdt Hobby-plan limiet van 10s en veroorzaakte build-failures)
+
+---
+
+### 2026-05-14 — Fantasy regels, header layout, nav-volgorde & onboarding herschreven (Claude Code)
+
+#### Fantasy — Min 4 spelers U22 (`lib/validation.ts`, `components/fantasy/RulesPanel.tsx`)
+- Nieuwe validatieregel: `u22Count` = aantal spelers met `age <= 22` in de volledige squad (ALL_SLOTS)
+- Violation toegevoegd: `Min 4 U22: slechts ${u22Count} speler(s) ≤22 jaar` wanneer `u22Count < 4`
+- `ValidationResult` uitgebreid met `u22Count: number`
+- RulesPanel toont nieuwe regel "Min 4 spelers U22" met ✓/✗ en detail `(X / 4)` bij rood
+
+#### Header layout (`components/layout/AppHeader.tsx`)
+- Naam en tokens gecentreerd in de header via `justify-center` op een `relative` container
+- '?'-knop absoluut gepositioneerd (`absolute right-4`) zodat naam/tokens niet verschuiven
+- `px-8` op de container voorkomt overlap van gecentreerde tekst met de knop
+
+#### Bottom nav volgorde (`components/layout/BottomNav.tsx`)
+- Volgorde gewijzigd: Wedstrijden → KO → **Fantasy → Oranje** → Overzicht (was: …KO → Oranje → Fantasy…)
+
+#### PWA manifest (`public/manifest.json`)
+- `"name"` gewijzigd van `"Panenka WK 2026"` naar `"Panenka"` — verwijdert "WK 2026" van het PWA-opstartscherm
+
+#### Onboarding slides — volledig herschreven (`components/onboarding/OnboardingSlides.tsx`)
+
+**Slide 0 (Welkom):** "Deze korte uitleg..." begint op een nieuwe regel (`<br />`)
+
+**Slide 1 (Tokens):** Header-demo bijgewerkt naar nieuwe layout (naam+tokens gecentreerd, '?' rechts); tekst uitgebreid met zin over deadline en minimale inzet
+
+**Slide 2 (Wedstrijden):** Volledige herstructurering — nieuwe intro met deadline 9 juni | 17:00, bullet points met `|`-separator en bijgewerkte omschrijvingen, nieuwe tekst na visual, puntentelling-formule oranje (was wit)
+
+**Slide 3 (Knockout):** "—" na "9 juni" vervangen door `|`; puntentelling herschreven met regeleinden vóór `→`, bijv.-toelichting op eigen regel; "kwalificeert zich voor knockoutfase" → "land behaald de ronde van 16"
+
+**Slide 4 (Fantasy XV):** Titel gewijzigd naar "Fantasy XV"; nieuwe intro-tekst; volgorde herordend (selectiecriteria → visual → hoe verdien je punten → hoe wordt quote bepaald); visual bijgewerkt naar **Donyell Malen** (overall 79, Roma, Serie A, leeftijd 27, quote 2.47); "Hoe verdien je punten" uitgebreid met opmerking over keepers; "Hoe wordt de speler-quote bepaald?" herschreven met 3 genummerde factoren + resulterende waarden (1.60 / 1.22 / 1.27 → 2.47)
+
+**Slide 5 (Oranje):** Volledig herschreven — titel "Oranje voorspellingen", nieuwe intro, Stap 1 met twee voorbeeldvragen, Stap 2 bijgewerkt, puntentelling-blok met uitleg over tokens en `Correct antwoord → 0.5 token`
+
+**Slide 6 (Puntentelling):** Intro-tekst bijgewerkt; labels en omschrijvingen van de drie onderdelen herschreven ("Fantasy XV" i.p.v. "Fantasy"); tekst onderaan verwijderd
+
+**Slide 7 (Inleg en winnen) — nieuw:** Uitleg over de 20 euro inleg, halvering van de pot en uitbetalingstabel (7 categorieën met percentages); percentages `text-sm` voor betere leesbaarheid

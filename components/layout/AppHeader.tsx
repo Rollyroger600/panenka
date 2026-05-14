@@ -45,13 +45,15 @@ export function AppHeader({ name, initials }: Props) {
         className="transition-all duration-200 relative"
         style={{ height: compact ? '1.75rem' : '3rem' }}
       />
-      <div className="flex items-center gap-2 mt-1 relative">
-        <span className="text-sm font-bold text-white">{name}</span>
-        <span className="text-[#555]">|</span>
-        <TokenCount initials={initials} />
+      <div className="relative flex items-center justify-center w-full mt-1 px-8">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-white">{name}</span>
+          <span className="text-[#555]">|</span>
+          <TokenCount initials={initials} />
+        </div>
         <button
           onClick={() => setOnboardingOpen(true)}
-          className="w-6 h-6 rounded-full border border-[#333] flex items-center justify-center font-heading text-xs font-bold transition-colors hover:border-[#555] hover:text-[#aaa] ml-1"
+          className="absolute right-4 w-6 h-6 rounded-full border border-[#333] flex items-center justify-center font-heading text-xs font-bold transition-colors hover:border-[#555] hover:text-[#aaa]"
           style={{ color: '#555' }}
           aria-label="Uitleg bekijken"
         >

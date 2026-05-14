@@ -7,6 +7,7 @@ export interface ValidationResult {
   clubMap: Record<string, string[]>
   leagueMap: Record<string, string[]>
   leagueKeyToName: Record<string, string>
+  u22Count: number
 }
 
 export function validateFantasyXV(players: (Player | null)[]): ValidationResult {
@@ -30,7 +31,12 @@ export function validateFantasyXV(players: (Player | null)[]): ValidationResult 
     leagueKeyToName[leagueKey] ??= p.league
   }
 
+  const u22Count = filled.filter((p) => p.age <= 22).length
+
   const violations: string[] = []
+
+  if (u22Count < 4)
+    violations.push(`Min 4 U22: slechts ${u22Count} speler(s) ≤22 jaar`)
 
   for (const [country, names] of Object.entries(countryMap)) {
     if (names.length > 1)
@@ -49,5 +55,5 @@ export function validateFantasyXV(players: (Player | null)[]): ValidationResult 
       violations.push(`Max 3 per competitie: ${league} (${names.length} spelers)`)
   }
 
-  return { violations, countryMap, confedMap, clubMap, leagueMap, leagueKeyToName }
+  return { violations, countryMap, confedMap, clubMap, leagueMap, leagueKeyToName, u22Count }
 }

@@ -8,8 +8,8 @@ import { IconPoule, IconKO, IconOranje, IconFantasy, IconOverzicht, IconBeker } 
 const TABS = [
   { href: '/poulefase', label: 'Wedstrijden', Icon: IconPoule },
   { href: '/knockout',  label: 'KO',        Icon: IconKO },
-  { href: '/oranje',    label: 'Oranje',    Icon: IconOranje },
   { href: '/fantasy',   label: 'Fantasy',   Icon: IconFantasy },
+  { href: '/oranje',    label: 'Oranje',    Icon: IconOranje },
   { href: '/overzicht', label: 'Overzicht', Icon: IconOverzicht },
 ]
 
