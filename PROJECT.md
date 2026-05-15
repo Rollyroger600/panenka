@@ -845,6 +845,20 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-15 — npm shortcut, multi-groep plan & pull analytics (Claude Code)
+
+#### npm shortcut `update_quoteringen` (`package.json`)
+- Script toegevoegd: `npm run update_quoteringen` draait `scrape-match-odds` + `scrape-ko-odds` sequentieel — handige alias voor dagelijks bijwerken van quoteringen
+
+#### Multi-groep plan OG + ASC (nog niet geïmplementeerd)
+- Volledig plan uitgewerkt voor multi-groep ondersteuning (groep OG + groep ASC)
+- Opgeslagen in `C:\Users\r.akerboom\.claude\plans\onderwerp-multi-groep-ik-flickering-metcalfe.md`
+- Kernarchitectuur: cookie `group=og|asc` bepaalt context; gedeelde data (wedstrijden, fantasy, KO, Oranje-vraag) blijft groepsonafhankelijk; Oranje-antwoorden en leaderboard worden groepsspecifiek
+- Wouter (WS) + Robert (RA) zitten in beide groepen; groeptoggle verschijnt alleen op Oranje-pagina en Overzicht
+
+#### Pull co-auteur commits
+- Binnengehaald: PostHog analytics (`components/PostHogProvider.tsx`), Vercel Analytics en Vercel Speed Insights
+
 ### 2026-05-15 — Token teller fix, toernooischema verbeteringen & Excel export uitgebreid (Claude Code)
 
 #### Token teller fix — globale data-loader (`components/layout/GlobalDataLoader.tsx`, `app/(app)/layout.tsx`)
