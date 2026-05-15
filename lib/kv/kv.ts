@@ -16,3 +16,9 @@ export async function kvSet(key: string, value: unknown): Promise<void> {
 export function participantKey(section: string, initials: string): string {
   return `${section}:${initials.toLowerCase()}`
 }
+
+export function groupKey(section: string, groupId: string, initials?: string): string {
+  return initials
+    ? `${section}:${groupId}:${initials.toLowerCase()}`
+    : `${section}:${groupId}`
+}

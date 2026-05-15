@@ -6,8 +6,10 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import {
   saveResult, deleteResult, saveKoResults, saveOranjeResults, computeAndSaveScores,
   loadOranjeVragenAdmin, updateOranjeVraag, loadOranjeCorrectAdmin, saveOranjeCorrect,
-  saveFantasyStats,
+  saveFantasyStats, setAdminGroup,
 } from '@/app/actions/admin'
+import { GROUP_MEMBERS } from '@/lib/groups'
+import type { GroupId } from '@/lib/groups'
 import type { FantasyStats } from '@/lib/scoring'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { ParticipantScore } from '@/app/leaderboard/types'
@@ -32,6 +34,7 @@ const Q_LABELS: Record<string, string> = {
 type Tab = 'matches' | 'knockout' | 'vragen' | 'fantasy' | 'scores' | 'links'
 
 interface Props {
+  groupId: GroupId
   initialResults: Record<number, MatchResult>
   initialKoResults: Record<string, string[]>
   initialOranjeResults: Record<number, OranjeResult>
@@ -40,7 +43,8 @@ interface Props {
   initialFantasyStats: FantasyStats
 }
 
-export function AdminClient({ initialResults, initialKoResults, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect, initialFantasyStats }: Props) {
+export function AdminClient({ groupId, initialResults, initialKoResults, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect, initialFantasyStats }: Props) {
+  const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
   const [tab, setTab] = useState<Tab>('matches')
   const [results, setResults] = useState(initialResults)
   const [koResults, setKoResults] = useState(initialKoResults)
@@ -116,14 +120,14 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
 
   async function handleCompute() {
     setComputing(true)
-    const s = await computeAndSaveScores()
+    const s = await computeAndSaveScores(groupId)
     setScores(s)
     setComputing(false)
     setTab('scores')
   }
 
   async function handleExport() {
-    const res = await fetch('/api/export')
+    const res = await fetch(`/api/export?group=${groupId}`)
     if (!res.ok) { alert(`Export mislukt (HTTP ${res.status}):\n${await res.text() || '(geen foutmelding)'}`) ; return }
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
@@ -139,7 +143,7 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
   // ── Oranje vragen handlers ────────────────────────────────────────────────
 
   async function handlePubliceer(matchId: number, initials: string, gepubliceerd: boolean) {
-    await updateOranjeVraag(matchId, initials, { gepubliceerd })
+    await updateOranjeVraag(matchId, initials, { gepubliceerd }, groupId)
     setOranjeVragen((prev) => ({
       ...prev,
       [matchId]: { ...prev[matchId], [initials.toLowerCase()]: { ...prev[matchId]?.[initials.toLowerCase()], gepubliceerd } },
@@ -147,7 +151,7 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
   }
 
   async function handleAdminType(matchId: number, initials: string, adminType: Exclude<AntwoordType, 'anders'>) {
-    await updateOranjeVraag(matchId, initials, { adminType })
+    await updateOranjeVraag(matchId, initials, { adminType }, groupId)
     setOranjeVragen((prev) => ({
       ...prev,
       [matchId]: { ...prev[matchId], [initials.toLowerCase()]: { ...prev[matchId]?.[initials.toLowerCase()], adminType } },
@@ -160,7 +164,7 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
       [matchId]: { ...(oranjeCorrect[matchId] ?? {}), [initials.toLowerCase()]: waarde },
     }
     setOranjeCorrect(next)
-    await saveOranjeCorrect(next)
+    await saveOranjeCorrect(next, groupId)
   }
 
   const TABS: { id: Tab; label: string }[] = [
@@ -174,7 +178,7 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white p-4 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-3">
         <h1 className="text-xl font-bold text-[#FF6B00]">⚽ Admin — Panenka WK 2026</h1>
         <div className="flex gap-2">
           <button
@@ -191,6 +195,24 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
             {computing ? 'Bezig…' : '🔢 Bereken scores'}
           </button>
         </div>
+      </div>
+
+      {/* Groeptoggle */}
+      <div className="flex gap-1 mb-6">
+        {(['og', 'asc'] as const).map((g) => (
+          <form key={g} action={setAdminGroup.bind(null, g)}>
+            <button
+              type="submit"
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${
+                groupId === g
+                  ? 'bg-[#FF6B00] text-white'
+                  : 'bg-[#1e1e1e] text-[#555] hover:text-[#888] border border-[#2a2a2a]'
+              }`}
+            >
+              {g.toUpperCase()}
+            </button>
+          </form>
+        ))}
       </div>
 
       {/* Tabs */}
@@ -285,7 +307,7 @@ export function AdminClient({ initialResults, initialKoResults, initialOranjeRes
                   </span>
                 </div>
                 <div className="divide-y divide-[#1e1e1e]">
-                  {PARTICIPANTS.map((p) => {
+                  {groupParticipants.map((p) => {
                     const key = p.initials.toLowerCase()
                     const vraag = matchVragen[key]
                     const effectiefType = vraag?.adminType ?? (vraag?.type !== 'anders' ? vraag?.type : null)

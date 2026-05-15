@@ -845,6 +845,54 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-16 — Multi-groep implementatie Fase 1: OG + ASC (Claude Code)
+
+#### Groepsinfrastructuur (`lib/groups.ts` — nieuw)
+- Nieuw bestand met `GroupId` type (`'og' | 'asc'`), `GROUP_MEMBERS` ledenlijsten per groep, `DUAL_GROUP_INITIALS` (`['WS', 'RA']`) en `getGroupForParticipant()` helper
+- OG: 15 bestaande deelnemers; ASC: 16 deelnemers (14 nieuw + WS en RA als dual-group)
+
+#### ASC-deelnemers (`lib/participants.ts`)
+- 14 ASC-only deelnemers toegevoegd: Jan (JS), Christian (CV), Bregt (BV), Lex (AR), Mark (MB), Jelle (JH), Jorn (JK), Niels (NS), Peter (PN), Thomas (TWo), Coen (CB), David (DK), Wiger (WW), Vincent (VH)
+- Alle ASC-deelnemers krijgen `extra: 6` bonus tokens — maakt Wouter's budget identiek in beide groepen
+
+#### KV-sleutel helper (`lib/kv/kv.ts`)
+- `groupKey(section, groupId, initials?)` toegevoegd — genereert sleutels als `oranje_vragen:og` of `oranje_antwoorden:asc:ws`
+
+#### Login: group cookie (`app/actions/auth.ts`)
+- Bij login wordt `group=og|asc` cookie gezet op basis van `getGroupForParticipant()`
+- ASC-only deelnemers krijgen `group=asc`; dual-group en OG-only krijgen standaard `group=og`
+
+#### Oranje actions groepsbestendig (`app/actions/oranjeVragen.ts`, `app/actions/admin.ts`)
+- Alle Oranje-lees/schrijf functies lezen nu de `group` cookie en gebruiken `groupKey`
+- `computeAndSaveScores(groupId)` filtert deelnemers op groep, slaat op als `scores:og` of `scores:asc`
+- Admin: `setAdminGroup(groupId)` action toegevoegd voor OG/ASC toggle
+
+#### Admin OG/ASC toggle (`app/admin/page.tsx`, `app/admin/AdminClient.tsx`)
+- OG- en ASC-knoppen bovenaan de adminpagina; schakelen via `admin_group` cookie + redirect
+- Vragen-tab toont deelnemers van de geselecteerde groep
+- "Bereken scores" en "Download Excel" werken per groep
+
+#### Export groepsbestendig (`app/api/export/route.ts`)
+- Leest `?group=og|asc` query param (of `admin_group` cookie)
+- OG: selecteert master Excel zonder 'ASC' in bestandsnaam; ASC: selecteert bestand met 'ASC'
+- Aparte sheet-mappings voor ASC (`Poule_JS`, `FT_JS`, etc.)
+- Export-bestandsnaam bevat groepslabel: `export_OG_...xlsx` / `export_ASC_...xlsx`
+
+#### Leaderboard groepsbestendig (`app/leaderboard/page.tsx`)
+- Laadt `scores:og` of `scores:asc` op basis van `group` cookie
+- Backward compat: valt terug op oude `scores` sleutel voor OG als nieuwe key nog leeg is
+- Subtitel toont actieve groep (bijv. "WK 2026 Poule · OG")
+
+#### Migratie Redis-sleutels (`scripts/migrate-groups.mjs` — nieuw)
+- Script kopieert bestaande OG-data naar nieuwe groepsspecifieke sleutels (originelen blijven)
+- Uitgevoerd: `oranje_vragen → oranje_vragen:og` ✓, `scores → scores:og` ✓
+
+#### Token-strategie dual-group deelnemers
+- Wouter (WS): identiek budget in OG en ASC (+6 in beide) — predictions volledig gedeeld, geen toggle nodig in Fase 1
+- Robert (RA): vult ASC-predictions zelf in via ASC-context met eigen ASC-budget (+6)
+
+---
+
 ### 2026-05-15 — npm shortcut, multi-groep plan & pull analytics (Claude Code)
 
 #### npm shortcut `update_quoteringen` (`package.json`)

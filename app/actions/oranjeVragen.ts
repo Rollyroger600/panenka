@@ -1,12 +1,19 @@
 'use server'
 import { cookies } from 'next/headers'
-import { kvGet, kvSet, participantKey } from '@/lib/kv/kv'
+import { kvGet, kvSet, groupKey } from '@/lib/kv/kv'
+import type { GroupId } from '@/lib/groups'
 import type { OranjeVraag, OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap } from '@/lib/types/oranjeVragen'
 
-// ── Vragen (globale sleutel, alle deelnemers) ─────────────────────────────
+async function getGroupId(): Promise<GroupId> {
+  const store = await cookies()
+  return (store.get('group')?.value ?? 'og') as GroupId
+}
+
+// ── Vragen (per groep) ────────────────────────────────────────────────────
 
 export async function loadOranjeVragen(): Promise<OranjeVragenMap> {
-  return (await kvGet<OranjeVragenMap>('oranje_vragen')) ?? {}
+  const groupId = await getGroupId()
+  return (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId))) ?? {}
 }
 
 export async function saveOranjeVraag(
@@ -16,32 +23,34 @@ export async function saveOranjeVraag(
   const store = await cookies()
   const initials = store.get('participant')?.value
   if (!initials) return
+  const groupId = await getGroupId()
   const all = await loadOranjeVragen()
   if (!all[matchId]) all[matchId] = {}
   all[matchId][initials.toLowerCase()] = vraag
-  await kvSet('oranje_vragen', all)
+  await kvSet(groupKey('oranje_vragen', groupId), all)
 }
 
-// ── Antwoorden (per deelnemer) ────────────────────────────────────────────
+// ── Antwoorden (per deelnemer, per groep) ─────────────────────────────────
 
 export async function loadOranjeAntwoorden(): Promise<OranjeAntwoordenMap> {
   const store = await cookies()
   const initials = store.get('participant')?.value
   if (!initials) return {}
-  return (
-    (await kvGet<OranjeAntwoordenMap>(participantKey('oranje_antwoorden', initials))) ?? {}
-  )
+  const groupId = await getGroupId()
+  return (await kvGet<OranjeAntwoordenMap>(groupKey('oranje_antwoorden', groupId, initials))) ?? {}
 }
 
 export async function saveOranjeAntwoorden(data: OranjeAntwoordenMap): Promise<void> {
   const store = await cookies()
   const initials = store.get('participant')?.value
   if (!initials) return
-  await kvSet(participantKey('oranje_antwoorden', initials), data)
+  const groupId = await getGroupId()
+  await kvSet(groupKey('oranje_antwoorden', groupId, initials), data)
 }
 
-// ── Correcte antwoorden (admin, globale sleutel) ──────────────────────────
+// ── Correcte antwoorden (per groep) ──────────────────────────────────────
 
 export async function loadOranjeCorrect(): Promise<OranjeCorrectMap> {
-  return (await kvGet<OranjeCorrectMap>('oranje_correct')) ?? {}
+  const groupId = await getGroupId()
+  return (await kvGet<OranjeCorrectMap>(groupKey('oranje_correct', groupId))) ?? {}
 }

@@ -4,12 +4,14 @@ import path from 'path'
 import fs from 'fs/promises'
 import XlsxPopulate from 'xlsx-populate'
 import { PARTICIPANTS } from '@/lib/participants'
+import { GROUP_MEMBERS } from '@/lib/groups'
+import type { GroupId } from '@/lib/groups'
 import { MATCHES } from '@/lib/data/matches'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import type { CountryKOQuotes } from '@/lib/data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
-import { kvGet, participantKey } from '@/lib/kv/kv'
+import { kvGet, participantKey, groupKey } from '@/lib/kv/kv'
 import type { Prediction, KnockoutPicks, FantasySquad } from '@/store/gameStore'
 import { WK_PLAYERS } from '@/lib/data/players'
 import type { OranjeAntwoordenMap, OranjeVragenMap } from '@/lib/types/oranjeVragen'
@@ -70,16 +72,32 @@ function partCol(idx: number): string {
   return String.fromCharCode(69 + idx) // E=69, S=83
 }
 
-const POULE_SHEET: Record<string, string> = {
+// OG sheet names
+const POULE_SHEET_OG: Record<string, string> = {
   MG: 'Poule_MG', BH: 'Poule_BH', TW: 'Poule_TW', HP: 'Poule_HP', RH: 'Poule_RH',
   DM: 'Poule_DM', BM: 'Poule_BM', RA: 'Poule_RA', TdL: 'Poule_TdL', WP: 'Poule_WP',
   BS: 'Poule_BS', WS: 'Poule_WS', TvL: 'Poule_TvL', TG: 'Poule_TG', LV: 'Poule_LV',
 }
 
-const FT_SHEET: Record<string, string> = {
+const FT_SHEET_OG: Record<string, string> = {
   MG: 'FT_MG', BH: 'FT_BH', TW: 'FT_TW', HP: 'FT_HP', RH: 'FT_RH',
   DM: 'FT_DM', BM: 'FT_BM', RA: 'FT_RA', TdL: 'FT_TdL', WP: 'FT_WP',
   BS: 'FT_BS', WS: 'FT_WS', TvL: 'FT_TvL', TG: 'FT_TG', LV: 'FT_LV',
+}
+
+// ASC sheet names — zelfde structuur, gebaseerd op ASC-initialen
+const POULE_SHEET_ASC: Record<string, string> = {
+  JS: 'Poule_JS', CV: 'Poule_CV', BV: 'Poule_BV', AR: 'Poule_AR', MB: 'Poule_MB',
+  JH: 'Poule_JH', JK: 'Poule_JK', NS: 'Poule_NS', PN: 'Poule_PN', TWo: 'Poule_TWo',
+  CB: 'Poule_CB', DK: 'Poule_DK', WW: 'Poule_WW', VH: 'Poule_VH',
+  WS: 'Poule_WS', RA: 'Poule_RA',
+}
+
+const FT_SHEET_ASC: Record<string, string> = {
+  JS: 'FT_JS', CV: 'FT_CV', BV: 'FT_BV', AR: 'FT_AR', MB: 'FT_MB',
+  JH: 'FT_JH', JK: 'FT_JK', NS: 'FT_NS', PN: 'FT_PN', TWo: 'FT_TWo',
+  CB: 'FT_CB', DK: 'FT_DK', WW: 'FT_WW', VH: 'FT_VH',
+  WS: 'FT_WS', RA: 'FT_RA',
 }
 
 const ORANJE_SECTIONS = [
@@ -95,25 +113,33 @@ function cv(sheet: any, addr: string, val: string | number | null | undefined) {
   sheet.cell(addr).value(val)
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
   const store = await cookies()
   if (store.get('admin')?.value !== 'true') {
     return new NextResponse('Unauthorized', { status: 401 })
   }
 
-  // Find the most recent master Excel in project root
+  // Groep bepalen via query param of admin_group cookie
+  const url = new URL(req.url)
+  const groupId = (url.searchParams.get('group') ?? store.get('admin_group')?.value ?? 'og') as GroupId
+
+  const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
+  const POULE_SHEET = groupId === 'asc' ? POULE_SHEET_ASC : POULE_SHEET_OG
+  const FT_SHEET    = groupId === 'asc' ? FT_SHEET_ASC    : FT_SHEET_OG
+
+  // Find the master Excel for the current group
   const cwd = process.cwd()
   const files = await fs.readdir(cwd)
-  const xlsxFile = files
-    .filter((f) => /_WK 2026_Master\.xlsx$/.test(f))
-    .sort()
-    .at(-1)
+
+  const xlsxFile = groupId === 'asc'
+    ? files.filter((f) => f.includes('ASC') && f.endsWith('.xlsx')).sort().at(-1)
+    : files.filter((f) => /_WK 2026_Master\.xlsx$/.test(f) && !f.includes('ASC')).sort().at(-1)
 
   if (!xlsxFile) {
     const xlsxFiles = files.filter((f) => f.endsWith('.xlsx'))
     return new NextResponse(
-      `Master Excel niet gevonden.\ncwd: ${cwd}\nAlle .xlsx bestanden: ${xlsxFiles.join(', ') || '(geen)'}`,
+      `Master Excel voor groep '${groupId.toUpperCase()}' niet gevonden.\ncwd: ${cwd}\nAlle .xlsx bestanden: ${xlsxFiles.join(', ') || '(geen)'}`,
       { status: 404 }
     )
   }
@@ -122,8 +148,8 @@ export async function GET() {
   const fileData = await fs.readFile(filePath)
   const workbook = await XlsxPopulate.fromDataAsync(fileData)
 
-  // Load global oranje vragen once
-  const vragen = await kvGet<OranjeVragenMap>('oranje_vragen') ?? {}
+  // Load group-specific oranje vragen
+  const vragen = await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId)) ?? {}
 
   // Collect all participant data (predictions, knockout, fantasy, oranje answers)
   type ParticipantData = {
@@ -137,12 +163,12 @@ export async function GET() {
   const participantData: Record<string, ParticipantData> = {}
 
   await Promise.all(
-    PARTICIPANTS.map(async ({ initials }) => {
+    groupParticipants.map(async ({ initials }) => {
       const [predictions, knockoutPicks, fantasyKV, antwoorden] = await Promise.all([
         kvGet<Record<number, Prediction>>(participantKey('predictions', initials)),
         kvGet<KnockoutPicks>(participantKey('knockout', initials)),
         kvGet<{ squad: FantasySquad; teamName: string }>(participantKey('fantasy', initials)),
-        kvGet<OranjeAntwoordenMap>(participantKey('oranje_antwoorden', initials)),
+        kvGet<OranjeAntwoordenMap>(groupKey('oranje_antwoorden', groupId, initials)),
       ])
       participantData[initials] = {
         predictions: predictions ?? {},
@@ -155,7 +181,7 @@ export async function GET() {
   )
 
   // ── Write per-participant data ──────────────────────────────────────────────
-  for (const participant of PARTICIPANTS) {
+  for (const participant of groupParticipants) {
     const { initials, name } = participant
     const { predictions, knockoutPicks, fantasySquad, fantasyTeamName } = participantData[initials]
 
@@ -243,12 +269,12 @@ export async function GET() {
       const matchVragen = vragen[matchId] ?? {}
 
       // Participant initials as column headers
-      PARTICIPANTS.forEach((p, i) => {
+      groupParticipants.forEach((p, i) => {
         cv(oranjeSheet, `${partCol(i)}${headerRow}`, p.initials)
       })
 
       // One row per participant (as question author)
-      PARTICIPANTS.forEach((author, rowIdx) => {
+      groupParticipants.forEach((author, rowIdx) => {
         const row = startRow + rowIdx
         const vraag = matchVragen[author.initials.toLowerCase()]
 
@@ -256,7 +282,7 @@ export async function GET() {
         if (vraag) cv(oranjeSheet, `D${row}`, vraag.tekst)
 
         // Each participant's answer to this question
-        PARTICIPANTS.forEach((answerer, colIdx) => {
+        groupParticipants.forEach((answerer, colIdx) => {
           const answer =
             participantData[answerer.initials].antwoorden[matchId]?.[author.initials.toLowerCase()]
           if (answer != null) cv(oranjeSheet, `${partCol(colIdx)}${row}`, answer)
@@ -305,7 +331,7 @@ export async function GET() {
 
   // Return the modified workbook as a download
   const buffer = await workbook.outputAsync()
-  const exportName = `export_${xlsxFile}`
+  const exportName = `export_${groupId.toUpperCase()}_${xlsxFile}`
 
   return new NextResponse(buffer as unknown as ReadableStream, {
     headers: {

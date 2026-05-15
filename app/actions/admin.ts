@@ -1,9 +1,12 @@
 'use server'
 import { cookies } from 'next/headers'
-import { kvGet, kvSet, participantKey } from '@/lib/kv/kv'
+import { redirect } from 'next/navigation'
+import { kvGet, kvSet, participantKey, groupKey } from '@/lib/kv/kv'
 import { scoreParticipant, scoreFantasy } from '@/lib/scoring'
 import type { FantasyStats } from '@/lib/scoring'
 import { PARTICIPANTS } from '@/lib/participants'
+import { GROUP_MEMBERS } from '@/lib/groups'
+import type { GroupId } from '@/lib/groups'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
 import type { ParticipantScore } from '@/app/leaderboard/types'
@@ -21,6 +24,12 @@ export async function adminLogin(password: string): Promise<boolean> {
 export async function isAdmin(): Promise<boolean> {
   const store = await cookies()
   return store.get('admin')?.value === 'true'
+}
+
+export async function setAdminGroup(groupId: GroupId): Promise<void> {
+  const store = await cookies()
+  store.set('admin_group', groupId, { path: '/', maxAge: 60 * 60 * 24 * 7, httpOnly: true })
+  redirect('/admin')
 }
 
 export async function loadResults(): Promise<Record<number, MatchResult>> {
@@ -57,28 +66,29 @@ export async function saveOranjeResults(data: Record<number, OranjeResult>): Pro
 
 // ── Oranje vragen (admin beheer) ─────────────────────────────────────────
 
-export async function loadOranjeVragenAdmin(): Promise<OranjeVragenMap> {
-  return (await kvGet<OranjeVragenMap>('oranje_vragen')) ?? {}
+export async function loadOranjeVragenAdmin(groupId: GroupId = 'og'): Promise<OranjeVragenMap> {
+  return (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId))) ?? {}
 }
 
 export async function updateOranjeVraag(
   matchId: number,
   initials: string,
   updates: Partial<Pick<OranjeVraag, 'gepubliceerd' | 'adminType' | 'tekst'>>,
+  groupId: GroupId = 'og',
 ): Promise<void> {
-  const all = await loadOranjeVragenAdmin()
+  const all = await loadOranjeVragenAdmin(groupId)
   const key = initials.toLowerCase()
   if (!all[matchId]?.[key]) return
   all[matchId][key] = { ...all[matchId][key], ...updates }
-  await kvSet('oranje_vragen', all)
+  await kvSet(groupKey('oranje_vragen', groupId), all)
 }
 
-export async function loadOranjeCorrectAdmin(): Promise<OranjeCorrectMap> {
-  return (await kvGet<OranjeCorrectMap>('oranje_correct')) ?? {}
+export async function loadOranjeCorrectAdmin(groupId: GroupId = 'og'): Promise<OranjeCorrectMap> {
+  return (await kvGet<OranjeCorrectMap>(groupKey('oranje_correct', groupId))) ?? {}
 }
 
-export async function saveOranjeCorrect(data: OranjeCorrectMap): Promise<void> {
-  await kvSet('oranje_correct', data)
+export async function saveOranjeCorrect(data: OranjeCorrectMap, groupId: GroupId = 'og'): Promise<void> {
+  await kvSet(groupKey('oranje_correct', groupId), data)
 }
 
 // ── Fantasy statistieken ──────────────────────────────────────────────────
@@ -93,26 +103,27 @@ export async function saveFantasyStats(data: FantasyStats): Promise<void> {
 
 // ── Score berekening ──────────────────────────────────────────────────────
 
-export async function computeAndSaveScores(): Promise<Record<string, ParticipantScore>> {
+export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Record<string, ParticipantScore>> {
   const [results, koResults, oranjeResults, oranjeCorrect, fantasyStats] = await Promise.all([
     loadResults(),
     loadKoResults(),
     loadOranjeResults(),
-    loadOranjeCorrectAdmin(),
+    loadOranjeCorrectAdmin(groupId),
     loadFantasyStats(),
   ])
 
   const heeftNieuweSysteem = Object.keys(oranjeCorrect).length > 0
+  const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
 
   const scores: Record<string, ParticipantScore> = {}
 
   await Promise.all(
-    PARTICIPANTS.map(async (p) => {
+    groupParticipants.map(async (p) => {
       const [predictions, knockoutPicks, oranjeAnswers, oranjeAntwoorden, fantasyData] = await Promise.all([
         kvGet<Record<number, Prediction>>(participantKey('predictions', p.initials)),
         kvGet<KnockoutPicks>(participantKey('knockout', p.initials)),
         kvGet<Record<number, OranjeAnswer>>(participantKey('oranje', p.initials)),
-        kvGet<OranjeAntwoordenMap>(participantKey('oranje_antwoorden', p.initials)),
+        kvGet<OranjeAntwoordenMap>(groupKey('oranje_antwoorden', groupId, p.initials)),
         kvGet<{ squad: Record<string, import('@/lib/data/players').Player | null> }>(participantKey('fantasy', p.initials)),
       ])
 
@@ -142,6 +153,6 @@ export async function computeAndSaveScores(): Promise<Record<string, Participant
     }),
   )
 
-  await kvSet('scores', scores)
+  await kvSet(groupKey('scores', groupId), scores)
   return scores
 }
