@@ -7,6 +7,7 @@ import { GlobalDataLoader } from '@/components/layout/GlobalDataLoader'
 import { SaveIndicator } from '@/components/ui/SaveIndicator'
 import { PopupToast } from '@/components/ui/PopupToast'
 import { OnboardingController } from '@/components/onboarding/OnboardingController'
+import { PostHogProvider } from '@/components/PostHogProvider'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const store = await cookies()
@@ -15,6 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!name || !initials) redirect('/')
 
   return (
+    <PostHogProvider initials={initials} name={name}>
     <div className="min-h-screen" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
       <DeadlineBanner />
       <AppShell name={name} initials={initials}>
@@ -29,5 +31,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <OnboardingController />
       <BottomNav />
     </div>
+    </PostHogProvider>
   )
 }
