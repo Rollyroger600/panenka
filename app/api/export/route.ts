@@ -7,13 +7,16 @@ import { PARTICIPANTS } from '@/lib/participants'
 import { MATCHES } from '@/lib/data/matches'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
+import type { CountryKOQuotes } from '@/lib/data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 import { kvGet, participantKey } from '@/lib/kv/kv'
 import type { Prediction, KnockoutPicks, FantasySquad } from '@/store/gameStore'
+import { WK_PLAYERS } from '@/lib/data/players'
 import type { OranjeAntwoordenMap, OranjeVragenMap } from '@/lib/types/oranjeVragen'
 
 const REGULAR_SLOTS = Array.from({ length: 11 }, (_, i) => `p${i}`)
 const TALENT_SLOTS = Array.from({ length: 4 }, (_, i) => `t${i}`)
+const PLAYER_BY_ID = Object.fromEntries(WK_PLAYERS.map((p) => [p.id, p]))
 
 // Maps round qkey → KO_QUOTES field (copied from lib/scoring.ts)
 const QKEY_TO_QUOTE_FIELD: Record<string, keyof (typeof KO_QUOTES)[string]> = {
@@ -213,12 +216,16 @@ export async function GET() {
     const ftSheet = workbook.sheet(FT_SHEET[initials])
     if (ftSheet && fantasySquad) {
       REGULAR_SLOTS.forEach((slotKey, i) => {
-        const player = fantasySquad[slotKey]
-        if (player) cv(ftSheet, `D${13 + i}`, player.middleName)
+        const stored = fantasySquad[slotKey]
+        if (!stored) return
+        const player = PLAYER_BY_ID[stored.id] ?? stored
+        cv(ftSheet, `D${13 + i}`, player.middleName)
       })
       TALENT_SLOTS.forEach((slotKey, i) => {
-        const player = fantasySquad[slotKey]
-        if (player) cv(ftSheet, `D${24 + i}`, player.middleName)
+        const stored = fantasySquad[slotKey]
+        if (!stored) return
+        const player = PLAYER_BY_ID[stored.id] ?? stored
+        cv(ftSheet, `D${24 + i}`, player.middleName)
       })
     }
   }
@@ -250,6 +257,44 @@ export async function GET() {
         })
       })
     }
+  }
+
+  // ── Quotes doorgaande landen ────────────────────────────────────────────────
+  const quotesSheet = workbook.sheet('Quotes doorgaande landen')
+  if (quotesSheet) {
+    const KO_COLS = ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'] as const
+    const KO_FIELDS: (keyof CountryKOQuotes)[] = [
+      'poulewinnaar', 'tweede', 'derde', 'r16', 'r8', 'r4', 'finale', 'winnaar',
+    ]
+    for (let i = 0; i < 48; i++) {
+      const row = i + 2
+      const country = quotesSheet.cell(`A${row}`).value() as string | null
+      if (!country) continue
+      const quotes = KO_QUOTES[country]
+      if (!quotes) continue
+      KO_FIELDS.forEach((field, j) => {
+        const val = quotes[field]
+        if (val != null) cv(quotesSheet, `${KO_COLS[j]}${row}`, val)
+      })
+    }
+  }
+
+  // ── Wedstrijd-tabs (toto + uitslagen quoteringen) ────────────────────────────
+  for (let matchId = 1; matchId <= 72; matchId++) {
+    const matchSheet = workbook.sheet(String(matchId))
+    if (!matchSheet) continue
+    const odds = MATCH_ODDS[matchId]
+    if (!odds) continue
+
+    cv(matchSheet, 'G5', odds.home)
+    cv(matchSheet, 'G6', odds.draw)
+    cv(matchSheet, 'G7', odds.away)
+
+    const scores = Object.entries(odds.scores).sort((a, b) => a[1] - b[1])
+    scores.forEach(([score, quote], i) => {
+      cv(matchSheet, `B${6 + i}`, score)
+      cv(matchSheet, `C${6 + i}`, quote)
+    })
   }
 
   // Return the modified workbook as a download

@@ -845,6 +845,28 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-15 — Token teller fix, toernooischema verbeteringen & Excel export uitgebreid (Claude Code)
+
+#### Token teller fix — globale data-loader (`components/layout/GlobalDataLoader.tsx`, `app/(app)/layout.tsx`)
+- Nieuw component `GlobalDataLoader` toegevoegd aan de app-layout: laadt `predictions` en `knockoutPicks` bij elke pagina-mount, ongeacht welke pagina geopend wordt
+- Fix: op pagina's zonder eigen data-hook (oranje, fantasy) toonde de token-teller het volle budget i.p.v. het resterende; door de store leeg was werd `used = 0` berekend
+
+#### Toernooischema (`components/knockout/ScheduleView.tsx`)
+- **Bugfix R32-lijntjes**: `hbY` en `abY` misten een `SLOT`-term (30 px), waardoor de verbindingslijnen slot 2 én 3 verbonden in plaats van 3 én 4
+- **Titel** gewijzigd naar "Toernooischema op basis van ingevulde uitslagen"
+- **Poule-positielabels** toegevoegd links van elk R32-chip: toont positie als `E1`, `A2`, `C3` (bij beste nr. 3: `C3` zodra standings bekend zijn, anders `?3`); label 11px monospace, kleur #555
+- R32-kolombreedte uitgebreid van 76 px naar 104 px voor de label-ruimte; COLS en SVG-breedte bijgewerkt
+
+#### Excel export (`app/api/export/route.ts`)
+- **'Quotes doorgaande landen' tabblad**: schrijft KO-quoteringen (poulewinnaar t/m winnaar) in kolommen B–I, rijen 2–49; volgorde bepaald door landnamen in kolom A van het sheet (niet alfabetisch)
+- **Wedstrijd-tabbladen ('1' t/m '72')**: schrijft toto-quoteringen in G5/G6/G7 (thuis/gelijk/uit) en alle uitslag-quoteringen in B6:C… (gesorteerd van laagste naar hoogste quotering)
+- **Fantasy fix**: spelers worden nu opgezocht via `PLAYER_BY_ID[stored.id]` i.p.v. direct het opgeslagen object te gebruiken; voorkomt lege cellen als een squad is opgeslagen vóórdat het `middleName`-veld bestond
+
+#### Popup-teksten (`lib/popups.ts`)
+- Diverse popup-berichten herschreven met meer humor en specifieke verwijzingen naar de groep
+
+---
+
 ### 2026-05-13 — Overzicht statusbar fix & onboarding uitbreiding (Claude Code)
 
 #### Overzicht statusbar (`app/(app)/overzicht/OverzichtClient.tsx`)

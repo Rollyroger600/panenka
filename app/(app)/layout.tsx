@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { DeadlineBanner } from '@/components/layout/DeadlineBanner'
 import { AppShell } from '@/components/layout/AppShell'
+import { GlobalDataLoader } from '@/components/layout/GlobalDataLoader'
 import { SaveIndicator } from '@/components/ui/SaveIndicator'
 import { PopupToast } from '@/components/ui/PopupToast'
 import { OnboardingController } from '@/components/onboarding/OnboardingController'
@@ -22,6 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </AppShell>
 
+      <GlobalDataLoader />
       <SaveIndicator />
       <PopupToast currentUserName={name} />
       <OnboardingController />

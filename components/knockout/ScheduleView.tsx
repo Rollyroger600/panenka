@@ -34,15 +34,18 @@ const COL_LABELS = ['R 32', 'R 16', '1/4', '1/2', 'Fin', 'Win']
 const COL_TABS   = [null, 'r16', 'r8', 'r4', 'finale', 'winner']
 
 // ─── Bracket connector-line constants ────────────────────────────────────────
-const HEADER_H = 24   // approximate rendered height of ColHeader
-const COL_GAP  = 12   // gap between columns (matches flex gap)
+const HEADER_H    = 24   // approximate rendered height of ColHeader
+const COL_GAP     = 12   // gap between columns (matches flex gap)
+const R32_LABEL_W = 28   // label column (poule position) + gap
+const R32_CHIP_W  = 76   // chip column width
+const R32_W       = R32_LABEL_W + R32_CHIP_W
 const COLS = [
-  { x: 0,                         w: 76 },
-  { x: 76  + COL_GAP,             w: 68 },
-  { x: 76  + 68  + COL_GAP * 2,  w: 68 },
-  { x: 76  + 136 + COL_GAP * 3,  w: 68 },
-  { x: 76  + 204 + COL_GAP * 4,  w: 68 },
-  { x: 76  + 272 + COL_GAP * 5,  w: 68 },
+  { x: 0,                           w: R32_W },
+  { x: R32_W + COL_GAP,             w: 68 },
+  { x: R32_W + 68  + COL_GAP * 2,  w: 68 },
+  { x: R32_W + 136 + COL_GAP * 3,  w: 68 },
+  { x: R32_W + 204 + COL_GAP * 4,  w: 68 },
+  { x: R32_W + 272 + COL_GAP * 5,  w: 68 },
 ]
 const BRACKET_W = COLS[5].x + COLS[5].w
 
@@ -64,8 +67,8 @@ function BracketLines() {
     const gTop  = HEADER_H + gi * (GROUP_H + GROUP_GAP)
     const haY   = gTop + SLOT / 2
     const aaY   = gTop + SLOT + INNER + SLOT / 2
-    const hbY   = gTop + SLOT + INNER + MATCH_GAP + SLOT / 2
-    const abY   = gTop + SLOT + INNER + MATCH_GAP + SLOT + INNER + SLOT / 2
+    const hbY   = gTop + SLOT + INNER + SLOT + MATCH_GAP + SLOT / 2
+    const abY   = gTop + SLOT + INNER + SLOT + MATCH_GAP + SLOT + INNER + SLOT / 2
     fork(haY, aaY, (haY + aaY) / 2, COLS[0].x + COLS[0].w, COLS[1].x)
     fork(hbY, abY, (hbY + abY) / 2, COLS[0].x + COLS[0].w, COLS[1].x)
   }
@@ -126,6 +129,14 @@ function resolveTeam(q: Qualifier, matchNum: number, picks: Picks, w3Map: W3Map 
   return picks[`${q.kind}_${GROUP_INDEX[q.group]}`]?.country ?? null
 }
 
+// ─── Qualifier label (e.g. "E1", "A2", "C3") ────────────────────────────────
+function qualLabel(q: Qualifier, matchNum: number, w3Map: W3Map | null): string {
+  if (q.kind === 'w1') return `${q.group}1`
+  if (q.kind === 'w2') return `${q.group}2`
+  const group = w3Map?.[matchNum]?.group
+  return group ? `${group}3` : '?3'
+}
+
 // ─── Infer which team advances based on a set of picks ───────────────────────
 function infer(a: string | null, b: string | null, set: Set<string>): string | null {
   if (a && set.has(a)) return a
@@ -155,6 +166,21 @@ function computeW3Map(predictions: Record<number, Prediction>): W3Map | null {
     if (third) result[Number(matchStr)] = { country: third.country, group: groupLetter }
   }
   return result
+}
+
+// ─── R32 slot: label + chip ───────────────────────────────────────────────────
+function R32Slot({ country, lbl }: { country: string | null; lbl: string }) {
+  return (
+    <div className="flex items-center" style={{ height: SLOT, gap: 4 }}>
+      <span
+        style={{ width: R32_LABEL_W - 4, flexShrink: 0 }}
+        className="text-[11px] text-[#555] text-right font-mono leading-none"
+      >
+        {lbl}
+      </span>
+      <TeamChip country={country} />
+    </div>
+  )
 }
 
 // ─── Team chip ────────────────────────────────────────────────────────────────
@@ -230,7 +256,13 @@ export function ScheduleView({ activeTab }: { activeTab: string }) {
       const r16A  = infer(homeA, awayA, r16Set)
       const r16B  = infer(homeB, awayB, r16Set)
       const qf    = infer(r16A, r16B, r8Set)
-      return { homeA, awayA, homeB, awayB, r16A, r16B, qf }
+      return {
+        homeA, awayA, homeB, awayB, r16A, r16B, qf,
+        lblHomeA: qualLabel(mA.home, numA, w3Map),
+        lblAwayA: qualLabel(mA.away, numA, w3Map),
+        lblHomeB: qualLabel(mB.home, numB, w3Map),
+        lblAwayB: qualLabel(mB.away, numB, w3Map),
+      }
     })
 
     const sfTeams = [0, 1, 2, 3].map((pi) =>
@@ -284,7 +316,7 @@ export function ScheduleView({ activeTab }: { activeTab: string }) {
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-center gap-2 px-4 py-3"
       >
-        <span className="text-sm font-bold text-white">Toernooisschema</span>
+        <span className="text-sm font-bold text-white">Toernooischema op basis van ingevulde uitslagen</span>
         <span className="text-[#555] text-xs">{open ? '▲' : '▼'}</span>
       </button>
 
@@ -296,19 +328,19 @@ export function ScheduleView({ activeTab }: { activeTab: string }) {
               <BracketLines />
 
               {/* ─ R32 column ─ */}
-              <div ref={(el) => { colRefs.current[0] = el }} style={{ width: 76, flexShrink: 0 }}>
+              <div ref={(el) => { colRefs.current[0] = el }} style={{ width: R32_W, flexShrink: 0 }}>
                 <ColHeader label={COL_LABELS[0]} active={COL_TABS[0] === activeTab} />
                 <div style={{ height: TOTAL_H }}>
                   {bracket.groups.map((g, gi) => (
                     <div key={gi}>
                       <div className="flex flex-col" style={{ height: GROUP_H }}>
-                        <div style={{ height: SLOT }}><TeamChip country={g.homeA} /></div>
+                        <R32Slot country={g.homeA} lbl={g.lblHomeA} />
                         <div style={{ height: INNER }} />
-                        <div style={{ height: SLOT }}><TeamChip country={g.awayA} /></div>
+                        <R32Slot country={g.awayA} lbl={g.lblAwayA} />
                         <div style={{ height: MATCH_GAP }} />
-                        <div style={{ height: SLOT }}><TeamChip country={g.homeB} /></div>
+                        <R32Slot country={g.homeB} lbl={g.lblHomeB} />
                         <div style={{ height: INNER }} />
-                        <div style={{ height: SLOT }}><TeamChip country={g.awayB} /></div>
+                        <R32Slot country={g.awayB} lbl={g.lblAwayB} />
                       </div>
                       {gi < 7 && <div style={{ height: GROUP_GAP }} />}
                     </div>
