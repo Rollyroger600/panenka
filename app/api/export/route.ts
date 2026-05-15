@@ -130,6 +130,7 @@ export async function GET() {
     predictions: Record<number, Prediction>
     knockoutPicks: KnockoutPicks
     fantasySquad: FantasySquad | null
+    fantasyTeamName: string | null
     antwoorden: OranjeAntwoordenMap
   }
 
@@ -147,6 +148,7 @@ export async function GET() {
         predictions: predictions ?? {},
         knockoutPicks: knockoutPicks ?? {},
         fantasySquad: fantasyKV?.squad ?? null,
+        fantasyTeamName: fantasyKV?.teamName ?? null,
         antwoorden: antwoorden ?? {},
       }
     })
@@ -155,7 +157,7 @@ export async function GET() {
   // ── Write per-participant data ──────────────────────────────────────────────
   for (const participant of PARTICIPANTS) {
     const { initials, name } = participant
-    const { predictions, knockoutPicks, fantasySquad } = participantData[initials]
+    const { predictions, knockoutPicks, fantasySquad, fantasyTeamName } = participantData[initials]
 
     // ── Poule sheet ────────────────────────────────────────────────────────
     const pouleSheet = workbook.sheet(POULE_SHEET[initials])
@@ -214,19 +216,23 @@ export async function GET() {
 
     // ── Fantasy sheet ──────────────────────────────────────────────────────
     const ftSheet = workbook.sheet(FT_SHEET[initials])
-    if (ftSheet && fantasySquad) {
-      REGULAR_SLOTS.forEach((slotKey, i) => {
-        const stored = fantasySquad[slotKey]
-        if (!stored) return
-        const player = PLAYER_BY_ID[stored.id] ?? stored
-        cv(ftSheet, `D${13 + i}`, player.middleName)
-      })
-      TALENT_SLOTS.forEach((slotKey, i) => {
-        const stored = fantasySquad[slotKey]
-        if (!stored) return
-        const player = PLAYER_BY_ID[stored.id] ?? stored
-        cv(ftSheet, `D${24 + i}`, player.middleName)
-      })
+    if (ftSheet) {
+      cv(ftSheet, 'G2', name)
+      if (fantasyTeamName) cv(ftSheet, 'G4', fantasyTeamName)
+      if (fantasySquad) {
+        REGULAR_SLOTS.forEach((slotKey, i) => {
+          const stored = fantasySquad[slotKey]
+          if (!stored) return
+          const player = PLAYER_BY_ID[stored.id] ?? stored
+          cv(ftSheet, `D${13 + i}`, player.middleName)
+        })
+        TALENT_SLOTS.forEach((slotKey, i) => {
+          const stored = fantasySquad[slotKey]
+          if (!stored) return
+          const player = PLAYER_BY_ID[stored.id] ?? stored
+          cv(ftSheet, `D${24 + i}`, player.middleName)
+        })
+      }
     }
   }
 

@@ -64,7 +64,7 @@ export function SuggestionsPanel({ onApplyAll }: Props) {
           className="w-full flex items-center justify-center gap-2 px-4 py-3"
         >
           <span className="text-sm font-bold text-white">
-            Suggesties op basis van jouw voorspellingen
+            Suggesties op basis van jouw uitslagen
           </span>
           <span className="text-[#555] text-xs">{open ? '▲' : '▼'}</span>
         </button>

@@ -316,7 +316,7 @@ export function ScheduleView({ activeTab }: { activeTab: string }) {
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-center gap-2 px-4 py-3"
       >
-        <span className="text-sm font-bold text-white">Toernooischema op basis van ingevulde uitslagen</span>
+        <span className="text-sm font-bold text-white">Toernooischema op basis van jouw uitslagen</span>
         <span className="text-[#555] text-xs">{open ? '▲' : '▼'}</span>
       </button>
 

@@ -1,17 +1,17 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { usePredictions } from '@/hooks/usePredictions'
-import { useOranjeVoorspelling } from '@/hooks/useOranjeVoorspelling'
 import { useKnockoutPicks } from '@/hooks/useKnockoutPicks'
 import { useFantasyXV } from '@/hooks/useFantasyXV'
 import { useTokenBudget } from '@/hooks/useTokenBudget'
 import { useDeadline } from '@/hooks/useDeadline'
 import { useGameStore, ALL_SLOTS } from '@/store/gameStore'
 import { confirmPredictions } from '@/app/actions/overzicht'
+import { loadOranjeVragen, loadOranjeAntwoorden } from '@/app/actions/oranjeVragen'
 import { SkeletonList } from '@/components/ui/Skeleton'
+import type { OranjeVragenMap, OranjeAntwoordenMap } from '@/lib/types/oranjeVragen'
 
 const NED_MATCH_IDS = [10, 33, 58]
-const ORANJE_KEYS = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9'] as const
 
 interface Props {
   initials: string
@@ -42,32 +42,47 @@ function StatRow({ label, value, total }: { label: string; value: number; total:
 
 export function OverzichtClient({ initials, participantName }: Props) {
   const { isLoaded: pouleLoaded } = usePredictions()
-  const { isLoaded: oranjeLoaded } = useOranjeVoorspelling()
   const { isLoaded: koLoaded } = useKnockoutPicks()
   const { isLoaded: fantasyLoaded } = useFantasyXV(participantName)
   const { isPast, isVraagPast } = useDeadline()
 
   const { total, used, remaining } = useTokenBudget(initials)
-  const { predictions, oranjeVoorspelling, knockoutPicks, fantasySquad } = useGameStore()
+  const { predictions, knockoutPicks, fantasySquad } = useGameStore()
 
   const [showSuccess, setShowSuccess] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [oranjeVragen, setOranjeVragen] = useState<OranjeVragenMap>({})
+  const [oranjeAntwoorden, setOranjeAntwoorden] = useState<OranjeAntwoordenMap>({})
+  const [oranjeLoaded, setOranjeLoaded] = useState(false)
+
+  useEffect(() => {
+    Promise.all([loadOranjeVragen(), loadOranjeAntwoorden()]).then(([v, a]) => {
+      setOranjeVragen(v)
+      setOranjeAntwoorden(a)
+      setOranjeLoaded(true)
+    })
+  }, [])
 
   const isLoaded = pouleLoaded && oranjeLoaded && koLoaded && fantasyLoaded
 
+  const oranjeTotal = useMemo(() => {
+    if (!isVraagPast) return 3
+    return NED_MATCH_IDS.reduce((sum, id) => {
+      return sum + Object.values(oranjeVragen[id] ?? {}).filter((v) => v.gepubliceerd).length
+    }, 0)
+  }, [isVraagPast, oranjeVragen])
+
   const stats = useMemo(() => {
     const poule = Object.values(predictions).filter((p) => p.toto !== null && p.uitslag !== null).length
-    const oranje = NED_MATCH_IDS.reduce((sum, id) => {
-      const ans = oranjeVoorspelling[id]
-      if (!ans) return sum
-      return sum + ORANJE_KEYS.filter((k) => ans[k] !== null).length
-    }, 0)
+    const oranje = isVraagPast
+      ? NED_MATCH_IDS.reduce((sum, id) => {
+          return sum + Object.values(oranjeAntwoorden[id] ?? {}).filter(Boolean).length
+        }, 0)
+      : NED_MATCH_IDS.filter((id) => !!oranjeVragen[id]?.[initials.toLowerCase()]).length
     const ko = Object.values(knockoutPicks).filter((s) => s.country).length
     const fantasy = ALL_SLOTS.filter((k) => fantasySquad[k]).length
     return { poule, oranje, ko, fantasy }
-  }, [predictions, oranjeVoorspelling, knockoutPicks, fantasySquad])
-
-  const oranjeTotal = isVraagPast ? 45 : 3
+  }, [predictions, oranjeVragen, oranjeAntwoorden, isVraagPast, initials, knockoutPicks, fantasySquad])
   const isComplete =
     stats.poule === 72 &&
     stats.oranje === oranjeTotal &&

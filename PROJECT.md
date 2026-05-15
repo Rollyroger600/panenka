@@ -867,6 +867,25 @@ The following decisions were made during implementation that deviate from or ext
 
 ---
 
+### 2026-05-15 — Excel FT-namen, KO-teksten & oranje telling fix (Claude Code)
+
+#### Excel export FT-tabbladen (`app/api/export/route.ts`)
+- **Naam deelnemer → G2** en **teamnaam → G4** worden nu geschreven op elk Fantasy-tabblad (`FT_*`)
+- `teamName` wordt voortaan opgeslagen in `participantData` (was alleen `squad`); G2 wordt altijd geschreven als het sheet bestaat, G4 alleen als er een teamnaam is
+
+#### KO-pagina teksten (`components/knockout/SuggestionsPanel.tsx`, `components/knockout/ScheduleView.tsx`)
+- **R32 suggesties**: tekst gewijzigd van "Suggesties op basis van jouw voorspellingen" naar "Suggesties op basis van jouw uitslagen"
+- **R16–WIN schema**: tekst gewijzigd van "Toernooischema op basis van ingevulde uitslagen" naar "Toernooischema op basis van jouw uitslagen"
+
+#### Overzicht oranje telling fix (`app/(app)/overzicht/OverzichtClient.tsx`)
+- **Bugfix**: overzicht toonde altijd 0/3 voor "Oranje vragen" omdat het `oranjeVoorspelling` (KV-sleutel `oranje:<initials>`) telde — een lege store die niets met het oranje vragenssysteem te maken heeft
+- Fix: laadt nu direct `oranje_vragen` en `oranje_antwoorden` via de bestaande server actions
+- Vóór vraagdeadline: telt hoeveel van de 3 wedstrijden de deelnemer een vraag heeft ingediend (max 3)
+- Na vraagdeadline: telt ingevulde antwoorden vs. gepubliceerde vragen (dynamisch, niet hardcoded 45)
+- `useOranjeVoorspelling` hook verwijderd uit overzicht; ongebruikte `ORANJE_KEYS` constante verwijderd
+
+---
+
 ### 2026-05-13 — Overzicht statusbar fix & onboarding uitbreiding (Claude Code)
 
 #### Overzicht statusbar (`app/(app)/overzicht/OverzichtClient.tsx`)
