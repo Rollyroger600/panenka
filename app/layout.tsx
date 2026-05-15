@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Caveat } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' })
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body className={caveat.variable}>
         <div className="max-w-[430px] mx-auto min-h-screen">{children}</div>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
