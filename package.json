@@ -17,10 +17,12 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "exceljs": "^4.4.0",
+    "html-to-image": "^1.11.13",
     "next": "^15",
     "posthog-js": "^1.373.5",
     "react": "^19",
     "react-dom": "^19",
+    "recharts": "^3.8.1",
     "xlsx": "^0.18.5",
     "xlsx-populate": "^1.21.0",
     "zustand": "^5"

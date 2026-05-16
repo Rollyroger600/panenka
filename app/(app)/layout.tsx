@@ -21,7 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <PostHogProvider initials={initials} name={name}>
     <div className="min-h-screen" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
       <DeadlineBanner />
-      <AppShell name={name} initials={initials}>
+      <AppShell name={name} initials={initials} groupId={groupId}>
         <div className="max-w-[700px] mx-auto px-4 py-6">
           {children}
         </div>

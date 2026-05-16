@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { MATCHES } from '@/lib/data/matches'
 import { ALL_COUNTRIES } from '@/lib/data/countries'
 import { FlagImage } from '@/components/ui/FlagImage'
@@ -11,6 +11,7 @@ import {
   updateOranjeVraag, saveOranjeCorrect,
   saveFantasyStats, setAdminGroup,
 } from '@/app/actions/admin'
+import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
 import type { FantasyStats } from '@/lib/scoring'
@@ -30,7 +31,7 @@ const NED_MATCHES = [
   { id: 58, label: 'TUN – NED (26 jun)' },
 ]
 
-type Tab = 'matches' | 'knockout' | 'vragen' | 'fantasy' | 'scores' | 'links'
+type Tab = 'matches' | 'knockout' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday'
 
 interface Props {
   groupId: GroupId
@@ -161,6 +162,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     { id: 'fantasy',  label: `Fantasy (${Object.keys(fantasyStats).length})` },
     { id: 'scores',   label: 'Scores' },
     { id: 'links',    label: 'Links' },
+    { id: 'matchday', label: '📅 Matchday' },
   ]
 
   return (
@@ -404,6 +406,9 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
         {/* ── Uitnodigingslinks ──────────────────────────────────────────────────── */}
         {tab === 'links' && <LinksPanel />}
 
+        {/* ── Matchday beheer ────────────────────────────────────────────────────── */}
+        {tab === 'matchday' && <MatchdayAdminTab groupId={groupId} />}
+
         {/* ── Scores ─────────────────────────────────────────────────────────────── */}
         {tab === 'scores' && (
           <div>
@@ -437,6 +442,204 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ── MatchdayAdminTab ──────────────────────────────────────────────────────────
+
+function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
+  const [matchdayId, setMatchdayId] = useState(1)
+  const [quotes, setQuotes] = useState<Array<{ matchId: number; totoOdds: string; uitslagOdds: string }>>([])
+  const [potStandOg, setPotStandOg] = useState('')
+  const [potStandAsc, setPotStandAsc] = useState('')
+  const [rotations, setRotations] = useState<{ og: string[]; asc: string[] } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  // Load existing config + rotation when matchday changes
+  useEffect(() => {
+    setLoading(true)
+    setSaved(false)
+    const matchIds = getMatchesForMatchday(matchdayId)
+    Promise.all([
+      fetch(`/api/matchday/${matchdayId}`).then((r) => r.json()),
+      fetch('/api/matchday/rotation').then((r) => r.json()),
+    ]).then(([mdData, rotData]) => {
+      setRotations(rotData)
+      if (mdData.config) {
+        const cfg = mdData.config
+        setQuotes(
+          matchIds.map((id) => {
+            const existing = cfg.quotes.find((q: { matchId: number }) => q.matchId === id)
+            return {
+              matchId: id,
+              totoOdds: existing ? String(existing.totoOdds) : '',
+              uitslagOdds: existing ? String(existing.uitslagOdds) : '',
+            }
+          })
+        )
+        setPotStandOg(String(cfg.og.potStand))
+        setPotStandAsc(String(cfg.asc.potStand))
+      } else {
+        setQuotes(matchIds.map((id) => ({ matchId: id, totoOdds: '', uitslagOdds: '' })))
+        setPotStandOg('')
+        setPotStandAsc('')
+      }
+    }).finally(() => setLoading(false))
+  }, [matchdayId])
+
+  async function handleSave() {
+    setLoading(true)
+    const payload = {
+      quotes: quotes.map((q) => ({
+        matchId: q.matchId,
+        totoOdds: parseFloat(q.totoOdds) || 0,
+        uitslagOdds: parseFloat(q.uitslagOdds) || 0,
+      })),
+      og: { potStand: parseFloat(potStandOg) || 0 },
+      asc: { potStand: parseFloat(potStandAsc) || 0 },
+    }
+    await fetch(`/api/matchday/${matchdayId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    setSaved(true)
+    setLoading(false)
+  }
+
+  const matchIds = getMatchesForMatchday(matchdayId)
+
+  const totoOgName = rotations
+    ? (PARTICIPANTS.find((p) => p.initials === rotations.og[matchdayId - 1])?.name ?? '–')
+    : '...'
+  const totoAscName = rotations
+    ? (PARTICIPANTS.find((p) => p.initials === rotations.asc[matchdayId - 1])?.name ?? '–')
+    : '...'
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Matchday selector */}
+      <div className="flex items-center gap-3">
+        <label className="text-xs text-[#888] font-heading uppercase tracking-wide shrink-0">Matchday</label>
+        <select
+          value={matchdayId}
+          onChange={(e) => setMatchdayId(parseInt(e.target.value))}
+          className="bg-[#1e1e1e] border border-[#2a2a2a] text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#FF6B00]"
+        >
+          {Array.from({ length: 27 }, (_, i) => (
+            <option key={i + 1} value={i + 1}>
+              MD {String(i + 1).padStart(2, '0')} — Wedstrijden {matchIds[0] || '?'}–{matchIds[matchIds.length - 1] || '?'}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Toto van de dag */}
+      <div className="rounded-xl border border-[#2a2a2a] p-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
+        <p className="text-xs text-[#555] uppercase font-heading tracking-wide mb-2">Toto van de dag</p>
+        <div className="flex gap-6">
+          <div>
+            <span className="text-[#FF6B00] text-xs font-bold uppercase mr-1">OG:</span>
+            <span className="text-white text-sm font-bold">{totoOgName}</span>
+          </div>
+          <div>
+            <span className="text-[#FF6B00] text-xs font-bold uppercase mr-1">ASC:</span>
+            <span className="text-white text-sm font-bold">{totoAscName}</span>
+          </div>
+        </div>
+        <p className="text-[10px] text-[#444] mt-1.5">
+          Rotatie wordt automatisch gegenereerd. Zet de bets op Unibet op basis van de voorspellingen van deze deelnemer.
+        </p>
+      </div>
+
+      {/* Matches + quotes */}
+      <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+        <div className="px-3 py-2" style={{ background: 'rgba(10,10,10,0.75)' }}>
+          <p className="font-heading text-sm font-bold text-white">Unibet quoteringen</p>
+          <p className="text-[10px] text-[#555] mt-0.5">Voer de live odds in op het moment van inzetten.</p>
+        </div>
+        <div className="divide-y divide-[#1e1e1e]">
+          {quotes.map((q, idx) => {
+            const match = MATCHES.find((m) => m.id === q.matchId)
+            return (
+              <div key={q.matchId} className="px-3 py-2.5 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#555] text-[10px] w-5">#{q.matchId}</span>
+                  <span className="text-white text-sm font-bold">
+                    {match ? `${match.home} – ${match.away}` : `Wedstrijd ${q.matchId}`}
+                  </span>
+                  {match && <span className="text-[#555] text-[10px] ml-auto">{match.date}</span>}
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[10px] text-[#555]">Toto odds</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      value={q.totoOdds}
+                      onChange={(e) => setQuotes((prev) => prev.map((x, i) => i === idx ? { ...x, totoOdds: e.target.value } : x))}
+                      placeholder="bv. 3.50"
+                      className="bg-[#252525] border border-[#2a2a2a] text-white text-xs rounded-lg px-2 py-1.5 w-24 outline-none focus:border-[#FF6B00] [appearance:textfield]"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[10px] text-[#555]">Uitslag odds</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      value={q.uitslagOdds}
+                      onChange={(e) => setQuotes((prev) => prev.map((x, i) => i === idx ? { ...x, uitslagOdds: e.target.value } : x))}
+                      placeholder="bv. 8.00"
+                      className="bg-[#252525] border border-[#2a2a2a] text-white text-xs rounded-lg px-2 py-1.5 w-24 outline-none focus:border-[#FF6B00] [appearance:textfield]"
+                    />
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Pot stand */}
+      <div className="rounded-xl border border-[#2a2a2a] p-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
+        <p className="font-heading text-sm font-bold text-white mb-2">Stand van de pot</p>
+        <div className="flex gap-4">
+          {(['og', 'asc'] as const).map((g) => (
+            <div key={g} className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-[#555] uppercase font-bold">{g.toUpperCase()}</label>
+              <div className="flex items-center gap-1">
+                <span className="text-[#888] text-sm">€</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={g === 'og' ? potStandOg : potStandAsc}
+                  onChange={(e) => g === 'og' ? setPotStandOg(e.target.value) : setPotStandAsc(e.target.value)}
+                  placeholder="0.00"
+                  className="bg-[#252525] border border-[#2a2a2a] text-white text-sm rounded-lg px-2 py-1.5 w-28 outline-none focus:border-[#FF6B00] [appearance:textfield]"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Save button */}
+      <button
+        onClick={handleSave}
+        disabled={loading}
+        className="py-3 rounded-xl font-bold text-sm transition-colors"
+        style={{
+          background: saved ? '#2ECC71' : '#FF6B00',
+          color: '#fff',
+          opacity: loading ? 0.6 : 1,
+        }}
+      >
+        {loading ? 'Opslaan...' : saved ? '✓ Opgeslagen' : 'Opslaan & activeren'}
+      </button>
     </div>
   )
 }
