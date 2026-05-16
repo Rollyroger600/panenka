@@ -2,13 +2,16 @@
 import { useEffect, useState } from 'react'
 import { TokenCount } from './TokenCount'
 import { useGameStore } from '@/store/gameStore'
+import { MatchdayButton } from '@/components/matchday/MatchdayButton'
+import type { GroupId } from '@/lib/groups'
 
 interface Props {
   name: string
   initials: string
+  groupId?: GroupId
 }
 
-export function AppHeader({ name, initials }: Props) {
+export function AppHeader({ name, initials, groupId }: Props) {
   const [compact, setCompact] = useState(false)
   const setOnboardingOpen = useGameStore((s) => s.setOnboardingOpen)
 
@@ -51,14 +54,18 @@ export function AppHeader({ name, initials }: Props) {
           <span className="text-[#555]">|</span>
           <TokenCount initials={initials} />
         </div>
-        <button
-          onClick={() => setOnboardingOpen(true)}
-          className="absolute right-4 w-6 h-6 rounded-full border border-[#333] flex items-center justify-center font-heading text-xs font-bold transition-colors hover:border-[#555] hover:text-[#aaa]"
-          style={{ color: '#555' }}
-          aria-label="Uitleg bekijken"
-        >
-          ?
-        </button>
+        <div className="absolute right-4 flex items-center gap-2">
+          {/* TODO: re-enable na toernooistart (9 juni 2026) */}
+          {/* {groupId && <MatchdayButton group={groupId} />} */}
+          <button
+            onClick={() => setOnboardingOpen(true)}
+            className="w-6 h-6 rounded-full border border-[#333] flex items-center justify-center font-heading text-xs font-bold transition-colors hover:border-[#555] hover:text-[#aaa]"
+            style={{ color: '#555' }}
+            aria-label="Uitleg bekijken"
+          >
+            ?
+          </button>
+        </div>
       </div>
     </header>
   )

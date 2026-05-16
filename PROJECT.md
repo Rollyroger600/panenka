@@ -845,6 +845,55 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-16 — Matchday feature: dagelijkse visuals + export (Claude Code)
+
+#### Architectuur
+- 27 matchdays (MD 1–25: 4 wedstrijden, MD 26–27: 2 wedstrijden); elke matchday heeft 5 slides (4 voor MD 26–27)
+- Aparte visuals per groep (OG en ASC): eigen deelnemers, eigen "toto van de dag" rotatie, eigen pot stand
+- Slides: Match 1-2, Match 3-4, Inzet, Overzicht, Ranglijst
+
+#### Nieuwe packages
+- `recharts` — grafieken (lijndiagram, gestapelde staafgrafiek)
+- `html-to-image` — PNG export per slide voor WhatsApp
+
+#### Data & logica (`lib/data/matchdayMap.ts`, `lib/matchday.ts`, `lib/types/matchday.ts`)
+- `MATCHDAY_MAP`: statische map matchday ID → match IDs
+- `getOrCreateRotation(group)`: genereert 27-slot deelnemersrotatie (deterministisch via seed), slaat op in Redis als `matchday_rotation_og` / `matchday_rotation_asc`
+- `computeMatchdayScores()`: berekent per deelnemer poulefase, KO fase (wedstrijden 73–104), fantasy, doorgaande landen, toto's goed, uitslagen goed, en KO per ronde (R32/R16/KF/HF/finale/winnaar)
+- `getFantasyPlayersForMatch()`: zoekt welke fantasy speler een deelnemer heeft voor thuis-/uitland
+
+#### API routes
+- `GET/POST /api/matchday/[id]` — laadt of slaat matchday config op (quotes + pot stand)
+- `GET /api/matchday/[id]/full?group=og|asc` — alles-in-één endpoint: config, rotatie, match data met voorspellingen, scores, pot history, score history voor de drawer
+- `GET /api/matchday/scores?matchday=N&group=og|asc` — standalone scoreberekening
+- `GET/POST /api/matchday/rotation` — rotatiebeheer
+
+#### Slide components (`components/matchday/`)
+- `SlideWrapper` — gedeelde achtergrond/stijl/logo wrapper voor alle slides (390×844px portrait)
+- `MatchSlide` — per deelnemer: naam, tokens, toto (1/X/2 highlighted), uitslag, quote uitslag, fantasy speler thuis- en uitland
+- `InzetSlide` — "Toto van de dag" naam, per wedstrijd toto+uitslag odds (live Unibet), stand van de pot, lijndiagram pot evolutie
+- `OverzichtSlide` — twee tabellen (match scores + KO breakdown per ronde), gestapelde staafgrafiek per deelnemer
+- `RanglijstSlide` — lijndiagram totaalscore progressie per matchday, ranglijsttabel
+- `PotChart`, `ScoreStackedChart`, `ProgressChart` — Recharts-gebaseerde grafieken met Panenka kleuren
+
+#### MatchdayDrawer + button (`components/matchday/`)
+- `MatchdayButton` — voetbalicoontje rechts in AppHeader naast de `?` knop
+- `MatchdayDrawer` — fullscreen overlay met matchday-selector (1–27), slide-tabs, PNG export per slide of alle slides tegelijk
+
+#### AppHeader / AppShell integratie
+- `AppShell` en `AppHeader` krijgen `groupId` prop
+- `groupId` doorgegeven vanuit `app/(app)/layout.tsx` (al berekend)
+- `MatchdayButton` toont per groep de juiste data
+
+#### Admin tabblad "Matchday" (`app/admin/AdminClient.tsx`)
+- Nieuw tabblad "📅 Matchday" met matchday-selector (1–27)
+- Toont automatisch wie "toto van de dag" is voor OG en ASC (uit gegenereerde rotatie)
+- Invoervelden: live Unibet toto odds + uitslag odds per wedstrijd (2 of 4 afhankelijk van matchday)
+- Pot stand per groep (OG en ASC apart)
+- Opslaan activeert de matchday — slides worden zichtbaar voor alle deelnemers
+
+---
+
 ### 2026-05-16 — Admin restyling + quoteringen nulmeting + TypeScript fix (Claude Code)
 
 #### Admin pagina restyling (`app/admin/AdminClient.tsx`)
@@ -2038,3 +2087,29 @@ Doel: de Excel-exportknop werkend krijgen op Vercel. Er waren drie onafhankelijk
 **Slide 6 (Puntentelling):** Intro-tekst bijgewerkt; labels en omschrijvingen van de drie onderdelen herschreven ("Fantasy XV" i.p.v. "Fantasy"); tekst onderaan verwijderd
 
 **Slide 7 (Inleg en winnen) — nieuw:** Uitleg over de 20 euro inleg, halvering van de pot en uitbetalingstabel (7 categorieën met percentages); percentages `text-sm` voor betere leesbaarheid
+
+### 2026-05-16 — Matchday preview & MatchSlide redesign (Claude Code)
+
+#### Matchday-icoontje verborgen (`components/layout/AppHeader.tsx`)
+
+`MatchdayButton` uitgecommentarieerd met TODO. Wordt opnieuw geactiveerd na toernooistart (9 juni 2026).
+
+#### Preview-pagina voor matchday visuals (`app/matchday-preview/page.tsx` — nieuw)
+
+Standalone preview met ingebakken mock data (echte OG-deelnemers, echte wedstrijdnamen). Doel: visuele iteratie vóór toernooistart zonder live Redis-data nodig te hebben.
+
+#### `MatchdayDrawer` — `mockData` prop (`components/matchday/MatchdayDrawer.tsx`)
+
+Optionele `mockData?: FullMatchdayData` prop toegevoegd. Als aanwezig: skipt API-fetch en gebruikt de meegegeven data direct. Preview-pagina maakt hier gebruik van.
+
+#### `SlideWrapper` — `titleFont` prop (`components/matchday/SlideWrapper.tsx`)
+
+Optionele `titleFont?: 'heading' | 'accent'` prop. Default blijft Built Titling (`heading`); MatchSlide geeft `accent` mee voor Sporty Pro.
+
+#### MatchSlide redesign (`components/matchday/slides/MatchSlide.tsx`)
+
+Visuele revisie conform nieuwe stijlrichtlijnen:
+- **Titel**: Sporty Pro Bold (`font-accent font-bold`) met oranje glow — identiek aan andere titelpagina's
+- **Wedstrijd-container**: zelfde card-stijl als MatchCard — `rounded-xl border-[#2a2a2a]`, donkere header (`rgba(10,10,10,0.75)`) met matchnummer-badge links, vlaggen + teamnamen in Sporty Pro Light, datum/stadion in muted kleurtje
+- **Contenttabel**: Built Titling (`font-heading`) voor alle rij-inhoud
+- **Deelnemersnamen**: vet + cursief (`font-bold italic`)
