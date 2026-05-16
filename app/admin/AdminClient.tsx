@@ -3,9 +3,12 @@ import { useState, useMemo } from 'react'
 import { MATCHES } from '@/lib/data/matches'
 import { ALL_COUNTRIES } from '@/lib/data/countries'
 import { FlagImage } from '@/components/ui/FlagImage'
+import { ScorePicker } from '@/components/matches/ScorePicker'
+import { MATCH_ODDS } from '@/lib/data/odds'
+import { abbrevCountry } from '@/lib/helpers'
 import {
   saveResult, deleteResult, saveKoResults, saveOranjeResults, computeAndSaveScores,
-  loadOranjeVragenAdmin, updateOranjeVraag, loadOranjeCorrectAdmin, saveOranjeCorrect,
+  updateOranjeVraag, saveOranjeCorrect,
   saveFantasyStats, setAdminGroup,
 } from '@/app/actions/admin'
 import { GROUP_MEMBERS } from '@/lib/groups'
@@ -19,17 +22,13 @@ import type { OranjeVragenMap, OranjeCorrectMap, AntwoordType } from '@/lib/type
 import { ANTWOORD_TYPE_LABELS, MINUUT_OPTIES } from '@/lib/types/oranjeVragen'
 import { WK_PLAYERS } from '@/lib/data/players'
 
+const MUTED = '#7e7667'
+
 const NED_MATCHES = [
   { id: 10, label: 'NED – JPN (14 jun)' },
   { id: 33, label: 'NED – ZWE (20 jun)' },
   { id: 58, label: 'TUN – NED (26 jun)' },
 ]
-const TOGGLE_QS = ['q1','q2','q3','q4'] as const
-const PLAYER_QS = ['q5','q6','q7','q8','q9'] as const
-const Q_LABELS: Record<string, string> = {
-  q1: 'Eerste ingooi', q2: 'Eerste corner', q3: 'Eerste vrije trap', q4: 'Eerste kaart',
-  q5: 'Meeste km', q6: 'Meeste passes', q7: 'Meeste tackles', q8: 'Meeste schoten', q9: 'Buitenspel',
-}
 
 type Tab = 'matches' | 'knockout' | 'vragen' | 'fantasy' | 'scores' | 'links'
 
@@ -65,8 +64,6 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
       : MATCHES
   }, [search])
 
-  // ── Match result handlers ──────────────────────────────────────────────────
-
   async function handleSaveResult(matchId: number, toto: '1' | 'X' | '2', uitslag: string) {
     setSaving(matchId)
     await saveResult(matchId, toto, uitslag)
@@ -79,8 +76,6 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     setResults((r) => { const n = { ...r }; delete n[matchId]; return n })
   }
 
-  // ── KO results handler ────────────────────────────────────────────────────
-
   async function toggleKoCountry(roundId: string, country: string, max: number) {
     const current = koResults[roundId] ?? []
     const next = current.includes(country)
@@ -91,16 +86,12 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     await saveKoResults(updated)
   }
 
-  // ── Oranje results handler ─────────────────────────────────────────────────
-
   async function setOranjeQ(matchId: number, key: string, value: string | null) {
     const current = oranjeResults[matchId] ?? {}
     const updated = { ...oranjeResults, [matchId]: { ...current, [key]: value } }
     setOranjeResults(updated as Record<number, OranjeResult>)
     await saveOranjeResults(updated as Record<number, OranjeResult>)
   }
-
-  // ── Fantasy stats handlers ────────────────────────────────────────────────
 
   async function handleFantasyStat(playerName: string, field: 'goals' | 'assists', value: number) {
     const current = fantasyStats[playerName] ?? { goals: 0, assists: 0 }
@@ -115,8 +106,6 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     setFantasyStats(updated)
     await saveFantasyStats(updated)
   }
-
-  // ── Compute scores ────────────────────────────────────────────────────────
 
   async function handleCompute() {
     setComputing(true)
@@ -139,8 +128,6 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     a.click()
     URL.revokeObjectURL(url)
   }
-
-  // ── Oranje vragen handlers ────────────────────────────────────────────────
 
   async function handlePubliceer(matchId: number, initials: string, gepubliceerd: boolean) {
     await updateOranjeVraag(matchId, initials, { gepubliceerd }, groupId)
@@ -173,266 +160,406 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     { id: 'vragen',   label: 'Oranje Vragen' },
     { id: 'fantasy',  label: `Fantasy (${Object.keys(fantasyStats).length})` },
     { id: 'scores',   label: 'Scores' },
-    { id: 'links',    label: 'Uitnodigingslinks' },
+    { id: 'links',    label: 'Links' },
   ]
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white p-4 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-xl font-bold text-[#FF6B00]">⚽ Admin — Panenka WK 2026</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 rounded-lg bg-[#1e1e1e] border border-[#333] text-white text-sm font-bold hover:bg-[#2a2a2a] transition-colors"
-          >
-            📥 Download Excel
-          </button>
-          <button
-            onClick={handleCompute}
-            disabled={computing}
-            className="px-4 py-2 rounded-lg bg-[#FF6B00] text-white text-sm font-bold hover:bg-[#FF8C33] disabled:opacity-50 transition-colors"
-          >
-            {computing ? 'Bezig…' : '🔢 Bereken scores'}
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#0D0D0D] text-white">
 
-      {/* Groeptoggle */}
-      <div className="flex gap-1 mb-6">
-        {(['og', 'asc'] as const).map((g) => (
-          <form key={g} action={setAdminGroup.bind(null, g)}>
+      {/* Sticky admin header */}
+      <div className="sticky top-0 z-50 border-b border-[#2a2a2a]/60" style={{ background: 'rgba(13,13,13,0.85)', backdropFilter: 'blur(12px)' }}>
+        <div className="max-w-[700px] mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/Logo/Artboard 1@4x.png" alt="Panenka" style={{ height: '1.75rem' }} />
+            <span className="font-heading text-[10px] font-bold uppercase tracking-widest text-[#555]">Admin</span>
+          </div>
+          <div className="flex gap-2">
             <button
-              type="submit"
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${
-                groupId === g
-                  ? 'bg-[#FF6B00] text-white'
-                  : 'bg-[#1e1e1e] text-[#555] hover:text-[#888] border border-[#2a2a2a]'
-              }`}
+              onClick={handleExport}
+              className="px-3 py-1.5 rounded-lg bg-[#1e1e1e] border border-[#333] text-white text-xs font-bold hover:bg-[#2a2a2a] transition-colors"
             >
-              {g.toUpperCase()}
+              📥 Excel
             </button>
-          </form>
-        ))}
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 mb-5">
-        {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              tab === t.id ? 'bg-[#FF6B00] text-white' : 'bg-[#1e1e1e] text-[#555] hover:text-[#888]'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Match results ──────────────────────────────────────────────────── */}
-      {tab === 'matches' && (
-        <div>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Zoek op land of match-ID…"
-            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#444] outline-none focus:border-[#FF6B00] mb-4"
-          />
-          <div className="flex flex-col gap-2">
-            {filteredMatches.map((m) => (
-              <MatchResultRow
-                key={m.id}
-                match={m}
-                result={results[m.id] ?? null}
-                saving={saving === m.id}
-                onSave={(toto, uitslag) => handleSaveResult(m.id, toto, uitslag)}
-                onDelete={() => handleDeleteResult(m.id)}
-              />
-            ))}
+            <button
+              onClick={handleCompute}
+              disabled={computing}
+              className="px-3 py-1.5 rounded-lg bg-[#FF6B00] text-white text-xs font-bold hover:bg-[#FF8C33] disabled:opacity-50 transition-colors"
+            >
+              {computing ? 'Bezig…' : '🔢 Bereken'}
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* ── KO results ─────────────────────────────────────────────────────── */}
-      {tab === 'knockout' && (
-        <div className="flex flex-col gap-4">
-          {KNOCKOUT_ROUNDS.map((round) => {
-            const picked = koResults[round.id] ?? []
-            return (
-              <div key={round.id} className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-                <div className="px-4 py-2.5 bg-[#111] flex items-center justify-between">
-                  <span className="text-sm font-bold text-white">{round.label}</span>
-                  <span className="text-xs text-[#FF6B00] font-bold">{picked.length} / {round.slots}</span>
-                </div>
-                <div className="p-3 flex flex-wrap gap-1.5">
-                  {ALL_COUNTRIES.map((country) => (
-                    <button
-                      key={country}
-                      onClick={() => toggleKoCountry(round.id, country, round.slots)}
-                      className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-                        picked.includes(country)
-                          ? 'bg-[#2ECC71]/20 text-[#2ECC71] border border-[#2ECC71]/40'
-                          : picked.length >= round.slots
-                          ? 'text-[#333] cursor-not-allowed'
-                          : 'bg-[#252525] text-[#888] hover:text-white'
-                      }`}
-                    >
-                      <FlagImage country={country} size={12} />
-                      {country}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
+      <div className="max-w-[700px] mx-auto px-4 py-4">
+
+        {/* Groeptoggle */}
+        <div className="flex gap-1 mb-4">
+          {(['og', 'asc'] as const).map((g) => (
+            <form key={g} action={setAdminGroup.bind(null, g)}>
+              <button
+                type="submit"
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${
+                  groupId === g
+                    ? 'bg-[#FF6B00] text-white'
+                    : 'bg-[#1e1e1e] text-[#555] hover:text-[#888] border border-[#2a2a2a]'
+                }`}
+              >
+                {g.toUpperCase()}
+              </button>
+            </form>
+          ))}
         </div>
-      )}
 
-      {/* ── Oranje vragen (nieuw systeem) ──────────────────────────────────── */}
-      {tab === 'vragen' && (
-        <div className="flex flex-col gap-6">
-          {NED_MATCHES.map(({ id, label }) => {
-            const nedMatch = MATCHES.find((m) => m.id === id)!
-            const opponent = nedMatch.home === 'Nederland' ? nedMatch.away : nedMatch.home
-            const nedPlayers = WK_PLAYERS.filter((p) => p.country === 'Nederland').map((p) => p.name)
-            const oppPlayers = WK_PLAYERS.filter((p) => p.country === opponent).map((p) => p.name)
-            const matchVragen = oranjeVragen[id] ?? {}
-            const matchCorrect = oranjeCorrect[id] ?? {}
+        {/* Tabs */}
+        <div className="flex gap-1 mb-5 flex-wrap">
+          {TABS.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                tab === t.id ? 'bg-[#FF6B00] text-white' : 'bg-[#1e1e1e] text-[#555] hover:text-[#888]'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-            return (
-              <div key={id} className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-                <div className="px-4 py-2.5 bg-[#111] flex items-center justify-between">
-                  <span className="text-sm font-bold text-white">{label}</span>
-                  <span className="text-xs text-[#555]">
-                    {Object.values(matchVragen).filter((v) => v.gepubliceerd).length} / {Object.keys(matchVragen).length} gepubliceerd
-                  </span>
+        {/* ── Match results ──────────────────────────────────────────────────────── */}
+        {tab === 'matches' && (
+          <div>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Zoek op land of match-ID…"
+              className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#444] outline-none focus:border-[#FF6B00] mb-4"
+            />
+            <div className="flex flex-col gap-3">
+              {filteredMatches.map((m) => (
+                <MatchResultRow
+                  key={m.id}
+                  match={m}
+                  result={results[m.id] ?? null}
+                  saving={saving === m.id}
+                  onSave={(toto, uitslag) => handleSaveResult(m.id, toto, uitslag)}
+                  onDelete={() => handleDeleteResult(m.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── KO results ─────────────────────────────────────────────────────────── */}
+        {tab === 'knockout' && (
+          <div className="flex flex-col gap-4">
+            {KNOCKOUT_ROUNDS.map((round) => {
+              const picked = koResults[round.id] ?? []
+              return (
+                <div key={round.id} className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+                  <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
+                    <span className="font-heading text-sm font-bold text-white">{round.label}</span>
+                    <span className="text-xs text-[#FF6B00] font-bold">{picked.length} / {round.slots}</span>
+                  </div>
+                  <div className="p-3 grid grid-cols-6 gap-2 sm:grid-cols-8">
+                    {ALL_COUNTRIES.map((country) => {
+                      const isSelected = picked.includes(country)
+                      const isFull = !isSelected && picked.length >= round.slots
+                      return (
+                        <button
+                          key={country}
+                          onClick={() => !isFull && toggleKoCountry(round.id, country, round.slots)}
+                          disabled={isFull}
+                          className={`flex flex-col items-center justify-center gap-0.5 aspect-square rounded-xl border transition-colors ${
+                            isSelected
+                              ? 'border-[#FF6B00] bg-[#FF6B00]/10'
+                              : isFull
+                              ? 'border-[#2a2a2a] bg-[#111] opacity-25 cursor-not-allowed'
+                              : 'border-[#333] bg-[#1a1a1a] hover:border-[#555]'
+                          }`}
+                        >
+                          <FlagImage country={country} size={20} />
+                          <span className={`font-accent text-[8px] leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-[#555]'}`}>
+                            {abbrevCountry(country)}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-                <div className="divide-y divide-[#1e1e1e]">
-                  {groupParticipants.map((p) => {
-                    const key = p.initials.toLowerCase()
-                    const vraag = matchVragen[key]
-                    const effectiefType = vraag?.adminType ?? (vraag?.type !== 'anders' ? vraag?.type : null)
-                    const correctWaarde = matchCorrect[key] ?? null
+              )
+            })}
+          </div>
+        )}
 
-                    return (
-                      <div key={key} className="px-4 py-3 flex flex-col gap-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <span className="text-[10px] font-bold text-[#555]">{p.name}</span>
-                            {vraag ? (
-                              <p className="text-sm text-white leading-snug">{vraag.tekst}</p>
-                            ) : (
-                              <p className="text-xs text-[#333] italic">Nog geen vraag ingediend</p>
+        {/* ── Oranje vragen ──────────────────────────────────────────────────────── */}
+        {tab === 'vragen' && (
+          <div className="flex flex-col gap-6">
+            {NED_MATCHES.map(({ id, label }) => {
+              const nedMatch = MATCHES.find((m) => m.id === id)!
+              const opponent = nedMatch.home === 'Nederland' ? nedMatch.away : nedMatch.home
+              const nedPlayers = WK_PLAYERS.filter((p) => p.country === 'Nederland').map((p) => p.name)
+              const oppPlayers = WK_PLAYERS.filter((p) => p.country === opponent).map((p) => p.name)
+              const matchVragen = oranjeVragen[id] ?? {}
+              const matchCorrect = oranjeCorrect[id] ?? {}
+
+              return (
+                <div key={id} className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+                  <div className="px-4 py-2.5 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
+                    <span className="font-heading text-sm font-bold text-white">{label}</span>
+                    <span className="text-xs text-[#555]">
+                      {Object.values(matchVragen).filter((v) => v.gepubliceerd).length} / {Object.keys(matchVragen).length} gepubliceerd
+                    </span>
+                  </div>
+                  <div className="divide-y divide-[#1e1e1e]">
+                    {groupParticipants.map((p) => {
+                      const key = p.initials.toLowerCase()
+                      const vraag = matchVragen[key]
+                      const effectiefType = vraag?.adminType ?? (vraag?.type !== 'anders' ? vraag?.type : null)
+                      const correctWaarde = matchCorrect[key] ?? null
+
+                      return (
+                        <div key={key} className="px-4 py-3 flex flex-col gap-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[10px] font-bold text-[#555]">{p.name}</span>
+                              {vraag ? (
+                                <p className="text-sm text-white leading-snug">{vraag.tekst}</p>
+                              ) : (
+                                <p className="text-xs text-[#333] italic">Nog geen vraag ingediend</p>
+                              )}
+                            </div>
+                            {vraag && (
+                              <button
+                                onClick={() => handlePubliceer(id, key, !vraag.gepubliceerd)}
+                                className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                                  vraag.gepubliceerd
+                                    ? 'bg-[#2ECC71]/20 text-[#2ECC71] border border-[#2ECC71]/30'
+                                    : 'bg-[#252525] text-[#555] hover:text-[#888]'
+                                }`}
+                              >
+                                {vraag.gepubliceerd ? '✓ Gepubliceerd' : 'Publiceer'}
+                              </button>
                             )}
                           </div>
+
                           {vraag && (
-                            <button
-                              onClick={() => handlePubliceer(id, key, !vraag.gepubliceerd)}
-                              className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
-                                vraag.gepubliceerd
-                                  ? 'bg-[#2ECC71]/20 text-[#2ECC71] border border-[#2ECC71]/30'
-                                  : 'bg-[#252525] text-[#555] hover:text-[#888]'
-                              }`}
-                            >
-                              {vraag.gepubliceerd ? '✓ Gepubliceerd' : 'Publiceer'}
-                            </button>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                                vraag.type === 'anders' && !vraag.adminType
+                                  ? 'bg-[#E74C3C]/20 text-[#E74C3C]'
+                                  : 'bg-[#252525] text-[#888]'
+                              }`}>
+                                {ANTWOORD_TYPE_LABELS[vraag.adminType ?? vraag.type]}
+                              </span>
+                              {vraag.type === 'anders' && (
+                                <>
+                                  {vraag.suggestie && (
+                                    <span className="text-[10px] text-[#555] italic">"{vraag.suggestie}"</span>
+                                  )}
+                                  <select
+                                    value={vraag.adminType ?? ''}
+                                    onChange={(e) => handleAdminType(id, key, e.target.value as Exclude<AntwoordType, 'anders'>)}
+                                    className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
+                                  >
+                                    <option value="">→ Kies type</option>
+                                    {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'minuut'] as const).map((t) => (
+                                      <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
+                                    ))}
+                                  </select>
+                                </>
+                              )}
+                            </div>
+                          )}
+
+                          {vraag && effectiefType && (
+                            <AdminCorrectInvoer
+                              type={effectiefType}
+                              waarde={correctWaarde}
+                              opponent={opponent}
+                              nedPlayers={nedPlayers}
+                              oppPlayers={oppPlayers}
+                              onChange={(v) => handleCorrectAntwoord(id, key, v)}
+                            />
                           )}
                         </div>
-
-                        {/* Type info + 'anders' conversie */}
-                        {vraag && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                              vraag.type === 'anders' && !vraag.adminType
-                                ? 'bg-[#E74C3C]/20 text-[#E74C3C]'
-                                : 'bg-[#252525] text-[#888]'
-                            }`}>
-                              {ANTWOORD_TYPE_LABELS[vraag.adminType ?? vraag.type]}
-                            </span>
-                            {vraag.type === 'anders' && (
-                              <>
-                                {vraag.suggestie && (
-                                  <span className="text-[10px] text-[#555] italic">"{vraag.suggestie}"</span>
-                                )}
-                                <select
-                                  value={vraag.adminType ?? ''}
-                                  onChange={(e) => handleAdminType(id, key, e.target.value as Exclude<AntwoordType, 'anders'>)}
-                                  className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
-                                >
-                                  <option value="">→ Kies type</option>
-                                  {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'minuut'] as const).map((t) => (
-                                    <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
-                                  ))}
-                                </select>
-                              </>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Correct antwoord invoer */}
-                        {vraag && effectiefType && (
-                          <AdminCorrectInvoer
-                            type={effectiefType}
-                            waarde={correctWaarde}
-                            opponent={opponent}
-                            nedPlayers={nedPlayers}
-                            oppPlayers={oppPlayers}
-                            onChange={(v) => handleCorrectAntwoord(id, key, v)}
-                          />
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* ── Fantasy statistieken ───────────────────────────────────────────── */}
-      {tab === 'fantasy' && (
-        <FantasyStatsTab
-          stats={fantasyStats}
-          search={fantasySearch}
-          onSearchChange={setFantasySearch}
-          onStatChange={handleFantasyStat}
-          onRemove={handleFantasyRemove}
-        />
-      )}
-
-      {/* ── Uitnodigingslinks ──────────────────────────────────────────────── */}
-      {tab === 'links' && (
-        <LinksPanel />
-      )}
-
-      {/* ── Scores ─────────────────────────────────────────────────────────── */}
-      {tab === 'scores' && (
-        <div>
-          {!scores ? (
-            <p className="text-[#555] text-sm">Klik op "Bereken scores" om de tussenstand te berekenen.</p>
-          ) : (
-            <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-              <div className="grid grid-cols-[2rem_1fr_3.5rem_3.5rem_3rem_4rem] gap-1 px-3 py-2 bg-[#111] text-[10px] text-[#444] uppercase">
-                <span>#</span><span>Naam</span>
-                <span className="text-right">Poule</span>
-                <span className="text-right">KO</span>
-                <span className="text-right">Oranje</span>
-                <span className="text-right font-bold">Totaal</span>
-              </div>
-              {Object.values(scores)
-                .sort((a, b) => b.total - a.total)
-                .map((s, i) => (
-                  <div key={s.initials}
-                    className="grid grid-cols-[2rem_1fr_3.5rem_3.5rem_3rem_4rem] gap-1 px-3 py-2.5 border-t border-[#1a1a1a] items-center"
-                  >
-                    <span className="text-sm text-[#555]">{i + 1}</span>
-                    <span className="text-sm font-bold text-white">{s.name}</span>
-                    <span className="text-xs text-[#888] text-right">{s.poulefase}</span>
-                    <span className="text-xs text-[#888] text-right">{s.knockout}</span>
-                    <span className="text-xs text-[#888] text-right">{s.oranje}</span>
-                    <span className="text-sm font-bold text-[#FF6B00] text-right">{s.total}</span>
+                      )
+                    })}
                   </div>
-                ))}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── Fantasy statistieken ───────────────────────────────────────────────── */}
+        {tab === 'fantasy' && (
+          <FantasyStatsTab
+            stats={fantasyStats}
+            search={fantasySearch}
+            onSearchChange={setFantasySearch}
+            onStatChange={handleFantasyStat}
+            onRemove={handleFantasyRemove}
+          />
+        )}
+
+        {/* ── Uitnodigingslinks ──────────────────────────────────────────────────── */}
+        {tab === 'links' && <LinksPanel />}
+
+        {/* ── Scores ─────────────────────────────────────────────────────────────── */}
+        {tab === 'scores' && (
+          <div>
+            {!scores ? (
+              <p className="text-[#555] text-sm">Klik op "Bereken scores" om de tussenstand te berekenen.</p>
+            ) : (
+              <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+                <div className="grid grid-cols-[2rem_1fr_3.5rem_3.5rem_3rem_4rem] gap-1 px-3 py-2 text-[10px] text-[#444] uppercase" style={{ background: 'rgba(10,10,10,0.75)' }}>
+                  <span>#</span><span>Naam</span>
+                  <span className="text-right">Poule</span>
+                  <span className="text-right">KO</span>
+                  <span className="text-right">Oranje</span>
+                  <span className="text-right font-bold">Totaal</span>
+                </div>
+                {Object.values(scores)
+                  .sort((a, b) => b.total - a.total)
+                  .map((s, i) => (
+                    <div key={s.initials}
+                      className="grid grid-cols-[2rem_1fr_3.5rem_3.5rem_3rem_4rem] gap-1 px-3 py-2.5 border-t border-[#1a1a1a] items-center"
+                    >
+                      <span className="text-sm text-[#555]">{i + 1}</span>
+                      <span className="text-sm font-bold text-white">{s.name}</span>
+                      <span className="text-xs text-[#888] text-right">{s.poulefase}</span>
+                      <span className="text-xs text-[#888] text-right">{s.knockout}</span>
+                      <span className="text-xs text-[#888] text-right">{s.oranje}</span>
+                      <span className="text-sm font-bold text-[#FF6B00] text-right">{s.total}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── MatchResultRow ─────────────────────────────────────────────────────────────
+
+function MatchResultRow({ match, result, saving, onSave, onDelete }: {
+  match: typeof MATCHES[0]
+  result: MatchResult | null
+  saving: boolean
+  onSave: (toto: '1' | 'X' | '2', uitslag: string) => void
+  onDelete: () => void
+}) {
+  const [toto, setToto] = useState<'1' | 'X' | '2'>(result?.toto ?? '1')
+  const [uitslag, setUitslag] = useState(result?.uitslag ?? '')
+  const [showPicker, setShowPicker] = useState(false)
+  const [customUitslag, setCustomUitslag] = useState('')
+
+  const hasOdds = Object.keys(MATCH_ODDS[match.id]?.scores ?? {}).length > 0
+
+  function handleSelect(score: string) {
+    setUitslag(score)
+    setShowPicker(false)
+  }
+
+  return (
+    <div className={`rounded-xl border overflow-hidden ${result ? 'border-[#FF6B00]' : 'border-[#2a2a2a]'}`} style={{ background: 'rgba(22,22,22,0.82)' }}>
+
+      {/* Header — zelfde opbouw als MatchCard */}
+      <div className="relative flex flex-col items-center px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
+        <div
+          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] font-heading text-sm font-bold text-white"
+          style={{ background: 'rgba(37,37,37,0.8)' }}
+        >
+          #{match.id}
+        </div>
+
+        {result && (
+          <button
+            onClick={onDelete}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] font-heading text-xs font-bold text-[#666] hover:border-red-500/40 hover:text-red-400 transition-colors"
+            style={{ background: 'rgba(37,37,37,0.8)' }}
+          >
+            wis
+          </button>
+        )}
+
+        <div className="flex items-center gap-2">
+          <FlagImage country={match.home} size={24} />
+          <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.home)}</span>
+          <span className="font-heading font-bold" style={{ color: MUTED }}>-</span>
+          <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.away)}</span>
+          <FlagImage country={match.away} size={24} />
+        </div>
+        <p className="font-heading font-light text-xs uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
+          {match.date} · {match.stadium}
+        </p>
+      </div>
+
+      {/* Controls row */}
+      <div className="px-3 py-2.5 flex items-center gap-2">
+
+        {/* Toto knoppen */}
+        <div className="flex gap-1">
+          {(['1', 'X', '2'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setToto(t)}
+              className={`w-9 h-9 flex items-center justify-center rounded-lg border transition-colors font-heading text-sm font-bold ${
+                toto === t
+                  ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
+                  : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
+              }`}
+              style={toto !== t ? { color: MUTED } : undefined}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {/* Uitslag knop — opent picker */}
+        <button
+          onClick={() => setShowPicker((p) => !p)}
+          className={`font-heading h-9 px-3 rounded-lg text-sm font-bold transition-colors border flex items-center ${
+            uitslag
+              ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
+              : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
+          }`}
+          style={!uitslag ? { color: MUTED } : undefined}
+        >
+          {uitslag || 'Uitslag'}
+        </button>
+
+        {/* Opslaan */}
+        <button
+          onClick={() => uitslag.trim() && onSave(toto, uitslag.trim())}
+          disabled={saving || !uitslag.trim()}
+          className="ml-auto px-3 py-1.5 rounded-lg bg-[#2ECC71]/20 text-[#2ECC71] text-xs font-bold disabled:opacity-40 hover:bg-[#2ECC71]/30 transition-colors"
+        >
+          {saving ? '…' : result ? '↑ Update' : '+ Opslaan'}
+        </button>
+      </div>
+
+      {/* Score picker */}
+      {showPicker && (
+        <div className="px-3 pb-3">
+          {hasOdds ? (
+            <ScorePicker matchId={match.id} toto={null} selected={uitslag || null} onSelect={handleSelect} />
+          ) : (
+            <div className="flex items-center gap-2 p-3 rounded-xl border border-[#2a2a2a]" style={{ background: 'rgba(10,10,10,0.75)' }}>
+              <input
+                value={customUitslag}
+                onChange={(e) => setCustomUitslag(e.target.value)}
+                placeholder="bijv. 2 - 1"
+                className="flex-1 bg-[#252525] border border-[#2a2a2a] text-sm text-white rounded-lg px-3 py-1.5 outline-none focus:border-[#FF6B00] text-center font-heading"
+              />
+              <button
+                onClick={() => { if (customUitslag.trim()) { setUitslag(customUitslag.trim()); setCustomUitslag(''); setShowPicker(false) } }}
+                disabled={!customUitslag.trim()}
+                className="px-3 py-1.5 rounded-lg bg-[#FF6B00] text-white text-xs font-bold disabled:opacity-40 transition-colors"
+              >
+                OK
+              </button>
             </div>
           )}
         </div>
@@ -523,9 +650,9 @@ function LinksPanel() {
   }
 
   return (
-    <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-      <div className="px-4 py-2.5 bg-[#111]">
-        <p className="text-sm font-bold text-white">Persoonlijke uitnodigingslinks</p>
+    <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+      <div className="px-4 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
+        <p className="font-heading text-sm font-bold text-white">Persoonlijke uitnodigingslinks</p>
         <p className="text-xs text-[#555] mt-0.5">Kopieer elke link en stuur via WhatsApp.</p>
       </div>
       <div className="divide-y divide-[#1e1e1e]">
@@ -593,11 +720,10 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Spelers met statistieken */}
       {withStats.length > 0 && (
-        <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-          <div className="px-4 py-2.5 bg-[#111] flex items-center justify-between">
-            <span className="text-sm font-bold text-white">Statistieken ingevoerd</span>
+        <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+          <div className="px-4 py-2.5 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
+            <span className="font-heading text-sm font-bold text-white">Statistieken ingevoerd</span>
             <span className="text-xs text-[#FF6B00] font-bold">{withStats.length} speler{withStats.length !== 1 ? 's' : ''}</span>
           </div>
           <div className="divide-y divide-[#1e1e1e]">
@@ -618,7 +744,6 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
         </div>
       )}
 
-      {/* Zoek speler */}
       <input
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
@@ -631,7 +756,7 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
       )}
 
       {filtered.length > 0 && (
-        <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+        <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
           <div className="divide-y divide-[#1e1e1e]">
             {filtered.map((player) => {
               const s = stats[player.name] ?? { goals: 0, assists: 0 }
@@ -654,59 +779,6 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
       {!q && withStats.length === 0 && (
         <p className="text-xs text-[#555] text-center py-4">Zoek een speler om statistieken in te voeren</p>
       )}
-    </div>
-  )
-}
-
-// ── MatchResultRow ─────────────────────────────────────────────────────────────
-
-function MatchResultRow({ match, result, saving, onSave, onDelete }: {
-  match: typeof MATCHES[0]
-  result: MatchResult | null
-  saving: boolean
-  onSave: (toto: '1' | 'X' | '2', uitslag: string) => void
-  onDelete: () => void
-}) {
-  const [toto, setToto] = useState<'1' | 'X' | '2'>(result?.toto ?? '1')
-  const [uitslag, setUitslag] = useState(result?.uitslag ?? '')
-
-  return (
-    <div className={`rounded-xl border p-3 ${result ? 'bg-[#161616] border-[#2ECC71]/20' : 'bg-[#111] border-[#2a2a2a]'}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-[#555]">#{match.id} · Poule {match.poule} · {match.date}</span>
-        {result && (
-          <button onClick={onDelete} className="text-[10px] text-[#E74C3C] hover:text-[#E74C3C]/80">✕ verwijder</button>
-        )}
-      </div>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm font-bold text-white flex-1 truncate">{match.home}</span>
-        <span className="text-[#444] text-xs">vs</span>
-        <span className="text-sm font-bold text-white flex-1 truncate text-right">{match.away}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        {(['1', 'X', '2'] as const).map((t) => (
-          <button key={t} onClick={() => setToto(t)}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-              toto === t ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#888]'
-            }`}
-          >
-            {t === '1' ? match.home.slice(0, 3) : t === '2' ? match.away.slice(0, 3) : 'X'}
-          </button>
-        ))}
-        <input
-          value={uitslag}
-          onChange={(e) => setUitslag(e.target.value)}
-          placeholder="2 - 1"
-          className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-20 outline-none focus:border-[#FF6B00] text-center"
-        />
-        <button
-          onClick={() => uitslag.trim() && onSave(toto, uitslag.trim())}
-          disabled={saving || !uitslag.trim()}
-          className="ml-auto px-3 py-1.5 rounded-lg bg-[#2ECC71]/20 text-[#2ECC71] text-xs font-bold disabled:opacity-40 hover:bg-[#2ECC71]/30 transition-colors"
-        >
-          {saving ? '…' : result ? '↑ Update' : '+ Sla op'}
-        </button>
-      </div>
     </div>
   )
 }

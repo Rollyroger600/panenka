@@ -272,6 +272,7 @@ async function main() {
     `  home: OddsTrend`,
     `  draw: OddsTrend`,
     `  away: OddsTrend`,
+    `  scores: Record<string, OddsTrend>`,
     `}`,
     ``,
     `export const ODDS_UPDATED_AT = '${updatedAt}'`,

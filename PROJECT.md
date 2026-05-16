@@ -845,6 +845,26 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-16 — Admin restyling + quoteringen nulmeting + TypeScript fix (Claude Code)
+
+#### Admin pagina restyling (`app/admin/AdminClient.tsx`)
+- **Header**: tekst-titel vervangen door Panenka logo in sticky header met blur-achtergrond (identiek aan AppHeader)
+- **MatchResultRow**: volledig herschreven naar MatchCard-stijl — match-nummer badge, vlaggen + teamnamen, datum/stadion, toto-knoppen (1/X/2), "Uitslag"-knop die ScorePicker dropdown opent (gesorteerd in thuis/gelijk/uit kolommen); fallback text-input voor wedstrijden zonder odds-data
+- **KO Resultaten**: van tekst-buttons naar vierkante vlag-tegels met landafkorting in grid van 6 kolommen — geselecteerd = oranje border + tint, vol = dimmed + disabled; identieke stijl als deelnemers KO-picker
+- **Kaarthoofden**: `bg-[#111]` vervangen door `rgba(10,10,10,0.75)` — consistent met rest van de app
+- **Container**: `max-w-2xl` → `max-w-[700px]` conform app-breedte
+- Ongebruikte imports `loadOranjeVragenAdmin` / `loadOranjeCorrectAdmin` opgeruimd
+
+#### TypeScript fix — `MatchTrends.scores` (`lib/data/odds_trends.ts`, `scripts/scrape-odds.mjs`)
+- `scores: Record<string, OddsTrend>` toegevoegd aan `MatchTrends` interface — het veld werd al gegenereerd maar miste in de type-definitie
+- Scraper-script bijgewerkt zodat de interface bij volgende run correct wordt gegenereerd
+
+#### Quoteringen nulmeting (launch dag)
+- `npm run update_quoteringen` twee keer uitgevoerd: eerste run laadt verse Kambi-data, tweede run vergelijkt identieke waarden → alle trends `same` → geen trend-icoontjes zichtbaar bij launch
+- 49 wedstrijden + 48 landen bijgewerkt; 23 wedstrijden nog niet op Kambi (app toont '—')
+
+---
+
 ### 2026-05-16 — Multi-groep implementatie Fase 1: OG + ASC (Claude Code)
 
 #### Groepsinfrastructuur (`lib/groups.ts` — nieuw)

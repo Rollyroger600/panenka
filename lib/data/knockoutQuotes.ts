@@ -45,7 +45,7 @@ export const KO_QUOTES: Record<string, CountryKOQuotes> = {
   'Oostenrijk': { poulewinnaar: 5.5, tweede: 1.42, derde: 1.13, r16: 3.5, r8: 8, r4: 21, finale: 34, winnaar: 151 },
   'Panama': { poulewinnaar: 51, tweede: 2.91, derde: 2.75, r16: 8, r8: 21, r4: 67, finale: 301, winnaar: 1501 },
   'Paraguay': { poulewinnaar: 4.75, tweede: 2.19, derde: 1.5, r16: 3.5, r8: 8, r4: 21, finale: 51, winnaar: 151 },
-  'Portugal': { poulewinnaar: 1.4, tweede: 3.63, derde: 1.01, r16: 1.45, r8: 2.4, r4: 3.75, finale: 6, winnaar: 13 },
+  'Portugal': { poulewinnaar: 1.4, tweede: 3.63, derde: 1.01, r16: 1.45, r8: 2.35, r4: 3.6, finale: 5.5, winnaar: 11 },
   'Qatar': { poulewinnaar: 34, tweede: 2.58, derde: 2.4, r16: 6, r8: 15, r4: 51, finale: 251, winnaar: 1001 },
   'Saoedi-Arabië': { poulewinnaar: 17, tweede: 2.01, derde: 1.8, r16: 5, r8: 15, r4: 51, finale: 251, winnaar: 1001 },
   'Schotland': { poulewinnaar: 13, tweede: 1.38, derde: 1.25, r16: 3.5, r8: 10, r4: 29, finale: 51, winnaar: 251 },
