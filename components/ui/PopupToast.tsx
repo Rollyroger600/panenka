@@ -3,12 +3,14 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { POPUPS } from '@/lib/popups'
 import { PARTICIPANTS } from '@/lib/participants'
+import { GROUP_MEMBERS } from '@/lib/groups'
+import type { GroupId } from '@/lib/groups'
 
 const MIN_INTERVAL_MS = 20 * 60_000
 const DISPLAY_MS = 5000
 const STORAGE_KEY = 'popup_next_time'
 
-export function PopupToast({ currentUserName }: { currentUserName: string }) {
+export function PopupToast({ currentUserName, groupId }: { currentUserName: string; groupId: GroupId }) {
   const pathname = usePathname()
   const pathnameRef = useRef(pathname)
   useEffect(() => { pathnameRef.current = pathname }, [pathname])
@@ -35,13 +37,17 @@ export function PopupToast({ currentUserName }: { currentUserName: string }) {
     const delay = nextTime > now ? nextTime - now : 30_000 + Math.random() * 30_000
 
     const scheduleTimer = setTimeout(() => {
+      const groupPopups = POPUPS[groupId] ?? {}
       const msgs = [
-        ...(POPUPS.global ?? []),
-        ...(POPUPS[pathnameRef.current] ?? []),
+        ...(groupPopups.global ?? []),
+        ...(groupPopups[pathnameRef.current] ?? []),
       ]
       if (msgs.length === 0) return
 
-      const otherNames = PARTICIPANTS.map((p) => p.name).filter((n) => n !== currentUserName)
+      const groupInitials = GROUP_MEMBERS[groupId]
+      const otherNames = PARTICIPANTS
+        .filter((p) => groupInitials.includes(p.initials) && p.name !== currentUserName)
+        .map((p) => p.name)
       const randomName = otherNames[Math.floor(Math.random() * otherNames.length)]
       const raw = msgs[Math.floor(Math.random() * msgs.length)]
       const text = raw.replace(/\{naam\}/g, randomName)

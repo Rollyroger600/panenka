@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { GlobalDataLoader } from '@/components/layout/GlobalDataLoader'
 import { SaveIndicator } from '@/components/ui/SaveIndicator'
 import { PopupToast } from '@/components/ui/PopupToast'
+import { getGroupForParticipant } from '@/lib/groups'
 import { OnboardingController } from '@/components/onboarding/OnboardingController'
 import { PostHogProvider } from '@/components/PostHogProvider'
 
@@ -14,6 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const name = store.get('participantName')?.value
   const initials = store.get('participant')?.value
   if (!name || !initials) redirect('/')
+  const groupId = getGroupForParticipant(initials)
 
   return (
     <PostHogProvider initials={initials} name={name}>
@@ -27,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <GlobalDataLoader />
       <SaveIndicator />
-      <PopupToast currentUserName={name} />
+      <PopupToast currentUserName={name} groupId={groupId} />
       <OnboardingController />
       <BottomNav />
     </div>

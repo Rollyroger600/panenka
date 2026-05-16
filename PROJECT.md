@@ -913,6 +913,31 @@ The following decisions were made during implementation that deviate from or ext
 
 ---
 
+### 2026-05-16 — Reset-script, popup per groep, export cleanup & welkomstscherm (Claude Code)
+
+#### Reset-script (`scripts/reset-all-data.mjs` — nieuw)
+- Eenmalig script dat alle deelnemersdata uit Redis wist: `predictions`, `knockout`, `fantasy`, `oranje`, `confirmed` per deelnemer; `oranje_vragen`, `oranje_antwoorden`, `oranje_correct`, `scores` per groep (og + asc)
+- Gebruik: `node --env-file=.env.local scripts/reset-all-data.mjs`
+- Logt per key of er data was (✓) of de key al leeg was
+
+#### Excel export — wedstrijd-tabs leegruimen (`app/api/export/route.ts`)
+- Na het schrijven van uitslag-quoteringen worden de 35 rijen daarna in kolommen B en C expliciet leeggemaakt (`.value(null)`)
+- Voorkomt dat oude/langere placeholder-data zichtbaar blijft als de nieuwe dataset kleiner is
+
+#### Popups per groep (`lib/popups.ts`, `components/ui/PopupToast.tsx`, `app/(app)/layout.tsx`)
+- `POPUPS` geherstructureerd naar `Record<GroupId, Record<string, string[]>>` — OG en ASC hebben elk hun eigen berichten per pagina
+- `PopupToast` krijgt nu `groupId` prop; willekeurige naam wordt alleen gekozen uit deelnemers van de eigen groep
+- `layout.tsx` bepaalt groep via `getGroupForParticipant(initials)` en geeft deze door
+
+#### ASC Excel (`260516_WK 2026_Master_ASC.xlsx`)
+- Master Excel voor de ASC-groep aangemaakt; export-route pikt deze automatisch op via de `ASC`-filter
+
+#### Welkomstscherm (`app/page.tsx`, `app/LoginButton.tsx`)
+- Containers op welkomstscherm: `bg-[#1a1a1a]` → `bg-[#1a1a1a]/70` zodat de achtergrondafbeelding licht doorschijnt
+- Knoptekst gewijzigd: "Invullen →" → "Start Panenka →"
+
+---
+
 ### 2026-05-15 — npm shortcut, multi-groep plan & pull analytics (Claude Code)
 
 #### npm shortcut `update_quoteringen` (`package.json`)

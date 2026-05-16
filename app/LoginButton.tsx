@@ -22,7 +22,7 @@ export default function LoginButton({ token }: { token: string }) {
           : 'bg-[#1a1a1a] text-[#444] border border-[#2a2a2a] cursor-not-allowed',
       ].join(' ')}
     >
-      {loading ? 'Laden…' : 'Invullen →'}
+      {loading ? 'Laden…' : 'Start Panenka →'}
     </button>
   )
 }

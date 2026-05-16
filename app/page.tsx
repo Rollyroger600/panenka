@@ -38,7 +38,7 @@ export default async function LandingPage({
       <div className="flex-1 flex flex-col justify-center w-full gap-4 pb-16">
         {participant ? (
           <>
-            <div className="w-full rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] px-4 py-5 flex flex-col gap-1 items-center text-center">
+            <div className="w-full rounded-xl bg-[#1a1a1a]/70 border border-[#2a2a2a] px-4 py-5 flex flex-col gap-1 items-center text-center">
               <p className="text-[#888] text-xs uppercase tracking-widest">Welkom</p>
               <p className="text-white font-bold text-2xl">{participant.name}</p>
               <p className="text-[#FF6B00] text-sm font-bold mt-2">
@@ -51,7 +51,7 @@ export default async function LandingPage({
             <LoginButton token={participant.token} />
           </>
         ) : (
-          <div className="w-full rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] px-4 py-6 text-center">
+          <div className="w-full rounded-xl bg-[#1a1a1a]/70 border border-[#2a2a2a] px-4 py-6 text-center">
             <p className="text-[#555] text-sm leading-relaxed">
               Gebruik je persoonlijke uitnodigingslink om in te loggen.
             </p>

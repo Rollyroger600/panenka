@@ -327,6 +327,11 @@ export async function GET(req: Request) {
       cv(matchSheet, `B${6 + i}`, score)
       cv(matchSheet, `C${6 + i}`, quote)
     })
+    for (let i = scores.length; i < 35; i++) {
+      const row = 6 + i
+      if (matchSheet.cell(`B${row}`).value() != null) matchSheet.cell(`B${row}`).value(null)
+      if (matchSheet.cell(`C${row}`).value() != null) matchSheet.cell(`C${row}`).value(null)
+    }
   }
 
   // Return the modified workbook as a download
