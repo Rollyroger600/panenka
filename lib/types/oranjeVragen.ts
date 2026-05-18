@@ -5,6 +5,7 @@ export type AntwoordType =
   | 'speler_opp'
   | 'percentage'
   | 'minuut'
+  | 'open'
   | 'anders'
 
 export interface OranjeVraag {
@@ -24,6 +25,9 @@ export type OranjeVragenMap = Record<number, Record<string, OranjeVraag>>
 // matchId → authorInitials → correct antwoord
 export type OranjeCorrectMap = Record<number, Record<string, string | null>>
 
+// matchId → questionAuthorKey → participantKey → isCorrect (voor 'open' type vragen)
+export type OranjeBeoordeling = Record<number, Record<string, Record<string, boolean>>>
+
 export const MINUUT_OPTIES = ['0-10', '10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90', '90+'] as const
 export type MinuutOptie = (typeof MINUUT_OPTIES)[number]
 
@@ -34,6 +38,7 @@ export const ANTWOORD_TYPE_LABELS: Record<AntwoordType, string> = {
   speler_opp: 'Speler tegenstander',
   percentage: 'Percentage (%)',
   minuut:     'Tijdvak (10 min.)',
+  open:       'Open antwoord',
   anders:     'Alternatieve suggestie, te beoordelen door admin',
 }
 

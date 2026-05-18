@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { AdminClient } from './AdminClient'
 import { AdminLogin } from './AdminLogin'
-import { loadResults, loadKoResults, loadOranjeResults, loadOranjeVragenAdmin, loadOranjeCorrectAdmin, loadFantasyStats } from '@/app/actions/admin'
+import { loadResults, loadKoResults, loadOranjeResults, loadOranjeVragenAdmin, loadOranjeCorrectAdmin, loadOranjeBeoordeling, loadAlleOranjeAntwoorden, loadFantasyStats } from '@/app/actions/admin'
 import type { GroupId } from '@/lib/groups'
 
 export default async function AdminPage() {
@@ -12,12 +12,14 @@ export default async function AdminPage() {
 
   const groupId = (store.get('admin_group')?.value ?? 'og') as GroupId
 
-  const [results, koResults, oranjeResults, oranjeVragen, oranjeCorrect, fantasyStats] = await Promise.all([
+  const [results, koResults, oranjeResults, oranjeVragen, oranjeCorrect, oranjeBeoordeling, alleAntwoorden, fantasyStats] = await Promise.all([
     loadResults(),
     loadKoResults(),
     loadOranjeResults(),
     loadOranjeVragenAdmin(groupId),
     loadOranjeCorrectAdmin(groupId),
+    loadOranjeBeoordeling(groupId),
+    loadAlleOranjeAntwoorden(groupId),
     loadFantasyStats(),
   ])
 
@@ -29,6 +31,8 @@ export default async function AdminPage() {
       initialOranjeResults={oranjeResults}
       initialOranjeVragen={oranjeVragen}
       initialOranjeCorrect={oranjeCorrect}
+      initialOranjeBeoordeling={oranjeBeoordeling}
+      initialAlleAntwoorden={alleAntwoorden}
       initialFantasyStats={fantasyStats}
     />
   )

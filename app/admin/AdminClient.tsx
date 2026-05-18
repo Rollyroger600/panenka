@@ -8,7 +8,7 @@ import { MATCH_ODDS } from '@/lib/data/odds'
 import { abbrevCountry } from '@/lib/helpers'
 import {
   saveResult, deleteResult, saveKoResults, saveOranjeResults, computeAndSaveScores,
-  updateOranjeVraag, saveOranjeCorrect,
+  updateOranjeVraag, saveOranjeCorrect, saveOranjeBeoordeling,
   saveFantasyStats, setAdminGroup,
 } from '@/app/actions/admin'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
@@ -19,7 +19,7 @@ import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { ParticipantScore } from '@/app/leaderboard/types'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 import { PARTICIPANTS } from '@/lib/participants'
-import type { OranjeVragenMap, OranjeCorrectMap, AntwoordType } from '@/lib/types/oranjeVragen'
+import type { OranjeVragenMap, OranjeCorrectMap, OranjeBeoordeling, OranjeAntwoordenMap, AntwoordType } from '@/lib/types/oranjeVragen'
 import { ANTWOORD_TYPE_LABELS, MINUUT_OPTIES } from '@/lib/types/oranjeVragen'
 import { WK_PLAYERS } from '@/lib/data/players'
 
@@ -40,10 +40,12 @@ interface Props {
   initialOranjeResults: Record<number, OranjeResult>
   initialOranjeVragen: OranjeVragenMap
   initialOranjeCorrect: OranjeCorrectMap
+  initialOranjeBeoordeling: OranjeBeoordeling
+  initialAlleAntwoorden: Record<string, OranjeAntwoordenMap>
   initialFantasyStats: FantasyStats
 }
 
-export function AdminClient({ groupId, initialResults, initialKoResults, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect, initialFantasyStats }: Props) {
+export function AdminClient({ groupId, initialResults, initialKoResults, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect, initialOranjeBeoordeling, initialAlleAntwoorden, initialFantasyStats }: Props) {
   const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
   const [tab, setTab] = useState<Tab>('matches')
   const [results, setResults] = useState(initialResults)
@@ -51,6 +53,8 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   const [oranjeResults, setOranjeResults] = useState(initialOranjeResults)
   const [oranjeVragen, setOranjeVragen] = useState<OranjeVragenMap>(initialOranjeVragen)
   const [oranjeCorrect, setOranjeCorrect] = useState<OranjeCorrectMap>(initialOranjeCorrect)
+  const [oranjeBeoordeling, setOranjeBeoordeling] = useState<OranjeBeoordeling>(initialOranjeBeoordeling)
+  const alleAntwoorden = initialAlleAntwoorden
   const [scores, setScores] = useState<Record<string, ParticipantScore> | null>(null)
   const [computing, setComputing] = useState(false)
   const [search, setSearch] = useState('')
@@ -136,6 +140,19 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
       ...prev,
       [matchId]: { ...prev[matchId], [initials.toLowerCase()]: { ...prev[matchId]?.[initials.toLowerCase()], gepubliceerd } },
     }))
+  }
+
+  async function handleBeoordeling(matchId: number, questionKey: string, participantKey: string, correct: boolean | null) {
+    const next: OranjeBeoordeling = JSON.parse(JSON.stringify(oranjeBeoordeling))
+    if (!next[matchId]) next[matchId] = {}
+    if (!next[matchId][questionKey]) next[matchId][questionKey] = {}
+    if (correct === null) {
+      delete next[matchId][questionKey][participantKey]
+    } else {
+      next[matchId][questionKey][participantKey] = correct
+    }
+    setOranjeBeoordeling(next)
+    await saveOranjeBeoordeling(next, groupId)
   }
 
   async function handleAdminType(matchId: number, initials: string, adminType: Exclude<AntwoordType, 'anders'>) {
@@ -363,7 +380,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                                     className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
                                   >
                                     <option value="">→ Kies type</option>
-                                    {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'minuut'] as const).map((t) => (
+                                    {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'minuut', 'open'] as const).map((t) => (
                                       <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
                                     ))}
                                   </select>
@@ -372,7 +389,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                             </div>
                           )}
 
-                          {vraag && effectiefType && (
+                          {vraag && effectiefType && effectiefType !== 'open' && (
                             <AdminCorrectInvoer
                               type={effectiefType}
                               waarde={correctWaarde}
@@ -381,6 +398,34 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                               oppPlayers={oppPlayers}
                               onChange={(v) => handleCorrectAntwoord(id, key, v)}
                             />
+                          )}
+
+                          {vraag && effectiefType === 'open' && (
+                            <div className="flex flex-col gap-1.5 mt-1">
+                              {groupParticipants.map((deelnemer) => {
+                                const dKey = deelnemer.initials.toLowerCase()
+                                const antwoord = alleAntwoorden[dKey]?.[id]?.[key] ?? null
+                                const verdict = oranjeBeoordeling[id]?.[key]?.[dKey] ?? null
+                                if (!antwoord) return null
+                                return (
+                                  <div key={dKey} className="flex items-center gap-2">
+                                    <span className="text-[10px] text-[#555] w-14 shrink-0">{deelnemer.name}</span>
+                                    <span className="flex-1 text-xs text-white truncate">"{antwoord}"</span>
+                                    <button
+                                      onClick={() => handleBeoordeling(id, key, dKey, verdict === true ? null : true)}
+                                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${verdict === true ? 'bg-[#2ECC71]/20 text-[#2ECC71] border border-[#2ECC71]/30' : 'bg-[#252525] text-[#555] hover:text-[#2ECC71]'}`}
+                                    >✓</button>
+                                    <button
+                                      onClick={() => handleBeoordeling(id, key, dKey, verdict === false ? null : false)}
+                                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${verdict === false ? 'bg-[#E74C3C]/20 text-[#E74C3C] border border-[#E74C3C]/30' : 'bg-[#252525] text-[#555] hover:text-[#E74C3C]'}`}
+                                    >✗</button>
+                                  </div>
+                                )
+                              })}
+                              {groupParticipants.every((d) => !alleAntwoorden[d.initials.toLowerCase()]?.[id]?.[key]) && (
+                                <span className="text-[10px] text-[#333] italic">Nog geen antwoorden ingevuld</span>
+                              )}
+                            </div>
                           )}
                         </div>
                       )
@@ -837,6 +882,7 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
       </div>
     )
   }
+  // 'open' wordt afgehandeld via de beoordeling-UI, niet hier
   return null
 }
 

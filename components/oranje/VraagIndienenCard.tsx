@@ -7,7 +7,7 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import { abbrevCountry } from '@/lib/helpers'
 import type { Match } from '@/lib/data/matches'
 
-const TYPES_KEUZE: AntwoordType[] = ['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'minuut', 'anders']
+const TYPES_KEUZE: AntwoordType[] = ['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'minuut', 'open', 'anders']
 
 interface Props {
   match: Match

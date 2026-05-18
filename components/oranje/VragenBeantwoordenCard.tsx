@@ -228,5 +228,17 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
     )
   }
 
+  if (type === 'open') {
+    return (
+      <input
+        type="text"
+        value={waarde ?? ''}
+        onChange={(e) => onChange(e.target.value || null)}
+        placeholder="Typ jouw antwoord…"
+        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#666] outline-none focus:border-[#FF6B00]"
+      />
+    )
+  }
+
   return null
 }

@@ -10,7 +10,7 @@ import type { GroupId } from '@/lib/groups'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
 import type { ParticipantScore } from '@/app/leaderboard/types'
-import type { OranjeVragenMap, OranjeVraag, OranjeCorrectMap, OranjeAntwoordenMap, AntwoordType } from '@/lib/types/oranjeVragen'
+import type { OranjeVragenMap, OranjeVraag, OranjeCorrectMap, OranjeAntwoordenMap, OranjeBeoordeling, AntwoordType } from '@/lib/types/oranjeVragen'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'panenka2026'
 
@@ -91,6 +91,25 @@ export async function saveOranjeCorrect(data: OranjeCorrectMap, groupId: GroupId
   await kvSet(groupKey('oranje_correct', groupId), data)
 }
 
+export async function loadOranjeBeoordeling(groupId: GroupId = 'og'): Promise<OranjeBeoordeling> {
+  return (await kvGet<OranjeBeoordeling>(groupKey('oranje_beoordeling', groupId))) ?? {}
+}
+
+export async function saveOranjeBeoordeling(data: OranjeBeoordeling, groupId: GroupId = 'og'): Promise<void> {
+  await kvSet(groupKey('oranje_beoordeling', groupId), data)
+}
+
+export async function loadAlleOranjeAntwoorden(groupId: GroupId = 'og'): Promise<Record<string, OranjeAntwoordenMap>> {
+  const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
+  const entries = await Promise.all(
+    groupParticipants.map(async (p) => {
+      const antwoorden = await kvGet<OranjeAntwoordenMap>(groupKey('oranje_antwoorden', groupId, p.initials))
+      return [p.initials.toLowerCase(), antwoorden ?? {}] as const
+    })
+  )
+  return Object.fromEntries(entries)
+}
+
 // ── Fantasy statistieken ──────────────────────────────────────────────────
 
 export async function loadFantasyStats(): Promise<FantasyStats> {
@@ -104,15 +123,16 @@ export async function saveFantasyStats(data: FantasyStats): Promise<void> {
 // ── Score berekening ──────────────────────────────────────────────────────
 
 export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Record<string, ParticipantScore>> {
-  const [results, koResults, oranjeResults, oranjeCorrect, fantasyStats] = await Promise.all([
+  const [results, koResults, oranjeResults, oranjeCorrect, beoordeling, fantasyStats] = await Promise.all([
     loadResults(),
     loadKoResults(),
     loadOranjeResults(),
     loadOranjeCorrectAdmin(groupId),
+    loadOranjeBeoordeling(groupId),
     loadFantasyStats(),
   ])
 
-  const heeftNieuweSysteem = Object.keys(oranjeCorrect).length > 0
+  const heeftNieuweSysteem = Object.keys(oranjeCorrect).length > 0 || Object.keys(beoordeling).length > 0
   const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
 
   const scores: Record<string, ParticipantScore> = {}
@@ -136,6 +156,8 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
         oranjeResults,
         heeftNieuweSysteem ? (oranjeAntwoorden ?? {}) : undefined,
         heeftNieuweSysteem ? oranjeCorrect : undefined,
+        p.initials.toLowerCase(),
+        beoordeling,
       )
 
       const fantasy = scoreFantasy(fantasyData?.squad ?? {}, fantasyStats)

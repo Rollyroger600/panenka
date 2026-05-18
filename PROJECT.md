@@ -2127,3 +2127,31 @@ Visuele revisie conform nieuwe stijlrichtlijnen:
 **Oorzaak**: `outputFileTracingIncludes` in `next.config.ts` gebruikte het glob-patroon `./*_WK 2026_Master.xlsx`, dat alleen bestanden matcht die eindigen op `_Master.xlsx`. De ASC-variant eindigt op `_Master_ASC.xlsx` en viel daarmee buiten de bundle.
 
 **Fix**: tweede glob toegevoegd: `./*_WK 2026_Master_ASC.xlsx`. Ook twee redundante expliciete bestandsnamen verwijderd (al gedekt door de OG-glob).
+
+#### Nieuwe master Excel versie 260517 (`260517_WK 2026_Master.xlsx`, `260517_WK 2026_Master_ASC.xlsx`)
+
+Beide bestanden toegevoegd en gepusht naar GitHub zodat Vercel ze meeneemt in de volgende deployment.
+
+### 2026-05-18 — Oranje vragen: antwoordtype 'open' + handmatige beoordeling (Claude Code)
+
+#### Nieuw antwoordtype 'open antwoord' (`lib/types/oranjeVragen.ts`)
+
+`AntwoordType` uitgebreid met `'open'`. Label: "Open antwoord". Beschikbaar voor deelnemers bij het indienen én voor admin bij het omzetten van 'anders'-vragen.
+
+#### Deelnemers-UI: vrij tekstveld (`components/oranje/VragenBeantwoordenCard.tsx`, `components/oranje/VraagIndienenCard.tsx`)
+
+- Deelnemers kunnen "Open antwoord" kiezen als antwoordtype bij het indienen van een vraag
+- Bij het beantwoorden van een 'open' vraag verschijnt een vrij tekstveld
+
+#### Admin handmatige beoordeling (`app/admin/AdminClient.tsx`, `app/actions/admin.ts`, `app/admin/page.tsx`)
+
+Omdat open antwoorden niet 1-op-1 vergeleken kunnen worden (bijv. "Gakpo" vs "Cody Gakpo"), beoordeelt de admin elk antwoord handmatig:
+
+- Per gepubliceerde 'open' vraag toont de admin alle ingevulde antwoorden van deelnemers
+- Per deelnemer: twee knoppen — ✓ (goed) en ✗ (fout). Klik nogmaals om het oordeel te wissen
+- Oordelen worden opgeslagen in Redis onder `oranje_beoordeling_{groupId}` als `OranjeBeoordeling` (`matchId → questionAuthorKey → participantKey → boolean`)
+- Nieuwe server actions: `loadOranjeBeoordeling`, `saveOranjeBeoordeling`, `loadAlleOranjeAntwoorden`
+
+#### Scoring uitgebreid (`lib/scoring.ts`)
+
+`scoreOranjeNieuw` accepteert nu `participantKey` en `beoordeling`. Voor vragen zonder correcte-antwoord-string (type 'open') wordt de beoordeling gecheckt: `beoordeling[matchId][questionKey][participantKey] === true` → +0,5 token. `scoreParticipant` heeft twee extra optionele parameters gekregen en wordt vanuit `computeAndSaveScores` aangeroepen met participantKey + beoordeling.
