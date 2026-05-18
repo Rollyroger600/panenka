@@ -2113,3 +2113,17 @@ Visuele revisie conform nieuwe stijlrichtlijnen:
 - **Wedstrijd-container**: zelfde card-stijl als MatchCard — `rounded-xl border-[#2a2a2a]`, donkere header (`rgba(10,10,10,0.75)`) met matchnummer-badge links, vlaggen + teamnamen in Sporty Pro Light, datum/stadion in muted kleurtje
 - **Contenttabel**: Built Titling (`font-heading`) voor alle rij-inhoud
 - **Deelnemersnamen**: vet + cursief (`font-bold italic`)
+
+### 2026-05-18 — Export fix ASC master & quoteringen update (Claude Code)
+
+#### Quoteringen bijgewerkt (`lib/data/odds.ts`, `lib/data/odds_trends.ts`, `lib/data/knockoutQuotes.ts`, `lib/data/knockoutQuotes_trends.ts`)
+
+`npm run update_quoteringen` uitgevoerd — 49 wedstrijden en 48 landen bijgewerkt via Kambi/Unibet API. Geen gewijzigde quotes t.o.v. vorige run; odds zijn stabiel.
+
+#### Fix: ASC master Excel ontbrak op Vercel (`next.config.ts`)
+
+**Bug**: export voor ASC-groep gaf HTTP 404 "Master Excel voor groep 'ASC' niet gevonden". Het bestand `260516_WK 2026_Master_ASC.xlsx` stond wél in git maar ontbrak op Vercel.
+
+**Oorzaak**: `outputFileTracingIncludes` in `next.config.ts` gebruikte het glob-patroon `./*_WK 2026_Master.xlsx`, dat alleen bestanden matcht die eindigen op `_Master.xlsx`. De ASC-variant eindigt op `_Master_ASC.xlsx` en viel daarmee buiten de bundle.
+
+**Fix**: tweede glob toegevoegd: `./*_WK 2026_Master_ASC.xlsx`. Ook twee redundante expliciete bestandsnamen verwijderd (al gedekt door de OG-glob).

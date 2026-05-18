@@ -4,8 +4,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/export': [
       './*_WK 2026_Master.xlsx',
-      './260428_WK 2026_Master.xlsx',
-      './260509_WK 2026_Master.xlsx',
+      './*_WK 2026_Master_ASC.xlsx',
     ],
   },
 }

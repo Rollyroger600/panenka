@@ -13,7 +13,7 @@ export interface KOTrends {
   winnaar: OddsTrend
 }
 
-export const KO_QUOTES_UPDATED_AT = '2026-05-16T05:12:58.836Z'
+export const KO_QUOTES_UPDATED_AT = '2026-05-18T07:18:41.015Z'
 
 export const KO_TRENDS: Record<string, KOTrends> = {
   'Algerije': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },

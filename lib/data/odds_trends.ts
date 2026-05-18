@@ -7,7 +7,7 @@ export interface MatchTrends {
   scores: Record<string, OddsTrend>
 }
 
-export const ODDS_UPDATED_AT = '2026-05-16T05:12:41.120Z'
+export const ODDS_UPDATED_AT = '2026-05-18T07:18:24.582Z'
 
 export const ODDS_TRENDS: Record<number, MatchTrends> = {
   1: { home: "same", draw: "same", away: "same", scores: { '1 - 1': "same", '4 - 0': "same", '3 - 3': "same", '2 - 1': "same", '5 - 2': "same", '1 - 2': "same", '3 - 2': "same", '0 - 1': "same", '5 - 0': "same", '1 - 0': "same", '0 - 0': "same", '3 - 1': "same", '2 - 2': "same", '0 - 3': "same", '0 - 2': "same", '4 - 2': "same", '6 - 0': "same", '2 - 3': "same", '5 - 1': "same", '4 - 1': "same", '6 - 1': "same", '2 - 0': "same", '3 - 0': "same", '1 - 3': "same" } },
