@@ -845,6 +845,69 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-18 — Matchday slides redesign: MatchSlide (slides 1 & 2) + drawer UX (Claude Code)
+
+#### SlideWrapper (`components/matchday/SlideWrapper.tsx`)
+- Achtergrond verplaatst van SlideWrapper naar MatchdayDrawer (`fixed inset-0`) zodat de achtergrond niet meebeweegt bij scrollen
+- PNG-export: achtergrond tijdelijk via `applyExportBackground()` op het element gezet vóór `toPng()`
+- Dark overlay (rgba 35%) verwijderd
+- `minHeight: 844` verwijderd — slide krimpt naar werkelijke content-hoogte
+- `flex-1` verwijderd van content-div — logo volgt direct na content (geen lege ruimte)
+- Logo: 28px → 48px hoogte, 20px ruimte boven logo
+- Titel: `font-accent font-bold text-3xl text-white tracking-widest` (identiek aan poulefase-titels, geen oranje stroke/shadow)
+- `titleFont="accent"` toegevoegd aan InzetSlide, OverzichtSlide en RanglijstSlide
+
+#### MatchSlide (`components/matchday/slides/MatchSlide.tsx`) — volledig herschreven
+- Donkere card-containers verwijderd — content direct op achtergrond
+- Landen tonen als 3-letter code via `COUNTRY_ABB` lookup
+- Vlaggen: 24×24px (identiek aan MatchCard)
+- Wedstrijdnummer-badge: `w-10 h-9 text-sm`, transparant met witte omlijning
+- Datum/stadion: `font-heading font-light text-xs uppercase tracking-widest` (identiek aan MatchCard)
+- Kolommen: naam (38px) | inzet (20px) | toto 1/X/2 (elk 26px) | uitslag (34px) | quote (26px) | fantasy thuis+uit (flex-1 elk)
+- TOTO: merged header "1 / X / 2"; per deelnemer toont de overeenkomende toto-quotering in de juiste sub-kolom
+- "Uitslag Voorspelling": merged header over uitslag + quote kolommen
+- Fantasy XV header: vlag thuisland gecentreerd boven thuis-kolom, "Fantasy XV" absoluut gecentreerd, vlag uitland gecentreerd boven uit-kolom
+- Verticale lijnen doorlopend via `div`-cellen met `alignSelf: stretch`; geen interne toto-lijnen, geen lijn tussen uitslag/quote, geen lijn tussen fantasy sub-kolommen
+- Kolomtitels 9px, wit
+- Namen links uitgelijnd
+- Spelersnamen via `middleName()` lookup in `WK_PLAYERS`
+- Quoteringen 2 decimalen (`toFixed(2)`)
+- Uitslag-format: "2 - 1" (spaties rondom streepje)
+- Lege cellen tonen leeg (geen `–`)
+- Laatste wedstrijd: `mb-0` (geen ruimte na tabel)
+
+#### MatchdayDrawer (`components/matchday/MatchdayDrawer.tsx`)
+- Achtergrondafbeelding op drawer-root (`fixed inset-0`) — beweegt niet mee bij scrollen
+- Tabbladen vervangen door swipe-navigatie (touch left/right, threshold 50px)
+- Dot-indicators: pill-vorm (actief = breed/oranje), verplaatst naar onderkant scherm
+- Matchday-selector: dropdown vervangen door `‹ MATCHDAY 01 ›` pijltjesnavigatie met witte omlijning, geen donkere achtergrond, 20px ruimte boven
+- "Groep OG" balk verwijderd
+- "MATCHDAY" tekst uit header verwijderd
+- Exportknoppen (Download slide + Alles exporteren) verwijderd — export via Claude Code chat
+- Alle `border-b`/`border-t` separatorlijnen in drawer verwijderd
+
+---
+
+### 2026-05-18 — InzetSlide (slide 3) redesign naar Artboard 2 referentie (Claude Code)
+
+#### InzetSlide (`components/matchday/slides/InzetSlide.tsx`) — volledig herschreven
+- `TotoRow` en `UitslagRow` helpers verwijderd
+- Subtitle op één regel, alles wit: `TOTO VAN DE DAG — DE SPEELRONDE VAN [naam in script 18px]`
+- `titleFont="accent"` behouden (Sporty Pro, identiek aan andere slides)
+- 3-kolommen tabel: **TOTO** (flex 1) | **WEDSTRIJD** (flex 2) | **UITSLAG** (flex 1), alles gecentreerd
+- Enige horizontale lijn: direct onder kolomkoppen; alle rij-borders verwijderd
+- Eerste datarij: `€ 1,00` in kolom 1 en 3, midden leeg
+- `×` separator na `€ 1,00`-rij én tussen elke wedstrijdrij in kolom 1 (`leading-none`, minimale hoogte); kolom 3 geen separator
+- Per wedstrijd: quotering zonder prefix | vlag thuis (50×50) — uitslag — vlag uit (50×50) | quotering
+- Vlagcontainers vaste breedte (56px) zodat vlaggen verticaal uitlijnen ongeacht uitslag-tekst
+- Quoteringen: geen `x`-prefix, gewoon getal met 2 decimalen
+- Alle Built Titling tekst 18px
+- Tabel `mx-8` voor smalle marge
+- Stand van de pot: plain tekst `STAND VAN DE POT:` + bedrag (geen oranje box)
+- Decimaal punt → komma bij potstand
+
+---
+
 ### 2026-05-16 — Matchday feature: dagelijkse visuals + export (Claude Code)
 
 #### Architectuur

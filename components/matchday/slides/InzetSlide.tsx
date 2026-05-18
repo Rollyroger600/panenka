@@ -12,67 +12,13 @@ interface Props {
   group: 'og' | 'asc'
   totoVanDeDagName: string | null
   totoVanDeDagInitials: string | null
-  // Each match: the "toto van de dag" participant's predictions
   matchData: Array<{
     match: MatchSlideData['match']
     quote: MatchdayQuote
-    // prediction from toto van de dag participant
     participantToto: '1' | 'X' | '2' | null
     participantUitslag: string | null
   }>
   potHistory: PotPoint[]
-}
-
-function TotoRow({
-  match,
-  quote,
-  toto,
-}: {
-  match: Props['matchData'][number]['match']
-  quote: MatchdayQuote
-  toto: '1' | 'X' | '2' | null
-}) {
-  return (
-    <div className="flex items-center gap-2 py-1 border-b border-[#ffffff0d] text-xs">
-      <FlagImage country={match.home} size={16} />
-      <span className="text-[#aaa] text-[10px]">vs</span>
-      <FlagImage country={match.away} size={16} />
-      <span className="ml-auto font-bold text-white">
-        {toto ?? '–'}
-      </span>
-      <span
-        className="rounded px-1.5 py-0.5 font-bold text-xs"
-        style={{ background: 'rgba(255,107,0,0.3)', color: '#FF8C33' }}
-      >
-        x {quote.totoOdds.toFixed(2)}
-      </span>
-    </div>
-  )
-}
-
-function UitslagRow({
-  match,
-  quote,
-  uitslag,
-}: {
-  match: Props['matchData'][number]['match']
-  quote: MatchdayQuote
-  uitslag: string | null
-}) {
-  return (
-    <div className="flex items-center gap-2 py-1 border-b border-[#ffffff0d] text-xs">
-      <FlagImage country={match.home} size={16} />
-      <span className="text-[#aaa] text-[10px]">vs</span>
-      <FlagImage country={match.away} size={16} />
-      <span className="ml-auto font-bold text-white">{uitslag ?? '–'}</span>
-      <span
-        className="rounded px-1.5 py-0.5 font-bold text-xs"
-        style={{ background: 'rgba(255,107,0,0.3)', color: '#FF8C33' }}
-      >
-        x {quote.uitslagOdds.toFixed(2)}
-      </span>
-    </div>
-  )
 }
 
 export const InzetSlide = forwardRef<HTMLDivElement, Props>(
@@ -81,56 +27,103 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
     const potStand = group === 'og' ? config.og.potStand : config.asc.potStand
 
     return (
-      <SlideWrapper ref={ref} title={`INZET ${padded}`}>
-        {/* Toto van de dag header */}
-        <div className="text-center mb-3">
-          <p className="text-[#aaa] text-[11px] font-heading tracking-wider uppercase">
-            Toto van de dag — de speelronde van
-          </p>
-          <p
-            className="font-script text-2xl mt-0.5"
-            style={{ color: '#FF6B00' }}
-          >
-            {totoVanDeDagName ?? '–'}
-          </p>
-        </div>
+      <SlideWrapper ref={ref} title={`INZET ${padded}`} titleFont="accent">
 
-        {/* Toto bets (€1,00 combinatie) */}
-        <div className="rounded-lg p-2 mb-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <div className="flex justify-between items-center mb-1">
-            <span className="font-heading text-white text-xs tracking-wide">TOTO</span>
-            <span className="text-[#FF6B00] font-bold text-xs">€ 1,00</span>
-          </div>
-          {matchData.map(({ match, quote, participantToto }) => (
-            <TotoRow key={match.id} match={match} quote={quote} toto={participantToto} />
-          ))}
-        </div>
-
-        {/* Uitslag bets (€1,00 per wedstrijd) */}
-        <div className="rounded-lg p-2 mb-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <div className="flex justify-between items-center mb-1">
-            <span className="font-heading text-white text-xs tracking-wide">UITSLAG</span>
-            <span className="text-[#FF6B00] font-bold text-xs">€ 1,00 <span className="text-[#888] text-[10px]">× {matchData.length}</span></span>
-          </div>
-          {matchData.map(({ match, quote, participantUitslag }) => (
-            <UitslagRow key={match.id} match={match} quote={quote} uitslag={participantUitslag} />
-          ))}
-        </div>
-
-        {/* Pot stand */}
-        <div className="flex items-center justify-between rounded-lg px-3 py-2 mb-3"
-          style={{ background: 'rgba(255,107,0,0.15)', border: '1px solid rgba(255,107,0,0.4)' }}
-        >
-          <span className="font-heading text-white text-xs tracking-wide">STAND VAN DE POT</span>
-          <span className="font-bold text-[#FF6B00] text-lg">
-            € {potStand.toFixed(2)}
+        {/* Subtitle — één regel, alles wit */}
+        <p className="text-center mb-4 leading-snug">
+          <span className="font-heading text-[18px] text-white tracking-wider uppercase">
+            TOTO VAN DE DAG — DE SPEELRONDE VAN{' '}
           </span>
+          <span className="font-script text-[18px] text-white leading-none">
+            {totoVanDeDagName ?? '–'}
+          </span>
+        </p>
+
+        {/* 3-kolommen tabel */}
+        <div className="mb-5 mx-8">
+          {/* Kolomkoppen — enige horizontale lijn */}
+          <div
+            className="flex font-heading text-[18px] text-white tracking-wider uppercase pb-2 mb-0"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}
+          >
+            <div style={{ flex: 1 }} className="text-center">TOTO</div>
+            <div style={{ flex: 2 }} className="text-center">WEDSTRIJD</div>
+            <div style={{ flex: 1 }} className="text-center">UITSLAG</div>
+          </div>
+
+          {/* €1,00 rij */}
+          <div className="flex font-heading text-[18px] text-white font-bold py-3">
+            <div style={{ flex: 1 }} className="text-center">€ 1,00</div>
+            <div style={{ flex: 2 }} />
+            <div style={{ flex: 1 }} className="text-center">€ 1,00</div>
+          </div>
+
+          {/* 'x' tussen €1,00-rij en eerste wedstrijd */}
+          <div className="flex leading-none">
+            <div style={{ flex: 1 }} className="font-heading text-[14px] text-white opacity-50 text-center">×</div>
+            <div style={{ flex: 2 }} />
+            <div style={{ flex: 1 }} />
+          </div>
+
+          {/* Per-wedstrijd rijen met 'x' tussendoor in de TOTO-kolom */}
+          {matchData.flatMap(({ match, quote, participantUitslag }, idx) => {
+            const row = (
+              <div key={match.id} className="flex items-center py-4">
+                {/* Kolom 1: toto quotering */}
+                <div style={{ flex: 1 }} className="font-heading text-[18px] text-white font-bold text-center">
+                  {quote.totoOdds.toFixed(2)}
+                </div>
+
+                {/* Kolom 2: vlag thuis — uitslag — vlag uit */}
+                <div style={{ flex: 2 }} className="flex items-center justify-center">
+                  <div style={{ width: 56 }} className="flex justify-center items-center">
+                    <FlagImage country={match.home} size={50} />
+                  </div>
+                  <div style={{ width: 52, textAlign: 'center' }} className="font-heading text-[18px] text-white font-bold">
+                    {participantUitslag
+                      ? participantUitslag.replace('-', ' - ')
+                      : '–'}
+                  </div>
+                  <div style={{ width: 56 }} className="flex justify-center items-center">
+                    <FlagImage country={match.away} size={50} />
+                  </div>
+                </div>
+
+                {/* Kolom 3: uitslag quotering */}
+                <div style={{ flex: 1 }} className="font-heading text-[18px] text-white font-bold text-center">
+                  {quote.uitslagOdds.toFixed(2)}
+                </div>
+              </div>
+            )
+
+            if (idx < matchData.length - 1) {
+              return [row, (
+                <div key={`sep-${match.id}`} className="flex leading-none">
+                  <div style={{ flex: 1 }} className="font-heading text-[14px] text-white opacity-50 text-center">×</div>
+                  <div style={{ flex: 2 }} />
+                  <div style={{ flex: 1 }} />
+                </div>
+              )]
+            }
+            return [row]
+          })}
         </div>
 
-        {/* Pot evolution chart */}
+        {/* Stand van de pot */}
+        <div className="mb-3">
+          <p className="font-heading text-[18px] text-white tracking-wider uppercase mb-1">
+            STAND VAN DE POT:
+          </p>
+          <p className="font-heading text-[18px] text-white font-bold">
+            € {potStand.toFixed(2).replace('.', ',')}
+          </p>
+        </div>
+
+        {/* Pot evolutie grafiek */}
         <div className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.04)' }}>
           <PotChart data={potHistory} totalMatchdays={27} />
         </div>
+
       </SlideWrapper>
     )
   }
