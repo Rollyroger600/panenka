@@ -9,100 +9,118 @@ interface Props {
   rows: MatchdayScoreRow[]
 }
 
-function ScoreCell({ value }: { value: number }) {
+const VLINE = '1px solid rgba(255,255,255,0.14)'
+const HDR_BOTTOM = '1px solid rgba(255,255,255,0.15)'
+const ROW_BOTTOM = '1px solid rgba(255,255,255,0.05)'
+
+// Eerste kolom vaste breedte; overige kolommen verdelen de rest gelijkmatig
+const NAAM: React.CSSProperties = { width: 50, flexShrink: 0 }
+const COL:  React.CSSProperties = { flex: 1, minWidth: 0 }
+
+function fmt(v: number)    { return v > 0 ? v.toFixed(1) : '' }
+function fmtInt(v: number) { return v > 0 ? String(v) : '' }
+
+// ── Gedeelde cel-componenten ───────────────────────────────────────────────
+
+function HdrNaam() {
   return (
-    <td className="text-right text-[9px] text-[#ddd] px-1 py-0.5 tabular-nums">
-      {value > 0 ? value.toFixed(1) : '–'}
-    </td>
+    <div style={{ ...NAAM, borderRight: VLINE, fontSize: 9, color: '#fff' }} />
   )
 }
 
-function IntCell({ value }: { value: number }) {
+function HdrCell({ label, last = false }: { label: string; last?: boolean }) {
   return (
-    <td className="text-right text-[9px] text-[#ddd] px-1 py-0.5 tabular-nums">
-      {value > 0 ? value : '–'}
-    </td>
+    <div
+      style={{ ...COL, borderRight: last ? undefined : VLINE, fontSize: 9, color: '#fff' }}
+      className="flex items-center justify-center"
+    >
+      {label}
+    </div>
   )
 }
+
+function DataNaam({ name }: { name: string }) {
+  return (
+    <div
+      style={{ ...NAAM, borderRight: VLINE, paddingTop: 1, paddingBottom: 1 }}
+      className="font-heading text-[9px] text-white font-bold italic flex items-center overflow-hidden px-0.5"
+    >
+      <span className="truncate">{name}</span>
+    </div>
+  )
+}
+
+function DataCell({ value, last = false, bold = false }: { value: string; last?: boolean; bold?: boolean }) {
+  return (
+    <div
+      style={{ ...COL, borderRight: last ? undefined : VLINE, paddingTop: 1, paddingBottom: 1 }}
+      className={`font-heading text-[9px] text-white flex items-center justify-center${bold ? ' font-bold' : ''}`}
+    >
+      {value}
+    </div>
+  )
+}
+
+// ── Slide ─────────────────────────────────────────────────────────────────
 
 export const OverzichtSlide = forwardRef<HTMLDivElement, Props>(
   ({ matchdayId, rows }, ref) => {
     const padded = String(matchdayId).padStart(2, '0')
 
     return (
-      <SlideWrapper ref={ref} title={`OVERZICHT ${padded}`}>
-        {/* Table 1: match score breakdown */}
-        <div className="mb-2 overflow-x-auto">
-          <table className="w-full" style={{ fontSize: 8 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,107,0,0.4)' }}>
-                <th className="text-left text-[#FF6B00] px-1 py-0.5 font-heading text-[8px]">Naam</th>
-                <th className="text-right text-[#FF6B00] px-1 py-0.5 font-heading text-[8px]">Poule</th>
-                <th className="text-right text-[#FFB800] px-1 py-0.5 font-heading text-[8px]">KO</th>
-                <th className="text-right text-[#2ECC71] px-1 py-0.5 font-heading text-[8px]">FXV</th>
-                <th className="text-right text-[#aaa] px-1 py-0.5 font-heading text-[8px]">T✓</th>
-                <th className="text-right text-[#aaa] px-1 py-0.5 font-heading text-[8px]">U✓</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.initials} className="border-b border-[#ffffff0a]">
-                  <td className="text-white px-1 py-0.5 text-[9px] font-bold">{row.name}</td>
-                  <ScoreCell value={row.poulefase} />
-                  <ScoreCell value={row.kofase} />
-                  <ScoreCell value={row.fantasy} />
-                  <IntCell value={row.totoGoed} />
-                  <IntCell value={row.uitslagGoed} />
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <SlideWrapper ref={ref} title={`OVERZICHT ${padded}`} titleFont="accent" minHeight={720}>
 
-        {/* Table 2: KO breakdown */}
-        <div className="mb-2 overflow-x-auto">
-          <table className="w-full" style={{ fontSize: 8 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(61,139,219,0.4)' }}>
-                <th className="text-left text-[#3498DB] px-1 py-0.5 font-heading text-[8px]">Naam</th>
-                <th className="text-right text-[#3498DB] px-1 py-0.5 font-heading text-[8px]">R32</th>
-                <th className="text-right text-[#3498DB] px-1 py-0.5 font-heading text-[8px]">R16</th>
-                <th className="text-right text-[#3498DB] px-1 py-0.5 font-heading text-[8px]">KF</th>
-                <th className="text-right text-[#3498DB] px-1 py-0.5 font-heading text-[8px]">HF</th>
-                <th className="text-right text-[#3498DB] px-1 py-0.5 font-heading text-[8px]">Fin</th>
-                <th className="text-right text-[#3498DB] px-1 py-0.5 font-heading text-[8px]">Win</th>
-                <th className="text-right text-[#FF6B00] px-1 py-0.5 font-heading text-[8px] font-bold">Tot</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.initials} className="border-b border-[#ffffff0a]">
-                  <td className="text-white px-1 py-0.5 text-[9px]">{row.name}</td>
-                  <ScoreCell value={row.koR32} />
-                  <ScoreCell value={row.koR16} />
-                  <ScoreCell value={row.koKF} />
-                  <ScoreCell value={row.koHF} />
-                  <ScoreCell value={row.koFinale} />
-                  <ScoreCell value={row.koWinnaar} />
-                  <td className="text-right text-[9px] text-[#FF6B00] font-bold px-1 py-0.5 tabular-nums">
-                    {row.total > 0 ? row.total.toFixed(1) : '–'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Stacked bar chart */}
-        <div className="rounded-lg p-1" style={{ background: 'rgba(255,255,255,0.04)' }}>
-          <div className="text-[8px] text-[#888] mb-1 flex gap-3 justify-center">
-            <span><span className="inline-block w-2 h-2 rounded-sm mr-0.5" style={{ background: '#FF6B00' }} />Poule</span>
-            <span><span className="inline-block w-2 h-2 rounded-sm mr-0.5" style={{ background: '#FFB800' }} />KO fase</span>
-            <span><span className="inline-block w-2 h-2 rounded-sm mr-0.5" style={{ background: '#2ECC71' }} />Fantasy</span>
-            <span><span className="inline-block w-2 h-2 rounded-sm mr-0.5" style={{ background: '#3498DB' }} />Doorgaande landen</span>
+        {/* Tabel 1: Poule | KO | FXV | Toto | Uitsl */}
+        <div className="mb-4" style={{ paddingTop: 8 }}>
+          <div className="flex font-heading uppercase" style={{ borderBottom: HDR_BOTTOM, paddingBottom: 2 }}>
+            <HdrNaam />
+            <HdrCell label="Poule" />
+            <HdrCell label="KO" />
+            <HdrCell label="FXV" />
+            <HdrCell label="Toto" />
+            <HdrCell label="Uitsl" last />
           </div>
-          <ScoreStackedChart rows={rows} />
+          {rows.map((row) => (
+            <div key={row.initials} className="flex" style={{ borderBottom: ROW_BOTTOM }}>
+              <DataNaam name={row.name} />
+              <DataCell value={fmt(row.poulefase)} />
+              <DataCell value={fmt(row.kofase)} />
+              <DataCell value={fmt(row.fantasy)} />
+              <DataCell value={fmtInt(row.totoGoed)} />
+              <DataCell value={fmtInt(row.uitslagGoed)} last />
+            </div>
+          ))}
         </div>
+
+        {/* Tabel 2: R32 | R16 | KF | HF | Fin | Win | Totaal */}
+        <div className="mb-4">
+          <div className="flex font-heading uppercase" style={{ borderBottom: HDR_BOTTOM, paddingBottom: 2 }}>
+            <HdrNaam />
+            <HdrCell label="R 32" />
+            <HdrCell label="R 16" />
+            <HdrCell label="KF" />
+            <HdrCell label="HF" />
+            <HdrCell label="Fin" />
+            <HdrCell label="Win" />
+            <HdrCell label="Totaal" last />
+          </div>
+          {rows.map((row) => (
+            <div key={row.initials} className="flex" style={{ borderBottom: ROW_BOTTOM }}>
+              <DataNaam name={row.name} />
+              <DataCell value={fmt(row.koR32)} />
+              <DataCell value={fmt(row.koR16)} />
+              <DataCell value={fmt(row.koKF)} />
+              <DataCell value={fmt(row.koHF)} />
+              <DataCell value={fmt(row.koFinale)} />
+              <DataCell value={fmt(row.koWinnaar)} />
+              <DataCell value={fmt(row.total)} last bold />
+            </div>
+          ))}
+        </div>
+
+        {/* Gestapeld staafdiagram */}
+        <ScoreStackedChart rows={rows} />
+
       </SlideWrapper>
     )
   }

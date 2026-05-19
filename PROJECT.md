@@ -845,6 +845,43 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-19 — OverzichtSlide (slide 4) redesign + logo-architectuur (Claude Code)
+
+#### MatchdayDrawer (`components/matchday/MatchdayDrawer.tsx`)
+- Logo verplaatst uit SlideWrapper naar MatchdayDrawer als vaste UI-rij boven de dot-indicators — altijd op dezelfde schermhoogte ongeacht slide-content
+- `addExportLogo()` / `removeExportLogo()`: logo tijdelijk als absoluut element in de slide-div geïnjecteerd vóór PNG-capture
+- Logo zweeft boven content; content mag achter logo schuiven
+
+#### SlideWrapper (`components/matchday/SlideWrapper.tsx`)
+- Logo volledig verwijderd uit SlideWrapper
+- `logoPaddingTop` prop verwijderd
+- `minHeight` prop behouden; `flex: 1` op content-area
+- Alle 5 slides: `minHeight={720}`
+
+#### InzetSlide (slide 3) — verfijningen
+- Subtitel: 8px padding boven; naam deelnemer 26px script
+- `×` separators 20px
+- Stand van de pot gecentreerd
+- Minder ruimte onder tabel en potstand
+- PotChart: hoogte 140px, witte gridlijnen doorlopend (`rgba(255,255,255,0.15)`, `strokeDasharray="0"`), witte astekst
+
+#### OverzichtSlide (slide 4) — volledig herschreven
+- Zelfde stijl als MatchSlide: flex-rijen, vaste pixel-breedtes, witte tekst, geen card-containers
+- Eerste kolom vaste breedte 50px (`NAAM`); overige kolommen `flex: 1` gelijkmatig verdeeld
+- `HdrNaam` / `DataNaam` / `HdrCell` / `DataCell` helper-componenten met identieke stijl → verticale gridlijnen liggen in lijn
+- Geen Naam-label in kolomtitel (cel leeg); lege cellen bij waarde 0
+- Tabel 1: (leeg) | Poule | KO | FXV | Toto | Uitsl — 8px padding boven
+- Tabel 2: (leeg) | R 32 | R 16 | KF | HF | Fin | Win | **Totaal** (bold)
+- Beide tabellen: `VLINE = rgba(255,255,255,0.14)`, header-bottom `rgba(255,255,255,0.15)`, rij-bottom `rgba(255,255,255,0.05)`
+
+#### ScoreStackedChart (`components/matchday/charts/ScoreStackedChart.tsx`)
+- Initialen deelnemers ipv voornamen op X-as
+- Witte astekst (7px), doorlopende witte gridlijnen (identiek aan PotChart)
+- `Legend` import verwijderd (ongebruikt)
+- Hoogte: 120px
+
+---
+
 ### 2026-05-18 — Matchday slides redesign: MatchSlide (slides 1 & 2) + drawer UX (Claude Code)
 
 #### SlideWrapper (`components/matchday/SlideWrapper.tsx`)

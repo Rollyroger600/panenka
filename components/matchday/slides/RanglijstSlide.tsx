@@ -18,7 +18,7 @@ export const RanglijstSlide = forwardRef<HTMLDivElement, Props>(
     const participants = rows.map((r) => ({ initials: r.initials, name: r.name }))
 
     return (
-      <SlideWrapper ref={ref} title={`RANGLIJST ${padded}`}>
+      <SlideWrapper ref={ref} title={`RANGLIJST ${padded}`} titleFont="accent" minHeight={720}>
         {/* Progress line chart */}
         <div className="rounded-lg p-2 mb-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
           <p className="text-[#888] text-[9px] text-center mb-1 font-heading tracking-wide uppercase">

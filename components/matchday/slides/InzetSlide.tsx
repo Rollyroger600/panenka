@@ -27,20 +27,20 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
     const potStand = group === 'og' ? config.og.potStand : config.asc.potStand
 
     return (
-      <SlideWrapper ref={ref} title={`INZET ${padded}`} titleFont="accent">
+      <SlideWrapper ref={ref} title={`INZET ${padded}`} titleFont="accent" minHeight={720}>
 
         {/* Subtitle — één regel, alles wit */}
-        <p className="text-center mb-4 leading-snug">
+        <p className="text-center mb-4 leading-snug" style={{ paddingTop: 8 }}>
           <span className="font-heading text-[18px] text-white tracking-wider uppercase">
             TOTO VAN DE DAG — DE SPEELRONDE VAN{' '}
           </span>
-          <span className="font-script text-[18px] text-white leading-none">
+          <span className="font-script text-[26px] text-white leading-none">
             {totoVanDeDagName ?? '–'}
           </span>
         </p>
 
         {/* 3-kolommen tabel */}
-        <div className="mb-5 mx-8">
+        <div className="mb-3 mx-8">
           {/* Kolomkoppen — enige horizontale lijn */}
           <div
             className="flex font-heading text-[18px] text-white tracking-wider uppercase pb-2 mb-0"
@@ -60,15 +60,16 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
 
           {/* 'x' tussen €1,00-rij en eerste wedstrijd */}
           <div className="flex leading-none">
-            <div style={{ flex: 1 }} className="font-heading text-[14px] text-white opacity-50 text-center">×</div>
+            <div style={{ flex: 1 }} className="font-heading text-[20px] text-white opacity-50 text-center">×</div>
             <div style={{ flex: 2 }} />
             <div style={{ flex: 1 }} />
           </div>
 
           {/* Per-wedstrijd rijen met 'x' tussendoor in de TOTO-kolom */}
           {matchData.flatMap(({ match, quote, participantUitslag }, idx) => {
+            const isLast = idx === matchData.length - 1
             const row = (
-              <div key={match.id} className="flex items-center py-4">
+              <div key={match.id} className={`flex items-center py-1 ${isLast ? 'pb-4' : ''}`}>
                 {/* Kolom 1: toto quotering */}
                 <div style={{ flex: 1 }} className="font-heading text-[18px] text-white font-bold text-center">
                   {quote.totoOdds.toFixed(2)}
@@ -99,7 +100,7 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
             if (idx < matchData.length - 1) {
               return [row, (
                 <div key={`sep-${match.id}`} className="flex leading-none">
-                  <div style={{ flex: 1 }} className="font-heading text-[14px] text-white opacity-50 text-center">×</div>
+                  <div style={{ flex: 1 }} className="font-heading text-[20px] text-white opacity-50 text-center">×</div>
                   <div style={{ flex: 2 }} />
                   <div style={{ flex: 1 }} />
                 </div>
@@ -110,7 +111,7 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
         </div>
 
         {/* Stand van de pot */}
-        <div className="mb-3">
+        <div className="mb-1 text-center">
           <p className="font-heading text-[18px] text-white tracking-wider uppercase mb-1">
             STAND VAN DE POT:
           </p>
@@ -120,7 +121,7 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
         </div>
 
         {/* Pot evolutie grafiek */}
-        <div className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.04)' }}>
+        <div className="px-2">
           <PotChart data={potHistory} totalMatchdays={27} />
         </div>
 
