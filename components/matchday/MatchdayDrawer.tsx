@@ -276,6 +276,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
                   rows={data.scores}
                   scoreHistory={data.scoreHistory}
                   totalMatchdays={MATCHDAY_COUNT}
+                  exporting={exporting}
                 />
               </div>
             </div>

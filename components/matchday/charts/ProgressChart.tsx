@@ -4,24 +4,23 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { ScoreHistoryPoint } from '@/lib/types/matchday'
-import type { MatchdayScoreRow } from '@/lib/matchday'
 
 interface Props {
   history: ScoreHistoryPoint[]
   participants: Array<{ initials: string; name: string }>
   totalMatchdays: number
+  height?: number
+  showLegend?: boolean
+  showLineLabels?: boolean
 }
 
-// Color palette for participant lines
 const LINE_COLORS = [
   '#FF6B00', '#FFB800', '#2ECC71', '#3498DB', '#9B59B6',
   '#E74C3C', '#1ABC9C', '#F39C12', '#D35400', '#27AE60',
   '#2980B9', '#8E44AD', '#C0392B', '#16A085', '#F1C40F',
-  '#7F8C8D',
 ]
 
-export function ProgressChart({ history, participants, totalMatchdays }: Props) {
-  // Build chart data: one row per matchday
+export function ProgressChart({ history, participants, totalMatchdays, height = 180, showLegend = false, showLineLabels = false }: Props) {
   const chartData = Array.from({ length: totalMatchdays }, (_, i) => {
     const md = i + 1
     const point = history.find((h) => h.matchdayId === md)
@@ -32,35 +31,77 @@ export function ProgressChart({ history, participants, totalMatchdays }: Props) 
     return row
   })
 
+  // Last non-null index per participant for end-of-line labels
+  const lastNonNullIdx: Record<string, number> = {}
+  if (showLineLabels) {
+    for (const p of participants) {
+      let last = -1
+      for (let i = 0; i < chartData.length; i++) {
+        if (chartData[i][p.initials] !== null) last = i
+      }
+      lastNonNullIdx[p.initials] = last
+    }
+  }
+
   return (
-    <ResponsiveContainer width="100%" height={180}>
-      <LineChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-        <XAxis
-          dataKey="md"
-          tick={{ fill: '#888', fontSize: 7 }}
-          interval={4}
-          tickSize={3}
-        />
-        <YAxis tick={{ fill: '#888', fontSize: 7 }} tickSize={3} />
-        <Tooltip
-          contentStyle={{ background: '#1a1a1a', border: '1px solid #333', fontSize: 9 }}
-          labelFormatter={(l) => `MD ${l}`}
-          formatter={(v, name) => [(v as number)?.toFixed(1) ?? '–', name as string]}
-        />
-        {participants.map((p, i) => (
-          <Line
-            key={p.initials}
-            type="monotone"
-            dataKey={p.initials}
-            stroke={LINE_COLORS[i % LINE_COLORS.length]}
-            strokeWidth={1.5}
-            dot={false}
-            connectNulls={false}
-            name={p.name.split(' ')[0]}
+    <div>
+      <ResponsiveContainer width="100%" height={height}>
+        <LineChart data={chartData} margin={{ top: 4, right: showLineLabels ? 44 : 4, left: -20, bottom: 0 }}>
+          <CartesianGrid stroke="rgba(255,255,255,0.15)" strokeDasharray="0" vertical={true} horizontal={true} />
+          <XAxis dataKey="md" tick={{ fill: '#fff', fontSize: 7 }} interval={4} tickSize={3} />
+          <YAxis tick={{ fill: '#fff', fontSize: 7 }} tickSize={3} />
+          <Tooltip
+            contentStyle={{ background: '#1a1a1a', border: '1px solid #333', fontSize: 9 }}
+            labelFormatter={(l) => `MD ${l}`}
+            formatter={(v, name) => [(v as number)?.toFixed(1) ?? '–', name as string]}
           />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
+          {participants.map((p, i) => {
+            const color     = LINE_COLORS[i % LINE_COLORS.length]
+            const firstName = p.name.split(' ')[0]
+            const lastIdx   = lastNonNullIdx[p.initials] ?? -1
+            return (
+              <Line
+                key={p.initials}
+                type="monotone"
+                dataKey={p.initials}
+                stroke={color}
+                strokeWidth={1.5}
+                dot={false}
+                connectNulls={false}
+                name={firstName}
+                label={showLineLabels ? (props: any) => {
+                  if (props.index !== lastIdx || props.value == null) return <g />
+                  return (
+                    <text
+                      x={props.x + 4}
+                      y={props.y}
+                      fill={color}
+                      fontSize={7}
+                      dominantBaseline="middle"
+                      fontFamily='"Built Titling", sans-serif'
+                    >
+                      {firstName}
+                    </text>
+                  )
+                } : undefined}
+              />
+            )
+          })}
+        </LineChart>
+      </ResponsiveContainer>
+
+      {showLegend && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '2px 4px', marginTop: 6 }}>
+          {participants.map((p, i) => (
+            <div key={p.initials} style={{ display: 'flex', alignItems: 'center', gap: 3, overflow: 'hidden' }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: LINE_COLORS[i % LINE_COLORS.length], flexShrink: 0 }} />
+              <span style={{ fontSize: 8, color: '#fff', fontFamily: '"Built Titling", sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {p.name.split(' ')[0]}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

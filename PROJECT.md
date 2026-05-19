@@ -845,6 +845,28 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-19 — RanglijstSlide (slide 5) redesign + ProgressChart uitbreidingen (Claude Code)
+
+#### RanglijstSlide (`components/matchday/slides/RanglijstSlide.tsx`) — volledig herschreven
+- Geen card-containers; content direct op achtergrond
+- ProgressChart: hoogte 500px, `showLegend` (5-koloms grid, gekleurde blokjes + voornamen) en `showLineLabels` (voornaam bij laatste datapunt per lijn)
+- Toggle voor 7 statistieken: Totaal | Poule | KO | FXV | Landen | Toto's | Uitsl. (standaard: Totaal); 12px font-heading knoppen
+- Toggle verborgen bij export (`exporting` prop); statistiek geforceerd op Totaal bij export
+- Tussenstand: 4-koloms kolom-major grid (posities 1→4 kolom 1, 5→8 kolom 2, etc.)
+- Stijl identiek aan andere slides: `VLINE`, `HDR_BOTTOM`, `ROW_BOTTOM`; 9px font-heading tekst
+- Rank | voornaam | score per cel; lege cellen bij waarde 0
+- `gap-3` + `borderLeft VLINE` als scheiding tussen de 4 blokken
+
+#### ProgressChart (`components/matchday/charts/ProgressChart.tsx`)
+- `showLineLabels` prop: voornaam als SVG `<text>` op het laatste non-null datapunt per lijn, in lijnkleur (7px, Built Titling)
+- Rechter margin 44px wanneer `showLineLabels` actief; anders 4px
+- `showLegend` prop: 5-koloms grid met gekleurde blokjes + voornamen (8px)
+
+#### MatchdayDrawer (`components/matchday/MatchdayDrawer.tsx`)
+- `exporting={exporting}` doorgegeven aan RanglijstSlide
+
+---
+
 ### 2026-05-19 — OverzichtSlide (slide 4) redesign + logo-architectuur (Claude Code)
 
 #### MatchdayDrawer (`components/matchday/MatchdayDrawer.tsx`)
