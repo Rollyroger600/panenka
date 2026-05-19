@@ -3,6 +3,7 @@ import React, { forwardRef } from 'react'
 
 interface Props {
   title?: string
+  titleDecoration?: React.ReactNode
   children: React.ReactNode
   className?: string
   titleFont?: 'heading' | 'accent'
@@ -16,7 +17,7 @@ interface Props {
 // so it always appears at the same screen position across all slides.
 // During PNG export, the logo is temporarily injected into the slide div.
 export const SlideWrapper = forwardRef<HTMLDivElement, Props>(
-  ({ title, children, className = '', titleFont = 'heading', minHeight, exporting = false }, ref) => {
+  ({ title, titleDecoration, children, className = '', titleFont = 'heading', minHeight, exporting = false }, ref) => {
     return (
       <div
         ref={ref}
@@ -32,12 +33,13 @@ export const SlideWrapper = forwardRef<HTMLDivElement, Props>(
       >
         {/* Title */}
         {title && (
-          <div className="relative z-10 pt-6 pb-2 text-center">
+          <div className="relative z-10 pt-6 pb-2 flex items-center justify-center gap-2">
             <h1
               className={`${titleFont === 'accent' ? 'font-accent font-bold' : 'font-heading'} text-3xl text-white tracking-widest`}
             >
               {title}
             </h1>
+            {titleDecoration}
           </div>
         )}
 

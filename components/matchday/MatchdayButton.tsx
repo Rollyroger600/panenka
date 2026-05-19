@@ -18,13 +18,12 @@ export function MatchdayButton({ group }: Props) {
         title="Matchday"
       >
         <span style={{ animation: 'matchday-bounce 0.7s ease-in-out infinite alternate', display: 'inline-flex' }}>
-          <svg
-            viewBox="0 0 24 24" width={17} height={17} fill="none" stroke="#999" strokeWidth={1.8}
-            style={{ animation: 'matchday-spin 1.4s linear infinite' }}
-          >
-            <circle cx="12" cy="12" r="10" />
-            <polygon points="12,2 15.5,8.5 22,9.3 17,14 18.5,20.5 12,17 5.5,20.5 7,14 2,9.3 8.5,8.5" fill="none" />
-          </svg>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icons/icon-ball.svg"
+            width={17} height={17} alt=""
+            style={{ animation: 'matchday-spin 1.4s linear infinite', opacity: 0.6, filter: 'brightness(0.7)' }}
+          />
         </span>
       </button>
 

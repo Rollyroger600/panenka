@@ -845,6 +845,26 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-19 — LiveSlide visuele verfijningen (Claude Code)
+
+#### SlideWrapper (`components/matchday/SlideWrapper.tsx`)
+- `titleDecoration?: React.ReactNode` prop toegevoegd — rendert inline naast de `<h1>` in een flex-container; gebruikt door LiveSlide voor de pulserende rode stip
+
+#### LiveSlide (`components/matchday/slides/LiveSlide.tsx`)
+- **Titel**: eigen titel-div vervangen door `SlideWrapper title="LIVE MATCH" titleFont="accent"` — zelfde stijl als alle andere slides (Sporty Pro Bold, 3xl)
+- **Rode stip**: via `titleDecoration={<span className="live-pulse-dot" />}` naast de titel
+- **Score-rij**: `pt-2` padding boven de vlaggen/score-rij
+- **Minuut**: gecentreerd op eigen regel onder de score, 14px font-heading wit; `mt-1` padding erboven
+- **Doelpunten**: verticaal gestapeld (was horizontaal); 3-koloms grid (`1fr 20px 1fr`) — thuisteam rechts uitgelijnd links, uitteam links uitgelijnd rechts, voetbalicoon gecentreerd; `gap-y-1.5` tussen rijen; tekst 14px wit
+- **Voetbalicoon doelpunten**: `icon-ball.svg` (was inline SVG), 16px, `opacity: 0.55`
+- **Tabelkoppen**: wit + 12px (was muted + 9px)
+- **Tabelcontent**: alle cellen 12px (was 9–10px)
+
+#### MatchdayButton (`components/matchday/MatchdayButton.tsx`)
+- Geanimeerd voetbalicoon vervangen door `icon-ball.svg` (was inline SVG circle+polygon); bounce + spin animaties behouden; `opacity: 0.6 + brightness(0.7)` voor grijzige look
+
+---
+
 ### 2026-05-19 — Matchday export-rework + LiveSlide + visuele verfijningen (Claude Code)
 
 #### Export-architectuur (robuust, uniform, WhatsApp HD)

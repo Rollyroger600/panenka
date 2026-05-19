@@ -32,15 +32,13 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
     const padded = String(matchdayId).padStart(2, '0')
 
     return (
-      <SlideWrapper ref={ref} minHeight={720}>
-        {/* Title row with live indicator */}
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="live-pulse-dot" />
-          <span className="font-heading text-white text-[13px] tracking-widest uppercase">
-            Live — Matchday {padded}
-          </span>
-        </div>
-
+      <SlideWrapper
+        ref={ref}
+        title="LIVE MATCH"
+        titleFont="accent"
+        titleDecoration={<span className="live-pulse-dot" />}
+        minHeight={720}
+      >
         {liveMatches.map((lm) => {
           const match = MATCHES.find((m) => m.id === lm.matchId)
           if (!match) return null
@@ -52,7 +50,7 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
           return (
             <div key={lm.matchId} className="mb-4">
               {/* Score header */}
-              <div className="flex items-center justify-center gap-3 mb-1">
+              <div className="flex items-center justify-center gap-3 pt-2">
                 <FlagImage country={match.home} size={28} />
                 <span className="font-accent font-light text-base text-white">{homeAbb}</span>
                 <span className="font-heading text-white text-xl" style={{ minWidth: 48, textAlign: 'center' }}>
@@ -60,27 +58,44 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
                 </span>
                 <span className="font-accent font-light text-base text-white">{awayAbb}</span>
                 <FlagImage country={match.away} size={28} />
-                {minuteStr && (
-                  <span className="font-heading text-[11px]" style={{ color: MUTED, minWidth: 28 }}>
-                    {minuteStr}
-                  </span>
-                )}
               </div>
+
+              {/* Minuut */}
+              {minuteStr && (
+                <div className="text-center font-heading text-[14px] text-white mt-1 mb-1">
+                  {minuteStr}
+                </div>
+              )}
 
               {/* Goal scorers */}
               {lm.goals.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 mb-3">
+                <div className="flex flex-col gap-y-1.5 mb-3">
                   {lm.goals.map((g, i) => (
-                    <span key={i} className="font-heading text-[9px]" style={{ color: MUTED }}>
-                      ⚽ {g.minute}' {g.scorer}{goalTypeLabel(g.type)}
-                    </span>
+                    <div key={i} className="grid items-center" style={{ gridTemplateColumns: '1fr 20px 1fr' }}>
+                      {g.team === 'home' ? (
+                        <span className="font-heading text-[14px] text-right text-white pr-2">
+                          {g.minute}' {g.scorer}{goalTypeLabel(g.type)}
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/icons/icon-ball.svg" width={16} height={16} alt="" style={{ display: 'block', margin: '0 auto', opacity: 0.55 }} />
+                      {g.team === 'away' ? (
+                        <span className="font-heading text-[14px] text-left text-white pl-2">
+                          {g.scorer}{goalTypeLabel(g.type)} {g.minute}'
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
 
               {/* Participant table */}
               <div style={{ borderBottom: HDR_BOTTOM, paddingBottom: 3, marginBottom: 3 }}>
-                <div className="grid font-heading text-[9px] uppercase tracking-wider" style={{ color: MUTED, gridTemplateColumns: '1fr 28px 56px 48px 44px' }}>
+                <div className="grid font-heading text-[12px] uppercase tracking-wider text-white" style={{ gridTemplateColumns: '1fr 28px 56px 48px 44px' }}>
                   <span>Deelnemer</span>
                   <span className="text-center">Toto</span>
                   <span className="text-center">Uitslag</span>
@@ -95,13 +110,13 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
                   className="grid items-center"
                   style={{ gridTemplateColumns: '1fr 28px 56px 48px 44px', borderBottom: ROW_BOTTOM, paddingTop: 3, paddingBottom: 3 }}
                 >
-                  <span className="font-heading text-[10px] text-white truncate">
+                  <span className="font-heading text-[12px] text-white truncate">
                     {row.name.split(' ')[0]}
                   </span>
 
                   {/* Toto */}
                   <span
-                    className="font-heading text-[10px] text-center"
+                    className="font-heading text-[12px] text-center"
                     style={{ color: row.totoCorrect ? '#4ade80' : row.toto ? '#f87171' : MUTED }}
                   >
                     {row.totoCorrect ? '✓' : row.toto ? totoLabel(row.toto) : '—'}
@@ -109,14 +124,14 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
 
                   {/* Uitslag */}
                   <span
-                    className="font-heading text-[9px] text-center"
+                    className="font-heading text-[12px] text-center"
                     style={{ color: row.uitslagCorrect ? '#4ade80' : row.uitslag ? MUTED : MUTED }}
                   >
                     {row.uitslagCorrect ? `✓ ${row.uitslag}` : (row.uitslag ?? '—')}
                   </span>
 
                   {/* Fantasy */}
-                  <span className="font-heading text-[9px] text-center" style={{ color: row.potentialFantasyPoints > 0 ? '#facc15' : MUTED }}>
+                  <span className="font-heading text-[12px] text-center" style={{ color: row.potentialFantasyPoints > 0 ? '#facc15' : MUTED }}>
                     {row.fantasyGoals > 0 || row.fantasyAssists > 0
                       ? `${row.fantasyGoals}G ${row.fantasyAssists}A`
                       : '—'}
@@ -124,7 +139,7 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
 
                   {/* Total potential */}
                   <span
-                    className="font-heading text-[10px] text-right"
+                    className="font-heading text-[12px] text-right"
                     style={{ color: row.totalPotential > 0 ? '#FF6B00' : MUTED }}
                   >
                     {row.totalPotential > 0 ? row.totalPotential.toFixed(1) : '—'}
