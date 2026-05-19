@@ -13,6 +13,10 @@ export async function kvSet(key: string, value: unknown): Promise<void> {
   await redis.set(key, JSON.stringify(value))
 }
 
+export async function kvSetEx(key: string, value: unknown, ttlSeconds: number): Promise<void> {
+  await redis.set(key, JSON.stringify(value), { ex: ttlSeconds })
+}
+
 export function participantKey(section: string, initials: string): string {
   return `${section}:${initials.toLowerCase()}`
 }

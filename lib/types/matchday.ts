@@ -30,6 +30,37 @@ export interface ScoreHistoryPoint {
   scores: Record<string, number>  // initials → total score
 }
 
+export interface LiveGoalEvent {
+  scorer: string
+  minute: number
+  team: 'home' | 'away'
+  type: 'REGULAR' | 'PENALTY' | 'OWN'
+}
+
+export interface LiveParticipantRow {
+  initials: string
+  name: string
+  toto: '1' | 'X' | '2' | null
+  totoCorrect: boolean
+  potentialTotoPoints: number
+  uitslag: string | null
+  uitslagCorrect: boolean
+  potentialUitslagPoints: number
+  fantasyGoals: number
+  fantasyAssists: number
+  potentialFantasyPoints: number
+  totalPotential: number
+}
+
+export interface LiveMatchData {
+  matchId: number
+  status: 'IN_PLAY' | 'PAUSED' | 'FINISHED'
+  score: { home: number; away: number }
+  minute: number | null
+  goals: LiveGoalEvent[]
+  participantRows: LiveParticipantRow[]
+}
+
 export interface FullMatchdayData {
   matchdayId: number
   config: MatchdayConfig

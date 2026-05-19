@@ -845,6 +845,62 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-19 — Matchday export-rework + LiveSlide + visuele verfijningen (Claude Code)
+
+#### Export-architectuur (robuust, uniform, WhatsApp HD)
+- **`display: none` vervangen door off-screen positionering** in MatchdayDrawer: inactieve slides zijn `position: absolute; left: -9999px` zodat html-to-image altijd correcte layout vindt
+- **SlideWrapper `exporting` prop**: bij export `height: 844px; overflow: hidden; paddingTop: 16px` — alle slides zijn identiek 390×844px logisch → 1290×2792px fysiek (@ratio 1290/390)
+- **`captureSlide`** gebruikt altijd vaste dimensies (`EXPORT_W=390, EXPORT_H=844, EXPORT_RATIO=1290/390`); dubbele toPng-aanroep voor font-embedding
+- **`handleExportAll`**: iterates van `liveOffset` tot `totalSlides`; geen display-toggle workaround meer; 120ms wacht op React re-render vóór capture
+- **LiveSlide uitgesloten** van export (zowel "Slide" als "Alles"); "Slide"-knop disabled op live slide
+- **Logo `bottom: 24px`** (was 10px) voor meer ruimte onder logo in export
+- `exporting` prop toegevoegd aan MatchSlide, InzetSlide, OverzichtSlide (was al in RanglijstSlide)
+
+#### LiveSlide (`components/matchday/slides/LiveSlide.tsx`) — nieuw
+- Slide 0, verschijnt automatisch bij actieve live wedstrijd
+- Per live wedstrijd: vlaggen + live score + minuut + doelpuntenmakers (⚽)
+- Tabel: naam | toto ✓/✗ | uitslag | FXV goals/assists | potentiële punten
+- Groen (#4ade80) = correct, rood (#f87171) = fout, oranje (#FF6B00) = punten
+- Pulserende rode stip via `.live-pulse-dot` CSS-klasse
+- Data via `/api/matchday/live` (football-data.org, Redis-cache 25s TTL, 30s polling)
+
+#### Live API (`app/api/matchday/live/route.ts`) — nieuw
+- `GET /api/matchday/live?matchday={id}&group={og|asc}`
+- Redis-cache per match met 25s TTL; module-level `retryAfterMs` voor 429-afhandeling
+- Berekent `LiveParticipantRow` per deelnemer: toto/uitslag correctheid, fantasy goals/assists
+
+#### MatchdayButton animatie
+- Voetbalicoontje: `matchday-bounce` (alternate 0.7s) + `matchday-spin` (1.4s lineair)
+- Kleur #999, grootte w-8/h-8; '?'-knop gespiegeld naar rechts
+
+#### AppHeader layout
+- MatchdayButton absoluut links (`left-4`), '?'-knop absoluut rechts (`right-4`)
+- MatchdayButton gecommentarieerd tot toernooistart
+
+#### Chart-centrering (alle grafieken)
+- `YAxis width` expliciet gezet (26px voor getallen, 34px voor €-labels)
+- `margin.left: 4`, `margin.right` gelijkgesteld aan linkse dode ruimte → plot-area symmetrisch gecentreerd
+- `PotChart`: ResponsiveContainer vervangen door vaste breedte (340px); zelfde aanpak als andere charts
+
+#### ProgressChart (`components/matchday/charts/ProgressChart.tsx`)
+- `width` prop (default 350) + vaste `LineChart width={width}` (geen ResponsiveContainer)
+- `showLineLabels`: voornaam als SVG-tekst bij laatste datapunt
+- Rechter margin 36px (was 44) met labels
+
+#### ScoreStackedChart (`components/matchday/charts/ScoreStackedChart.tsx`)
+- `width` prop + vaste `BarChart width={width}`; centering-div toegevoegd
+
+#### Visuele verfijningen slides
+- **MatchSlide (1&2)**: datum/stadion kleur `rgba(255,255,255,0.28)` (lichter); rijpadding 1px→0px
+- **InzetSlide (3)**: uitslag-kolom cellen `flex items-center justify-center`; vlagopacity op basis van toto-voorspelling (thuiswinst: uitvlag 40%, uitwinst: thuisvlag 40%, gelijkspel/geen: beide 85%)
+- **OverzichtSlide (4)**: scores 2 decimalen (`toFixed(2)`); rijpadding 1px→0px
+- **RanglijstSlide (5)**: tussenstand scores 2 decimalen; chart-hoogte 525px
+
+#### font-bold italic verwijderd
+- Alle Built Titling elementen in alle slides: geen `font-bold` of `italic`/`skewX`
+
+---
+
 ### 2026-05-19 — RanglijstSlide (slide 5) redesign + ProgressChart uitbreidingen (Claude Code)
 
 #### RanglijstSlide (`components/matchday/slides/RanglijstSlide.tsx`) — volledig herschreven

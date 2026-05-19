@@ -48,16 +48,16 @@ export const RanglijstSlide = forwardRef<HTMLDivElement, Props>(
     )
 
     return (
-      <SlideWrapper ref={ref} title={`RANGLIJST ${padded}`} titleFont="accent" minHeight={720}>
+      <SlideWrapper ref={ref} title={`RANGLIJST ${padded}`} titleFont="accent" minHeight={720} exporting={exporting}>
 
         {/* ProgressChart */}
         <ProgressChart
           history={scoreHistory}
           participants={participants}
           totalMatchdays={totalMatchdays}
-          height={500}
-          showLegend
+          height={525}
           showLineLabels
+          style={{ paddingTop: 8 }}
         />
 
         {/* Metric toggle — verborgen bij export */}
@@ -99,7 +99,7 @@ export const RanglijstSlide = forwardRef<HTMLDivElement, Props>(
                   const val  = row[metric.key] as number
                   const display = metric.isInt
                     ? (val > 0 ? String(val) : '')
-                    : (val > 0 ? val.toFixed(1) : '')
+                    : (val > 0 ? val.toFixed(2) : '')
                   return (
                     <div
                       key={row.initials}
@@ -112,7 +112,7 @@ export const RanglijstSlide = forwardRef<HTMLDivElement, Props>(
                       >
                         {rank}
                       </span>
-                      <span className="font-heading text-[9px] text-white font-bold italic flex-1 truncate">
+                      <span className="font-heading text-[9px] text-white flex-1 truncate">
                         {row.name.split(' ')[0]}
                       </span>
                       <span className="font-heading text-[9px] text-white" style={{ flexShrink: 0 }}>

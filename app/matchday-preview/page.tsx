@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { MatchdayDrawer } from '@/components/matchday/MatchdayDrawer'
-import type { FullMatchdayData } from '@/lib/types/matchday'
+import type { FullMatchdayData, LiveMatchData } from '@/lib/types/matchday'
 
 const OG = [
   { name: 'Michiel',  initials: 'MG'  },
@@ -124,9 +124,48 @@ const MOCK_DATA: FullMatchdayData = {
   })),
 }
 
+const MOCK_LIVE: LiveMatchData[] = [
+  {
+    matchId: 1,
+    status: 'IN_PLAY',
+    score: { home: 2, away: 1 },
+    minute: 67,
+    goals: [
+      { scorer: 'M. Depay', minute: 23, team: 'home', type: 'REGULAR' },
+      { scorer: 'L. Martinez', minute: 45, team: 'away', type: 'PENALTY' },
+      { scorer: 'C. Gakpo', minute: 67, team: 'home', type: 'REGULAR' },
+    ],
+    participantRows: OG.map((p, i) => {
+      const totos: Array<'1' | 'X' | '2'> = ['1', '1', 'X', '2', '1', '1', 'X', '2', '1', '1', 'X', '2', '1', '1', '2']
+      const uitslagen = ['2-1', '2-0', null, null, '1-0', '2-1', null, null, '3-1', '2-1', null, null, '1-0', null, null]
+      const toto = totos[i]
+      const uitslag = uitslagen[i]
+      const totoCorrect = toto === '1'
+      const uitslagCorrect = uitslag === '2-1'
+      const tokens = TOKENS[i]
+      return {
+        initials: p.initials,
+        name: p.name,
+        toto,
+        totoCorrect,
+        potentialTotoPoints: totoCorrect ? Math.round(tokens * 2.1 * 100) / 100 : 0,
+        uitslag,
+        uitslagCorrect,
+        potentialUitslagPoints: uitslagCorrect ? Math.round(tokens * 6.5 * 100) / 100 : 0,
+        fantasyGoals: i === 0 ? 1 : 0,
+        fantasyAssists: i === 2 ? 1 : 0,
+        potentialFantasyPoints: i === 0 ? 3.2 : i === 2 ? 2.1 : 0,
+        totalPotential: 0,
+      }
+    }).map((r) => ({ ...r, totalPotential: Math.round((r.potentialTotoPoints + r.potentialUitslagPoints + r.potentialFantasyPoints) * 100) / 100 }))
+      .sort((a, b) => b.totalPotential - a.totalPotential),
+  },
+]
+
 export default function MatchdayPreviewPage() {
   const [open, setOpen] = useState(true)
   const [group, setGroup] = useState<'og' | 'asc'>('og')
+  const [showLive, setShowLive] = useState(false)
 
   return (
     <div style={{ background: '#0a0a0a', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
@@ -150,6 +189,21 @@ export default function MatchdayPreviewPage() {
             {g.toUpperCase()}
           </button>
         ))}
+        <button
+          onClick={() => setShowLive((v) => !v)}
+          style={{
+            padding: '6px 16px',
+            borderRadius: 4,
+            border: `1px solid ${showLive ? '#ef4444' : '#333'}`,
+            background: showLive ? 'rgba(239,68,68,0.15)' : '#1a1a1a',
+            color: showLive ? '#ef4444' : '#888',
+            fontSize: 12,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+          }}
+        >
+          {showLive ? '● LIVE aan' : '○ LIVE uit'}
+        </button>
       </div>
       <button
         onClick={() => setOpen(true)}
@@ -171,6 +225,7 @@ export default function MatchdayPreviewPage() {
         onClose={() => setOpen(false)}
         group={group}
         mockData={MOCK_DATA}
+        mockLiveData={showLive ? MOCK_LIVE : undefined}
       />
     </div>
   )

@@ -6,8 +6,9 @@ import { MatchSlide } from '@/components/matchday/slides/MatchSlide'
 import { InzetSlide } from '@/components/matchday/slides/InzetSlide'
 import { OverzichtSlide } from '@/components/matchday/slides/OverzichtSlide'
 import { RanglijstSlide } from '@/components/matchday/slides/RanglijstSlide'
+import { LiveSlide } from '@/components/matchday/slides/LiveSlide'
 import { MATCHDAY_COUNT } from '@/lib/data/matchdayMap'
-import type { FullMatchdayData } from '@/lib/types/matchday'
+import type { FullMatchdayData, LiveMatchData } from '@/lib/types/matchday'
 
 interface Props {
   open: boolean
@@ -15,22 +16,33 @@ interface Props {
   group: 'og' | 'asc'
   initialMatchday?: number
   mockData?: FullMatchdayData
+  mockLiveData?: LiveMatchData[]
+  showExport?: boolean
 }
 
-export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData }: Props) {
+export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData, mockLiveData, showExport }: Props) {
   const [matchdayId, setMatchdayId] = useState(initialMatchday ?? 1)
   const [slideIndex, setSlideIndex] = useState(0)
   const [data, setData] = useState<FullMatchdayData | null>(mockData ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
+  const [liveMatches, setLiveMatches] = useState<LiveMatchData[]>(mockLiveData ?? [])
+
+  useEffect(() => {
+    if (mockLiveData !== undefined) {
+      setLiveMatches(mockLiveData)
+      if (mockLiveData.length > 0) setSlideIndex(0)
+    }
+  }, [mockLiveData])
 
   const slide0Ref = useRef<HTMLDivElement>(null)
   const slide1Ref = useRef<HTMLDivElement>(null)
   const slide2Ref = useRef<HTMLDivElement>(null)
   const slide3Ref = useRef<HTMLDivElement>(null)
   const slide4Ref = useRef<HTMLDivElement>(null)
-  const slideRefs = [slide0Ref, slide1Ref, slide2Ref, slide3Ref, slide4Ref]
+  const slide5Ref = useRef<HTMLDivElement>(null)
+  const slideRefs = [slide0Ref, slide1Ref, slide2Ref, slide3Ref, slide4Ref, slide5Ref]
   const touchStartX = useRef<number | null>(null)
 
   const loadData = useCallback(async (md: number) => {
@@ -57,6 +69,25 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
   useEffect(() => {
     if (open && !mockData) loadData(matchdayId)
   }, [open, matchdayId, loadData, mockData])
+
+  // Live polling — every 30s when drawer is open (skip when mock live data provided)
+  useEffect(() => {
+    if (!open || mockLiveData) return
+
+    async function pollLive() {
+      try {
+        const res = await fetch(`/api/matchday/live?matchday=${matchdayId}&group=${group}`)
+        if (res.ok) {
+          const json = await res.json()
+          setLiveMatches(json.liveMatches ?? [])
+        }
+      } catch { /* ignore */ }
+    }
+
+    pollLive()
+    const interval = setInterval(pollLive, 30_000)
+    return () => clearInterval(interval)
+  }, [open, matchdayId, group])
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
@@ -90,7 +121,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
     const img = document.createElement('img')
     img.src = '/Logo/Artboard 1@4x.png'
     img.setAttribute('data-export-logo', '')
-    img.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);height:48px;opacity:0.9;z-index:20'
+    img.style.cssText = 'position:absolute;bottom:24px;left:50%;transform:translateX(-50%);height:48px;opacity:0.9;z-index:20'
     el.appendChild(img)
   }
 
@@ -98,21 +129,35 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
     el.querySelector('[data-export-logo]')?.remove()
   }
 
+  const EXPORT_W     = 390
+  const EXPORT_H     = 844
+  const EXPORT_RATIO = 1290 / 390
+
+  async function captureSlide(el: HTMLElement): Promise<string> {
+    await document.fonts.ready
+    const opts = { pixelRatio: EXPORT_RATIO, width: EXPORT_W, height: EXPORT_H }
+    await toPng(el, opts)
+    return toPng(el, opts)
+  }
+
   async function handleExportSlide(idx: number) {
+    if (hasLive && idx === 0) return
     const ref = slideRefs[idx]
     if (!ref.current || !data) return
     setExporting(true)
-    applyExportBackground(ref.current)
-    addExportLogo(ref.current)
+    await new Promise((r) => setTimeout(r, 120))
+    const el = ref.current
+    applyExportBackground(el)
+    addExportLogo(el)
     try {
-      const dataUrl = await toPng(ref.current, { pixelRatio: 2 })
+      const dataUrl = await captureSlide(el)
       const a = document.createElement('a')
       a.href = dataUrl
-      a.download = `matchday-${String(matchdayId).padStart(2, '0')}-slide-${idx + 1}-${group}.png`
+      a.download = `matchday-${String(matchdayId).padStart(2, '0')}-slide-${idx - liveOffset + 1}-${group}.png`
       a.click()
     } finally {
-      removeExportLogo(ref.current)
-      clearExportBackground(ref.current)
+      removeExportLogo(el)
+      clearExportBackground(el)
       setExporting(false)
     }
   }
@@ -120,19 +165,20 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
   async function handleExportAll() {
     if (!data) return
     setExporting(true)
+    await new Promise((r) => setTimeout(r, 120))
     try {
-      const totalSlides = data.matchSlides.length === 1 ? 4 : 5
-      for (let i = 0; i < totalSlides; i++) {
+      for (let i = liveOffset; i < totalSlides; i++) {
         const ref = slideRefs[i]
         if (!ref.current) continue
-        applyExportBackground(ref.current)
-        addExportLogo(ref.current)
-        const dataUrl = await toPng(ref.current, { pixelRatio: 2 })
-        removeExportLogo(ref.current)
-        clearExportBackground(ref.current)
+        const el = ref.current
+        applyExportBackground(el)
+        addExportLogo(el)
+        const dataUrl = await captureSlide(el)
+        removeExportLogo(el)
+        clearExportBackground(el)
         const a = document.createElement('a')
         a.href = dataUrl
-        a.download = `matchday-${String(matchdayId).padStart(2, '0')}-slide-${i + 1}-${group}.png`
+        a.download = `matchday-${String(matchdayId).padStart(2, '0')}-slide-${i - liveOffset + 1}-${group}.png`
         a.click()
         await new Promise((r) => setTimeout(r, 200))
       }
@@ -143,7 +189,9 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
 
   if (!open) return null
 
-  const totalSlides = data ? (data.matchSlides.length === 1 ? 4 : 5) : 5
+  const hasLive = liveMatches.length > 0
+  const liveOffset = hasLive ? 1 : 0
+  const totalSlides = data ? (data.matchSlides.length === 1 ? 4 : 5) + liveOffset : 5 + liveOffset
 
   // Build totoVanDeDag per-match prediction data for InzetSlide
   function buildInzetMatchData() {
@@ -194,12 +242,34 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
             ›
           </button>
         </div>
-        <button
-          onClick={onClose}
-          className="ml-auto text-[#888] hover:text-white text-sm px-2 py-1 rounded"
-        >
-          ✕
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          {showExport && data && (
+            <>
+              <button
+                onClick={() => handleExportSlide(slideIndex)}
+                disabled={exporting || (hasLive && slideIndex === 0)}
+                className="font-heading text-[10px] px-2 py-1 rounded"
+                style={{ background: 'rgba(255,107,0,0.15)', border: '1px solid #FF6B00', color: '#FF6B00' }}
+              >
+                Slide
+              </button>
+              <button
+                onClick={handleExportAll}
+                disabled={exporting}
+                className="font-heading text-[10px] px-2 py-1 rounded"
+                style={{ background: 'rgba(255,107,0,0.15)', border: '1px solid #FF6B00', color: '#FF6B00' }}
+              >
+                Alles
+              </button>
+            </>
+          )}
+          <button
+            onClick={onClose}
+            className="text-[#888] hover:text-white text-sm px-2 py-1 rounded"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Slide content */}
@@ -228,27 +298,41 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
 
         {data && !loading && (() => {
           const has2MatchSlides = data.matchSlides.length === 2
-          // Slide index mapping: 0=Match1, 1=Match2(optional), 2=Inzet, 3=Overzicht, 4=Ranglijst
-          // For MD 26-27 (1 match slide): 0=Match1, 1=Inzet, 2=Overzicht, 3=Ranglijst
-          const inzetIdx   = has2MatchSlides ? 2 : 1
-          const overzichtIdx = has2MatchSlides ? 3 : 2
-          const ranglijstIdx = has2MatchSlides ? 4 : 3
+          // Slide index mapping (with optional live slide at index 0):
+          // live=0 (optional), match1=0+off, match2=1+off (optional), inzet, overzicht, ranglijst
+          const off = liveOffset
+          const inzetIdx     = (has2MatchSlides ? 2 : 1) + off
+          const overzichtIdx = (has2MatchSlides ? 3 : 2) + off
+          const ranglijstIdx = (has2MatchSlides ? 4 : 3) + off
 
           return (
             <div className="relative" style={{ overflow: 'hidden' }}>
-              {/* All slides rendered (hidden when not active) for ref access */}
+              {/* LiveSlide — only when live matches active */}
+              {hasLive && (
+                <div style={slideIndex === 0 ? {} : { position: 'absolute', left: -9999, width: 390 }}>
+                  <LiveSlide
+                    ref={slideRefs[0]}
+                    matchdayId={matchdayId}
+                    liveMatches={liveMatches}
+                    exporting={exporting}
+                  />
+                </div>
+              )}
+
+              {/* Match slides */}
               {data.matchSlides.map((matchesInSlide, i) => (
-                <div key={i} style={{ display: slideIndex === i ? 'block' : 'none' }}>
+                <div key={i} style={slideIndex === i + off ? {} : { position: 'absolute', left: -9999, width: 390 }}>
                   <MatchSlide
-                    ref={slideRefs[i]}
+                    ref={slideRefs[i + off]}
                     matchdayId={matchdayId}
                     slideIndex={(i + 1) as 1 | 2}
                     matches={matchesInSlide}
+                    exporting={exporting}
                   />
                 </div>
               ))}
 
-              <div style={{ display: slideIndex === inzetIdx ? 'block' : 'none' }}>
+              <div style={slideIndex === inzetIdx ? {} : { position: 'absolute', left: -9999, width: 390 }}>
                 <InzetSlide
                   ref={slideRefs[inzetIdx]}
                   matchdayId={matchdayId}
@@ -258,18 +342,20 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
                   totoVanDeDagInitials={data.totoVanDeDagInitials}
                   matchData={buildInzetMatchData()}
                   potHistory={data.potHistory}
+                  exporting={exporting}
                 />
               </div>
 
-              <div style={{ display: slideIndex === overzichtIdx ? 'block' : 'none' }}>
+              <div style={slideIndex === overzichtIdx ? {} : { position: 'absolute', left: -9999, width: 390 }}>
                 <OverzichtSlide
                   ref={slideRefs[overzichtIdx]}
                   matchdayId={matchdayId}
                   rows={data.scores}
+                  exporting={exporting}
                 />
               </div>
 
-              <div style={{ display: slideIndex === ranglijstIdx ? 'block' : 'none' }}>
+              <div style={slideIndex === ranglijstIdx ? {} : { position: 'absolute', left: -9999, width: 390 }}>
                 <RanglijstSlide
                   ref={slideRefs[ranglijstIdx]}
                   matchdayId={matchdayId}

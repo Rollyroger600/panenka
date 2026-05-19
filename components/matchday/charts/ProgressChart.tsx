@@ -1,7 +1,7 @@
 'use client'
+import React from 'react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
 } from 'recharts'
 import type { ScoreHistoryPoint } from '@/lib/types/matchday'
 
@@ -20,7 +20,7 @@ const LINE_COLORS = [
   '#2980B9', '#8E44AD', '#C0392B', '#16A085', '#F1C40F',
 ]
 
-export function ProgressChart({ history, participants, totalMatchdays, height = 180, showLegend = false, showLineLabels = false }: Props) {
+export function ProgressChart({ history, participants, totalMatchdays, height = 180, showLegend = false, showLineLabels = false, style, width = 350 }: Props & { style?: React.CSSProperties; width?: number }) {
   const chartData = Array.from({ length: totalMatchdays }, (_, i) => {
     const md = i + 1
     const point = history.find((h) => h.matchdayId === md)
@@ -44,12 +44,11 @@ export function ProgressChart({ history, participants, totalMatchdays, height = 
   }
 
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={chartData} margin={{ top: 4, right: showLineLabels ? 44 : 4, left: -20, bottom: 0 }}>
+    <div style={style}>
+      <LineChart width={width} height={height} data={chartData} margin={{ top: 4, right: showLineLabels ? 36 : 30, left: 4, bottom: 0 }}>
           <CartesianGrid stroke="rgba(255,255,255,0.15)" strokeDasharray="0" vertical={true} horizontal={true} />
           <XAxis dataKey="md" tick={{ fill: '#fff', fontSize: 7 }} interval={4} tickSize={3} />
-          <YAxis tick={{ fill: '#fff', fontSize: 7 }} tickSize={3} />
+          <YAxis width={26} tick={{ fill: '#fff', fontSize: 7 }} tickSize={3} />
           <Tooltip
             contentStyle={{ background: '#1a1a1a', border: '1px solid #333', fontSize: 9 }}
             labelFormatter={(l) => `MD ${l}`}
@@ -88,7 +87,6 @@ export function ProgressChart({ history, participants, totalMatchdays, height = 
             )
           })}
         </LineChart>
-      </ResponsiveContainer>
 
       {showLegend && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '2px 4px', marginTop: 6 }}>

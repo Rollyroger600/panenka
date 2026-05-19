@@ -39,6 +39,7 @@ interface Props {
   matchdayId: number
   slideIndex: 1 | 2
   matches: MatchSlideData[]
+  exporting?: boolean
 }
 
 function MatchSection({ data, last }: { data: MatchSlideData; last?: boolean }) {
@@ -49,7 +50,7 @@ function MatchSection({ data, last }: { data: MatchSlideData; last?: boolean }) 
       {/* Match header */}
       <div className="relative flex flex-col items-center py-2">
         <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-white font-heading text-sm font-bold text-white"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-white font-heading text-sm text-white"
         >
           # {match.id}
         </div>
@@ -58,13 +59,13 @@ function MatchSection({ data, last }: { data: MatchSlideData; last?: boolean }) 
           <span className="font-accent font-light text-sm text-white">
             {COUNTRY_ABB[match.home] ?? match.home}
           </span>
-          <span className="font-heading font-bold" style={{ color: MUTED }}>–</span>
+          <span className="font-heading" style={{ color: MUTED }}>–</span>
           <span className="font-accent font-light text-sm text-white">
             {COUNTRY_ABB[match.away] ?? match.away}
           </span>
           <FlagImage country={match.away} size={24} />
         </div>
-        <p className="font-heading font-light text-xs uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
+        <p className="font-heading font-light text-xs uppercase tracking-widest mt-0.5" style={{ color: 'rgba(255,255,255,0.28)' }}>
           {match.date} · {match.stadium}
         </p>
       </div>
@@ -116,7 +117,7 @@ function MatchSection({ data, last }: { data: MatchSlideData; last?: boolean }) 
           style={{ borderColor: 'rgba(255,255,255,0.05)' }}
         >
           {[
-            { w: W.name,    vline: true,  content: <span className="font-heading text-[9px] font-bold italic truncate">{row.name}</span>, left: true  },
+            { w: W.name,    vline: true,  content: <span className="font-heading text-[9px] truncate">{row.name}</span>, left: true  },
             { w: W.inzet,   vline: true,  content: row.tokens ?? '',                              left: false },
             { w: W.toto1,   vline: false, content: row.toto === '1' ? fmt(odds?.home) : '',  left: false },
             { w: W.totoX,   vline: false, content: row.toto === 'X' ? fmt(odds?.draw) : '',  left: false },
@@ -127,20 +128,20 @@ function MatchSection({ data, last }: { data: MatchSlideData; last?: boolean }) 
             <div
               key={i}
               className={`font-heading text-[9px] text-white flex items-center ${left ? 'justify-start' : 'justify-center'}`}
-              style={{ width: w, flexShrink: 0, paddingTop: 1, paddingBottom: 1, borderRight: vline ? VLINE : undefined }}
+              style={{ width: w, flexShrink: 0, paddingTop: 0, paddingBottom: 0, borderRight: vline ? VLINE : undefined }}
             >
               {content}
             </div>
           ))}
           <div
             className="font-heading text-white flex items-center justify-center truncate px-0.5"
-            style={{ flex: 1, fontSize: 8, paddingTop: 1, paddingBottom: 1 }}
+            style={{ flex: 1, fontSize: 8, paddingTop: 0, paddingBottom: 0 }}
           >
             {middleName(row.fantasyHome ?? '')}
           </div>
           <div
             className="font-heading text-white flex items-center justify-center truncate px-0.5"
-            style={{ flex: 1, fontSize: 8, paddingTop: 1, paddingBottom: 1 }}
+            style={{ flex: 1, fontSize: 8, paddingTop: 0, paddingBottom: 0 }}
           >
             {middleName(row.fantasyAway ?? '')}
           </div>
@@ -152,11 +153,11 @@ function MatchSection({ data, last }: { data: MatchSlideData; last?: boolean }) 
 }
 
 export const MatchSlide = forwardRef<HTMLDivElement, Props>(
-  ({ matchdayId, slideIndex, matches }, ref) => {
+  ({ matchdayId, slideIndex, matches, exporting = false }, ref) => {
     const padded = String(matchdayId).padStart(2, '0')
 
     return (
-      <SlideWrapper ref={ref} title={`MATCHDAY ${padded}`} titleFont="accent" minHeight={720}>
+      <SlideWrapper ref={ref} title={`MATCHDAY ${padded}`} titleFont="accent" minHeight={720} exporting={exporting}>
         {matches.map((m, i) => (
           <MatchSection key={m.matchId} data={m} last={i === matches.length - 1} />
         ))}

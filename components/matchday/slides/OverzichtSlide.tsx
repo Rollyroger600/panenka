@@ -7,6 +7,7 @@ import type { MatchdayScoreRow } from '@/lib/matchday'
 interface Props {
   matchdayId: number
   rows: MatchdayScoreRow[]
+  exporting?: boolean
 }
 
 const VLINE = '1px solid rgba(255,255,255,0.14)'
@@ -17,7 +18,7 @@ const ROW_BOTTOM = '1px solid rgba(255,255,255,0.05)'
 const NAAM: React.CSSProperties = { width: 50, flexShrink: 0 }
 const COL:  React.CSSProperties = { flex: 1, minWidth: 0 }
 
-function fmt(v: number)    { return v > 0 ? v.toFixed(1) : '' }
+function fmt(v: number)    { return v > 0 ? v.toFixed(2) : '' }
 function fmtInt(v: number) { return v > 0 ? String(v) : '' }
 
 // ── Gedeelde cel-componenten ───────────────────────────────────────────────
@@ -42,19 +43,19 @@ function HdrCell({ label, last = false }: { label: string; last?: boolean }) {
 function DataNaam({ name }: { name: string }) {
   return (
     <div
-      style={{ ...NAAM, borderRight: VLINE, paddingTop: 1, paddingBottom: 1 }}
-      className="font-heading text-[9px] text-white font-bold italic flex items-center overflow-hidden px-0.5"
+      style={{ ...NAAM, borderRight: VLINE, paddingTop: 0, paddingBottom: 0 }}
+      className="font-heading text-[9px] text-white flex items-center overflow-hidden px-0.5"
     >
       <span className="truncate">{name}</span>
     </div>
   )
 }
 
-function DataCell({ value, last = false, bold = false }: { value: string; last?: boolean; bold?: boolean }) {
+function DataCell({ value, last = false }: { value: string; last?: boolean; bold?: boolean }) {
   return (
     <div
-      style={{ ...COL, borderRight: last ? undefined : VLINE, paddingTop: 1, paddingBottom: 1 }}
-      className={`font-heading text-[9px] text-white flex items-center justify-center${bold ? ' font-bold' : ''}`}
+      style={{ ...COL, borderRight: last ? undefined : VLINE, paddingTop: 0, paddingBottom: 0 }}
+      className="font-heading text-[9px] text-white flex items-center justify-center"
     >
       {value}
     </div>
@@ -64,11 +65,11 @@ function DataCell({ value, last = false, bold = false }: { value: string; last?:
 // ── Slide ─────────────────────────────────────────────────────────────────
 
 export const OverzichtSlide = forwardRef<HTMLDivElement, Props>(
-  ({ matchdayId, rows }, ref) => {
+  ({ matchdayId, rows, exporting = false }, ref) => {
     const padded = String(matchdayId).padStart(2, '0')
 
     return (
-      <SlideWrapper ref={ref} title={`OVERZICHT ${padded}`} titleFont="accent" minHeight={720}>
+      <SlideWrapper ref={ref} title={`OVERZICHT ${padded}`} titleFont="accent" minHeight={720} exporting={exporting}>
 
         {/* Tabel 1: Poule | KO | FXV | Toto | Uitsl */}
         <div className="mb-4" style={{ paddingTop: 8 }}>

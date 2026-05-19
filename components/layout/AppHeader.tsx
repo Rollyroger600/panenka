@@ -54,13 +54,18 @@ export function AppHeader({ name, initials, groupId }: Props) {
           <span className="text-[#555]">|</span>
           <TokenCount initials={initials} />
         </div>
-        <div className="absolute right-4 flex items-center gap-2">
-          {/* TODO: re-enable na toernooistart (9 juni 2026) */}
-          {/* {groupId && <MatchdayButton group={groupId} />} */}
+        {/* TODO: activeren bij toernooistart
+        {groupId && (
+          <div className="absolute left-4">
+            <MatchdayButton group={groupId} />
+          </div>
+        )}
+        */}
+        <div className="absolute right-4">
           <button
             onClick={() => setOnboardingOpen(true)}
-            className="w-6 h-6 rounded-full border border-[#333] flex items-center justify-center font-heading text-xs font-bold transition-colors hover:border-[#555] hover:text-[#aaa]"
-            style={{ color: '#555' }}
+            className="w-8 h-8 rounded-full border border-[#333] flex items-center justify-center font-heading text-sm font-bold transition-colors hover:border-[#555] hover:text-[#aaa]"
+            style={{ color: '#999' }}
             aria-label="Uitleg bekijken"
           >
             ?
