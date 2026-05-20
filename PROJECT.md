@@ -845,6 +845,40 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-20 — LiveSlide uitbreidingen: extra panels, 9-koloms tabel, FDO live test (Claude Code)
+
+#### `lib/types/matchday.ts`
+- Nieuwe interfaces: `LiveBookingEvent`, `LiveSubstitutionEvent`, `LivePenaltyEvent`, `LivePlayer`, `LiveMatchStats`
+- `LiveMatchData` uitgebreid met optionele velden: `venue`, `attendance`, `bookings`, `substitutions`, `penalties`, `homeLineup`/`awayLineup`, `homeBench`/`awayBench`, `homeFormation`/`awayFormation`, `homeStats`/`awayStats`
+- `LiveParticipantRow` uitgebreid: `tokens`, `totoOdds`, `uitslagOdds`, `uitslagPossible`, `uitslagImpossible`, `fantasyHomePlayer`, `fantasyAwayPlayer`
+
+#### `app/api/matchday/live/route.ts`
+- **FDO_TEST_MATCH env var**: `internalId:fdoId` koppeling via `.env.local` — overschrijft `FDO_MATCH_IDS` lokaal zonder code-aanpassing; nooit gecommit/deployed
+- Venue en attendance uitgelezen uit FDO `/matches/{id}` en doorgegeven
+- Boekingen, wissels en penalties uitgelezen en genormaliseerd naar typed interfaces
+- Opstellingen (home/awayLineup, home/awayBench) en formaties uitgelezen
+- Matchstats (bezit, schoten, corners, kaarten) uitgelezen via `extractStat()` helper
+- `computeUitslagState()` helper: bepaalt `uitslagImpossible` en `uitslagPossible` op basis van live score en status
+- Fantasy-speler loop gesplitst in home/away (max 1 per land per spelregel); `fantasyHomePlayer`/`fantasyAwayPlayer` object met `{ name, goals, assists }`
+- `goalsByScorer`/`assistsByScorer` maps opgebouwd uit `goals[].scorer.name` en `goals[].assist.name`
+- Twee-tier sortering: `totalPotential > 0` op punten desc, `totalPotential === 0` op remainingPotential (uitslag+home+away kansen) desc
+
+#### `components/matchday/slides/LiveSlide.tsx`
+- **Floating overlay panels**: 3 knoppen (Timeline, Opstellingen, Stats) openen zwevend venster over de slide; zelfde knop sluit weer; X-knop in overlay
+- **Standaardweergave**: titel → vlaggen/score → stadion+toeschouwers → minuut → doelpunten → 3 knoppen → deelnemerstabel
+- **Timeline panel**: doelpunten, kaarten, wissels in chronologische volgorde met iconen
+- **Opstellingen panel**: twee kolommen (thuis/uit) met formatie + speelsters per positie
+- **Stats panel**: bezit, schoten, corners, kaarten in vergelijkingsrijen
+- **9-koloms tabel**: `45px 22px | 20px 22px | 36px 22px | 1fr 1fr | 32px` — naam, inzet, toto (voorspelling+quote), uitslag (voorspelling+quote), fantasy XV (thuis+uit), punten
+- **Merged headers**: "Toto" span 2, "Uitslag" span 2, "Fantasy XV" span 2; witte 12px tekst
+- **Kleurlogica**: toto correct=groen/fout=rood; uitslag correct=groen/impossible=rood/possible=oranje; fantasy gescoord=groen/actief=muted
+- **Verticale gridlijnen**: `1px solid rgba(255,255,255,0.14)` — zelfde stijl als MatchSlide; `alignSelf: stretch` + flex op grenskolommen zodat lijn ook zichtbaar is bij lege cellen
+
+#### `app/matchday-preview/page.tsx`
+- Mock `LiveParticipantRow` data bijgewerkt met alle nieuwe velden
+
+---
+
 ### 2026-05-19 — LiveSlide visuele verfijningen (Claude Code)
 
 #### SlideWrapper (`components/matchday/SlideWrapper.tsx`)

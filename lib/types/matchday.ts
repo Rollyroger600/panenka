@@ -37,18 +37,61 @@ export interface LiveGoalEvent {
   type: 'REGULAR' | 'PENALTY' | 'OWN'
 }
 
+export interface LiveBookingEvent {
+  minute: number
+  player: string
+  team: 'home' | 'away'
+  card: 'YELLOW' | 'RED' | 'YELLOW_RED'
+}
+
+export interface LiveSubstitutionEvent {
+  minute: number
+  playerOut: string
+  playerIn: string
+  team: 'home' | 'away'
+}
+
+export interface LivePenaltyEvent {
+  player: string
+  team: 'home' | 'away'
+  scored: boolean
+}
+
+export interface LivePlayer {
+  name: string
+  position: string | null
+  shirtNumber: number | null
+}
+
+export interface LiveMatchStats {
+  possession: number | null
+  shots: number | null
+  shotsOnTarget: number | null
+  corners: number | null
+  fouls: number | null
+  yellowCards: number | null
+  redCards: number | null
+}
+
 export interface LiveParticipantRow {
   initials: string
   name: string
+  tokens: number
   toto: '1' | 'X' | '2' | null
   totoCorrect: boolean
+  totoOdds: number
   potentialTotoPoints: number
   uitslag: string | null
   uitslagCorrect: boolean
+  uitslagPossible: boolean
+  uitslagImpossible: boolean
+  uitslagOdds: number
   potentialUitslagPoints: number
   fantasyGoals: number
   fantasyAssists: number
   potentialFantasyPoints: number
+  fantasyHomePlayer: { name: string; goals: number; assists: number } | null
+  fantasyAwayPlayer: { name: string; goals: number; assists: number } | null
   totalPotential: number
 }
 
@@ -59,6 +102,19 @@ export interface LiveMatchData {
   minute: number | null
   goals: LiveGoalEvent[]
   participantRows: LiveParticipantRow[]
+  venue?: string | null
+  attendance?: number | null
+  bookings?: LiveBookingEvent[]
+  substitutions?: LiveSubstitutionEvent[]
+  penalties?: LivePenaltyEvent[]
+  homeLineup?: LivePlayer[]
+  awayLineup?: LivePlayer[]
+  homeBench?: LivePlayer[]
+  awayBench?: LivePlayer[]
+  homeFormation?: string | null
+  awayFormation?: string | null
+  homeStats?: LiveMatchStats | null
+  awayStats?: LiveMatchStats | null
 }
 
 export interface FullMatchdayData {

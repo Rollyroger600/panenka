@@ -137,24 +137,34 @@ const MOCK_LIVE: LiveMatchData[] = [
     ],
     participantRows: OG.map((p, i) => {
       const totos: Array<'1' | 'X' | '2'> = ['1', '1', 'X', '2', '1', '1', 'X', '2', '1', '1', 'X', '2', '1', '1', '2']
-      const uitslagen = ['2-1', '2-0', null, null, '1-0', '2-1', null, null, '3-1', '2-1', null, null, '1-0', null, null]
+      const uitslagen = ['2-1', '2-0', '0-1', '1-2', '1-0', '2-1', '3-2', '0-2', '3-1', '2-1', '1-1', '0-1', '1-0', '2-2', '1-1']
       const toto = totos[i]
       const uitslag = uitslagen[i]
       const totoCorrect = toto === '1'
       const uitslagCorrect = uitslag === '2-1'
       const tokens = TOKENS[i]
+      // Mock: live score is 2-1, so "0-1" is impossible (home already at 2), "1-0" is impossible (away at 1)
+      const uitslagImpossible = !uitslagCorrect && (uitslag ? (parseInt(uitslag.split('-')[0]) < 2 || parseInt(uitslag.split('-')[1]) < 1) : false)
+      const uitslagPossible = !uitslagCorrect && !uitslagImpossible
       return {
         initials: p.initials,
         name: p.name,
+        tokens,
         toto,
         totoCorrect,
+        totoOdds: 2.1,
         potentialTotoPoints: totoCorrect ? Math.round(tokens * 2.1 * 100) / 100 : 0,
         uitslag,
         uitslagCorrect,
+        uitslagPossible,
+        uitslagImpossible,
+        uitslagOdds: 6.5,
         potentialUitslagPoints: uitslagCorrect ? Math.round(tokens * 6.5 * 100) / 100 : 0,
         fantasyGoals: i === 0 ? 1 : 0,
         fantasyAssists: i === 2 ? 1 : 0,
         potentialFantasyPoints: i === 0 ? 3.2 : i === 2 ? 2.1 : 0,
+        fantasyHomePlayer: i % 3 === 0 ? { name: 'M. Depay', goals: i === 0 ? 1 : 0, assists: 0 } : null,
+        fantasyAwayPlayer: i % 3 === 1 ? { name: 'L. Martinez', goals: 0, assists: i === 4 ? 1 : 0 } : null,
         totalPotential: 0,
       }
     }).map((r) => ({ ...r, totalPotential: Math.round((r.potentialTotoPoints + r.potentialUitslagPoints + r.potentialFantasyPoints) * 100) / 100 }))
