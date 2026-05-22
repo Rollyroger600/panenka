@@ -176,6 +176,19 @@ export default function MatchdayPreviewPage() {
   const [open, setOpen] = useState(true)
   const [group, setGroup] = useState<'og' | 'asc'>('og')
   const [showLive, setShowLive] = useState(false)
+  const [fdoLive, setFdoLive] = useState(false)
+
+  function handleFdoToggle() {
+    setFdoLive((v) => !v)
+    setShowLive(false)
+  }
+
+  function handleMockLiveToggle() {
+    setShowLive((v) => !v)
+    setFdoLive(false)
+  }
+
+  const mockLiveData = showLive ? MOCK_LIVE : undefined
 
   return (
     <div style={{ background: '#0a0a0a', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
@@ -200,7 +213,7 @@ export default function MatchdayPreviewPage() {
           </button>
         ))}
         <button
-          onClick={() => setShowLive((v) => !v)}
+          onClick={handleMockLiveToggle}
           style={{
             padding: '6px 16px',
             borderRadius: 4,
@@ -212,7 +225,22 @@ export default function MatchdayPreviewPage() {
             cursor: 'pointer',
           }}
         >
-          {showLive ? '● LIVE aan' : '○ LIVE uit'}
+          {showLive ? '● MOCK LIVE' : '○ MOCK LIVE'}
+        </button>
+        <button
+          onClick={handleFdoToggle}
+          style={{
+            padding: '6px 16px',
+            borderRadius: 4,
+            border: `1px solid ${fdoLive ? '#f97316' : '#333'}`,
+            background: fdoLive ? 'rgba(249,115,22,0.15)' : '#1a1a1a',
+            color: fdoLive ? '#f97316' : '#888',
+            fontSize: 12,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+          }}
+        >
+          {fdoLive ? '● FDO LIVE' : '○ FDO LIVE'}
         </button>
       </div>
       <button
@@ -235,7 +263,8 @@ export default function MatchdayPreviewPage() {
         onClose={() => setOpen(false)}
         group={group}
         mockData={MOCK_DATA}
-        mockLiveData={showLive ? MOCK_LIVE : undefined}
+        mockLiveData={mockLiveData}
+        fdoLiveEnabled={fdoLive}
       />
     </div>
   )

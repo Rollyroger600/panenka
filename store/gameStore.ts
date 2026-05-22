@@ -1,6 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import type { Player } from '@/lib/data/players'
+export { REGULAR_SLOTS, TALENT_SLOTS, ALL_SLOTS, SCRATCHPAD_SLOTS } from '@/lib/data/slots'
 
 export type Toto = '1' | 'X' | '2'
 
@@ -29,11 +30,6 @@ export interface KnockoutSlot {
   tok: number
 }
 
-// p0–p10 = 11 regular, t0–t3 = 4 talents, k0–k19 = scratchpad
-export const REGULAR_SLOTS = Array.from({ length: 11 }, (_, i) => `p${i}`)
-export const TALENT_SLOTS = Array.from({ length: 4 }, (_, i) => `t${i}`)
-export const ALL_SLOTS = [...REGULAR_SLOTS, ...TALENT_SLOTS]
-export const SCRATCHPAD_SLOTS = Array.from({ length: 20 }, (_, i) => `k${i}`)
 
 type PredictionsMap = Record<number, Prediction>
 type OranjeMap = Record<number, OranjeAnswer>

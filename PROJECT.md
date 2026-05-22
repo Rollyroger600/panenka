@@ -845,6 +845,28 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-22 — FDO live test knop + ALL_SLOTS bugfix (Claude Code)
+
+#### `lib/data/slots.ts` (nieuw)
+- Slot-constanten (`REGULAR_SLOTS`, `TALENT_SLOTS`, `ALL_SLOTS`, `SCRATCHPAD_SLOTS`) verplaatst naar aparte lib file zonder `'use client'`
+- Oplossing voor Turbopack-bug waarbij `ALL_SLOTS is not iterable` in server-side API routes die `gameStore.ts` importeerden
+
+#### `store/gameStore.ts`
+- Slot-constanten verwijderd; re-exporteert ze nu vanuit `@/lib/data/slots`
+
+#### `app/api/matchday/live/route.ts`
+- Import van `ALL_SLOTS` gewijzigd van `@/store/gameStore` naar `@/lib/data/slots` — live API route geeft nu 200 in plaats van 500
+
+#### `app/matchday-preview/page.tsx`
+- **"FDO LIVE" knop** toegevoegd naast "MOCK LIVE" — haalt echte football-data.org data op via polling
+- MOCK LIVE en FDO LIVE zijn wederzijds exclusief (één tegelijk actief)
+- `FDO_TEST_MATCH` initieel getest met Fiorentina vs Atalanta (`537185`), daarna omgezet naar Valencia vs Barcelona (`544589`, 23 mei 21:00 CET)
+
+#### `components/matchday/MatchdayDrawer.tsx`
+- `fdoLiveEnabled?: boolean` prop toegevoegd
+- Live polling draait nu ook als `mockData` aanwezig is maar `fdoLiveEnabled=true` — dit was geblokkeerd voor de preview pagina
+- `mockLiveData` effect reset `liveMatches` naar `[]` als FDO live wordt uitgeschakeld
+
 ### 2026-05-22 — Handmatig spelers toevoegen + nieuwe competitie (Claude Code)
 
 #### `lib/data/players.ts`

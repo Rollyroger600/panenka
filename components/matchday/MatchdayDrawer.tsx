@@ -18,9 +18,10 @@ interface Props {
   mockData?: FullMatchdayData
   mockLiveData?: LiveMatchData[]
   showExport?: boolean
+  fdoLiveEnabled?: boolean
 }
 
-export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData, mockLiveData, showExport }: Props) {
+export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData, mockLiveData, showExport, fdoLiveEnabled }: Props) {
   const [matchdayId, setMatchdayId] = useState(initialMatchday ?? 1)
   const [slideIndex, setSlideIndex] = useState(0)
   const [data, setData] = useState<FullMatchdayData | null>(mockData ?? null)
@@ -30,11 +31,14 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
   const [liveMatches, setLiveMatches] = useState<LiveMatchData[]>(mockLiveData ?? [])
 
   useEffect(() => {
+    if (fdoLiveEnabled) return  // FDO polling overrides mock
     if (mockLiveData !== undefined) {
       setLiveMatches(mockLiveData)
       if (mockLiveData.length > 0) setSlideIndex(0)
+    } else {
+      setLiveMatches([])
     }
-  }, [mockLiveData])
+  }, [mockLiveData, fdoLiveEnabled])
 
   const slide0Ref = useRef<HTMLDivElement>(null)
   const slide1Ref = useRef<HTMLDivElement>(null)
@@ -70,9 +74,10 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
     if (open && !mockData) loadData(matchdayId)
   }, [open, matchdayId, loadData, mockData])
 
-  // Live polling — every 30s when drawer is open (skip when mock live data provided)
+  // Live polling — every 30s when drawer is open (skip when mock live data provided, unless fdoLiveEnabled)
   useEffect(() => {
-    if (!open || mockLiveData) return
+    if (!open) return
+    if (mockLiveData && !fdoLiveEnabled) return
 
     async function pollLive() {
       try {
@@ -87,7 +92,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
     pollLive()
     const interval = setInterval(pollLive, 30_000)
     return () => clearInterval(interval)
-  }, [open, matchdayId, group])
+  }, [open, matchdayId, group, fdoLiveEnabled])
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
