@@ -55,6 +55,7 @@ const LEAGUE_LOGO_ID: Record<string, string> = {
   'Premyer Liqa': '313', 'Russian Premier League': 'russian-pl',
   'Egyptian Premier League': 'egyptian-pl', 'Kuwaiti Premier League': 'kuwaiti-pl',
   'Botola Pro': 'botola', 'Premier Soccer League': 'psl', 'Thai League 1': '100003',
+  'USL Championship': '888880',
 }
 
 const POS_GROUPS: Record<string, string[]> = {

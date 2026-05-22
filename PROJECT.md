@@ -845,6 +845,19 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-22 — Handmatig spelers toevoegen + nieuwe competitie (Claude Code)
+
+#### `lib/data/players.ts`
+- J. Locadia (id 204366) toegevoegd: Curaçao, ST/LW/LM, Miami FC, overall 69, dob 1993-11-07
+- A. Jahanbakhsh (id 215871) toegevoegd: Iran, LM/RM/RW, FCV Dender EH, overall 69, dob 1993-08-11
+- Beide ingevoegd op correcte alfabetische positie binnen overall: 69 sectie
+
+#### `components/fantasy/PlayerModal.tsx`
+- `LEAGUE_LOGO_ID` uitgebreid met `'USL Championship': '888880'`
+
+#### `public/Competities/888880.png`
+- Logo toegevoegd voor USL Championship (nieuw aangemaakt, leagueId 888880)
+
 ### 2026-05-20 — LiveSlide uitbreidingen: extra panels, 9-koloms tabel, FDO live test (Claude Code)
 
 #### `lib/types/matchday.ts`
