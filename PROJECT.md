@@ -845,6 +845,10 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-24 — Fantasy XV speler toegevoegd: R. Bounida (Claude Code)
+
+- `lib/data/players.ts`: R. Bounida (player_id 76944) handmatig toegevoegd. Was gefilterd door de ≥68 overall-drempel in het build-script (overall: 66). Data opgehaald uit `260524_WK 2026_Master.xlsx` (sofifa sheet). Club: Ajax, Eredivisie. Land: Marokko (CAF). Posities: LW, CAM, LM.
+
 ### 2026-05-24 — Export + UX fixes (Claude Code)
 
 - `app/api/export/route.ts`: kladblokspelers (scratchpad) worden nu geëxporteerd per deelnemer in het `FT_` tabblad, startend vanaf cel D34. Zelfde `middleName` format als de 15 basisspelers. Werkt voor zowel OG als ASC.

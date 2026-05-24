@@ -5688,4 +5688,5 @@ export const WK_PLAYERS: Player[] = [
   { id: 258713, leagueId: 66, name: "Z. Ouattara", middleName: "Zié Ouattara", fullName: "Zié Mohamed Ouattara", country: "Ivoorkust", overall: 68, positions: ["RB", "RM"], age: 26, dob: "2000-01-09", club: "Radomiak Radom", league: "Ekstraklasa", confederation: "CAF" },
   { id: 278007, leagueId: 14, name: "Z. Sturge", middleName: "Zak Sturge", fullName: "Zak Norton Sturge", country: "Engeland", overall: 68, positions: ["LB", "LM"], age: 21, dob: "2004-06-15", club: "Millwall FC", league: "Championship", confederation: "UEFA" },
   { id: 253057, leagueId: 14, name: "Z. Swanson", middleName: "Zak Swanson", fullName: "Zachary Swanson", country: "Engeland", overall: 68, positions: ["RB", "RM"], age: 25, dob: "2000-09-28", club: "Portsmouth", league: "Championship", confederation: "UEFA" },
+  { id: 76944, leagueId: 10, name: "R. Bounida", middleName: "Rayane Bounida", fullName: "Rayane Bounida", country: "Marokko", overall: 66, positions: ["LW", "CAM", "LM"], age: 20, dob: "2006-03-03", club: "Ajax", league: "Eredivisie", confederation: "CAF" },
 ]
