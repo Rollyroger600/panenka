@@ -845,6 +845,39 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-24 — Data-herstel: restore-predictions.mjs script (Claude Code)
+
+#### Incident samenvatting
+Op 2026-05-23 overschreef `scripts/seed-live-test.mjs` alle `predictions:*` en `fantasy:*` keys in Redis met testdata voor de ESPN live-test (Valencia-Barcelona). De echte WK-voorspellingen gingen verloren.
+
+#### Herstelstrategie
+- Gebruiker had een Excel export van ~3 dagen oud (vóór het incident)
+- CSVs aangemaakt: `c:\RA\WK 2026\Recovery\Recovery_OG.csv` en `Recovery_ASC.csv`
+- Deelnemers met data in de export: BS, WP, RA, WS (OG) + JH, NS, PN, WW, VH, JS (ASC)
+
+#### `scripts/restore-predictions.mjs` (nieuw)
+- Leest beide Recovery CSVs vanuit `c:\RA\WK 2026\Recovery\`
+- Converteert teamnamen → `1`/`X`/`2` via embedded wedstrijdschema (wedstrijden 1-72)
+- Embedded lookup van alle Fantasy XV spelers (middleName → Player object)
+- Schrijft `predictions:{initials}` en `fantasy:{initials}` (incl. `teamName`, lege `scratchpad`)
+- Veiligheidscheck: GET per key vóór SET, waarschuwt als key al gevuld is
+- Vraagt bevestiging vóór uitvoering
+
+#### Correcte volgorde voor herstel
+1. `node scripts/cleanup-live-test.mjs` — verwijdert testdata keys
+2. `node scripts/restore-predictions.mjs` — schrijft originele data terug
+
+#### Uitgevoerd (2026-05-24) — volledig afgerond
+- `cleanup-live-test.mjs` → 24 testkeys verwijderd uit Redis
+- `restore-predictions.mjs` → 16 keys succesvol hersteld (BS, WP, RA, WS / JH, NS, PN, WW, VH, JS)
+- Score-formaat bug gevonden: `normalizeScore` in restore-script produceerde `"1-1"` (geen spaties), waardoor `parseScore` in `lib/standings.ts` de uitslag niet kon parsen
+- Fix 1: `lib/standings.ts` — `parseScore` splitst nu op `/\s*-\s*/` i.p.v. `' - '` (robuust voor beide formaten)
+- Fix 2: `scripts/restore-predictions.mjs` — `normalizeScore` produceert nu `"1 - 1"` (met spaties)
+- Restore opnieuw gedraaid na score-formaat fix; alle deelnemers bevestigd werkend
+
+#### Nog te doen
+- LiveSlide ESPN code pushen naar git (staat nog alleen lokaal)
+
 ### 2026-05-22 — FDO live test knop + ALL_SLOTS bugfix (Claude Code)
 
 #### `lib/data/slots.ts` (nieuw)

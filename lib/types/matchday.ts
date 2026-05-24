@@ -115,6 +115,11 @@ export interface LiveMatchData {
   awayFormation?: string | null
   homeStats?: LiveMatchStats | null
   awayStats?: LiveMatchStats | null
+  // ESPN-provided team display info (overschrijft landvlag/afkorting bij club-wedstrijden)
+  homeTeamAbbr?: string | null
+  awayTeamAbbr?: string | null
+  homeTeamLogo?: string | null
+  awayTeamLogo?: string | null
 }
 
 export interface FullMatchdayData {

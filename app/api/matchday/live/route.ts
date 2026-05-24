@@ -3,48 +3,124 @@ import { kvGet, kvSetEx, participantKey } from '@/lib/kv/kv'
 import { MATCHES } from '@/lib/data/matches'
 import { PARTICIPANTS } from '@/lib/participants'
 import { GROUP_MEMBERS } from '@/lib/groups'
-import { loadMatchdayConfig } from '@/lib/matchday'
+import { loadMatchdayConfig, resolveTotoOdds, resolveUitslagOdds } from '@/lib/matchday'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
-import { FDO_MATCH_IDS } from '@/lib/data/fdoMatchIds'
+import { ESPN_MATCH_IDS } from '@/lib/data/espnMatchIds'
 import { computePlayerQuote } from '@/lib/helpers'
 import { ALL_SLOTS } from '@/lib/data/slots'
 import type { GroupId } from '@/lib/groups'
 import type { Prediction, FantasySquad } from '@/store/gameStore'
-import type { LiveMatchData, LiveParticipantRow, LiveGoalEvent, LiveBookingEvent, LiveSubstitutionEvent, LivePenaltyEvent, LivePlayer, LiveMatchStats } from '@/lib/types/matchday'
+import type { LiveMatchData, LiveParticipantRow, LiveGoalEvent, LiveBookingEvent, LiveSubstitutionEvent, LivePlayer, LiveMatchStats } from '@/lib/types/matchday'
 
-const FDO_BASE = 'https://api.football-data.org/v4'
-const LIVE_CACHE_TTL = 25  // seconds
+const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer'
+const DEFAULT_COMPETITION = 'fifa.world'
+const LIVE_CACHE_TTL = 30  // seconds
 
-interface FdoTeam {
-  id: number
-  name: string
-  formation: string | null
-  lineup: Array<{ player: { name: string }; position: string | null; shirtNumber: number | null }>
-  bench:   Array<{ player: { name: string }; position: string | null; shirtNumber: number | null }>
-  statistics?: Array<{ type: string; value: number | null }>
+// ─── ESPN types ───────────────────────────────────────────────────────────────
+
+interface EspnPlay {
+  clock: { displayValue: string }
+  scoringPlay: boolean
+  substitution: boolean
+  redCard: boolean
+  yellowCard: boolean
+  penaltyKick: boolean
+  ownGoal: boolean
+  didScore?: boolean
+  didAssist?: boolean
 }
 
-interface FdoMatch {
-  status: string
-  minute?: number
-  score: {
-    fullTime: { home: number | null; away: number | null }
-    halfTime: { home: number | null; away: number | null }
+interface EspnRosterEntry {
+  active: boolean
+  starter: boolean
+  jersey?: string
+  subbedIn?: boolean
+  subbedOut?: boolean
+  athlete: { displayName: string }
+  position?: { name: string; abbreviation: string }
+  plays?: EspnPlay[]
+}
+
+interface EspnRoster {
+  homeAway: 'home' | 'away'
+  team: { displayName: string }
+  roster?: EspnRosterEntry[]
+}
+
+interface EspnStatus {
+  type: { description: string; completed: boolean }
+  displayClock?: string
+  period?: number
+}
+
+interface EspnStat {
+  name: string
+  displayValue: string
+}
+
+interface EspnSummary {
+  header: {
+    competitions: Array<{
+      status: EspnStatus
+      competitors: Array<{
+        homeAway: 'home' | 'away'
+        score?: string
+        team: {
+          displayName: string
+          abbreviation?: string
+          logos?: Array<{ href: string }>
+        }
+      }>
+      attendance?: number
+      venue?: { fullName: string }
+    }>
   }
-  goals: Array<{
-    minute: number
-    team: { name: string }
-    scorer: { name: string }
-    assist: { name: string | null } | null
-    type: string
-  }>
-  venue?: string
-  attendance?: number | null
-  bookings?: Array<{ minute: number; team: { id: number; name: string }; player: { name: string }; card: string }>
-  substitutions?: Array<{ minute: number; team: { id: number; name: string }; playerOut: { name: string }; playerIn: { name: string } }>
-  penalties?: Array<{ player: { name: string }; team: { id: number; name: string }; scored: boolean }>
-  homeTeam?: FdoTeam
-  awayTeam?: FdoTeam
+  rosters?: EspnRoster[]
+  gameInfo?: {
+    venue?: { fullName: string }
+    attendance?: number
+  }
+  boxscore?: {
+    teams?: Array<{
+      team: { displayName: string }
+      statistics?: EspnStat[]
+    }>
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function espnStatusToInternal(description: string): 'IN_PLAY' | 'PAUSED' | 'FINISHED' | null {
+  switch (description) {
+    case 'In Progress':
+    case 'First Half':
+    case 'Second Half': return 'IN_PLAY'
+    case 'Half Time':
+    case 'Halftime':
+    case 'End of Period':
+    case 'Intermission': return 'PAUSED'
+    case 'Full Time':
+    case 'Final':       return 'FINISHED'
+    default:            return null
+  }
+}
+
+function parseEspnMinute(displayValue: string): number {
+  const s = displayValue.replace("'", '').trim()
+  if (s === 'HT') return 45
+  if (s.includes('+')) {
+    const [base, extra] = s.split('+').map(Number)
+    return (base || 0) + (extra || 0)
+  }
+  return parseInt(s) || 0
+}
+
+function getMatchMinute(status: EspnStatus): number | null {
+  if (!status.displayClock) return null
+  // ESPN displayClock is the overall game clock, e.g. "67:00" in the 67th minute
+  // It can also be "67'" or just "67" — extract the leading integer
+  const minute = parseInt(status.displayClock)
+  return isNaN(minute) ? null : minute
 }
 
 function currentToto(home: number, away: number): '1' | 'X' | '2' {
@@ -77,44 +153,193 @@ function computeUitslagState(
   return { impossible, possible }
 }
 
-function extractStat(stats: Array<{ type: string; value: number | null }> | undefined, type: string): number | null {
-  return stats?.find((s) => s.type === type)?.value ?? null
+// ─── ESPN data extraction ─────────────────────────────────────────────────────
+
+function extractGoals(rosters: EspnRoster[]): {
+  goals: LiveGoalEvent[]
+  goalsByScorer: Record<string, number>
+  assistsByScorer: Record<string, number>
+} {
+  const goals: LiveGoalEvent[] = []
+  const goalsByScorer: Record<string, number> = {}
+  const assistsByScorer: Record<string, number> = {}
+
+  for (const roster of rosters) {
+    const team = roster.homeAway
+    for (const player of roster.roster ?? []) {
+      const name = player.athlete?.displayName ?? ''
+      for (const play of player.plays ?? []) {
+        if (play.didScore) {
+          goals.push({
+            scorer: name,
+            minute: parseEspnMinute(play.clock?.displayValue ?? '0'),
+            team,
+            type: play.ownGoal ? 'OWN' : play.penaltyKick ? 'PENALTY' : 'REGULAR',
+          })
+          goalsByScorer[name] = (goalsByScorer[name] ?? 0) + 1
+        }
+        if (play.didAssist) {
+          assistsByScorer[name] = (assistsByScorer[name] ?? 0) + 1
+        }
+      }
+    }
+  }
+
+  goals.sort((a, b) => a.minute - b.minute)
+  return { goals, goalsByScorer, assistsByScorer }
 }
 
-function normalizeCard(raw: string): 'YELLOW' | 'RED' | 'YELLOW_RED' {
-  if (raw === 'RED_CARD') return 'RED'
-  if (raw === 'YELLOW_RED_CARD') return 'YELLOW_RED'
-  return 'YELLOW'
+function extractBookings(rosters: EspnRoster[]): LiveBookingEvent[] {
+  const bookings: LiveBookingEvent[] = []
+  for (const roster of rosters) {
+    const team = roster.homeAway
+    for (const player of roster.roster ?? []) {
+      const name = player.athlete?.displayName ?? ''
+      for (const play of player.plays ?? []) {
+        if (play.yellowCard || play.redCard) {
+          bookings.push({
+            minute: parseEspnMinute(play.clock?.displayValue ?? '0'),
+            player: name,
+            team,
+            card: play.redCard ? 'RED' : 'YELLOW',
+          })
+        }
+      }
+    }
+  }
+  return bookings.sort((a, b) => a.minute - b.minute)
 }
 
-// Tracks when we're allowed to make another request (rate-limit backoff)
-let retryAfterMs = 0
+function extractSubs(rosters: EspnRoster[]): LiveSubstitutionEvent[] {
+  const subs: LiveSubstitutionEvent[] = []
 
-async function fetchFdoMatch(fdoId: number): Promise<FdoMatch | null> {
-  const apiKey = process.env.FOOTBALL_DATA_API_KEY
-  if (!apiKey) return null
-  if (Date.now() < retryAfterMs) return null  // still in backoff
+  for (const roster of rosters) {
+    const team = roster.homeAway
+    const ins:  Array<{ name: string; minute: number }> = []
+    const outs: Array<{ name: string; minute: number }> = []
 
-  try {
-    const res = await fetch(`${FDO_BASE}/matches/${fdoId}`, {
-      headers: { 'X-Auth-Token': apiKey },
-      next: { revalidate: 0 },
-    })
-
-    // Respect throttling headers
-    const retryAfter = res.headers.get('X-RequestCounter-Reset') ?? res.headers.get('Retry-After')
-    if (res.status === 429 && retryAfter) {
-      retryAfterMs = Date.now() + parseInt(retryAfter) * 1000
-      return null
+    for (const player of roster.roster ?? []) {
+      const name = player.athlete?.displayName ?? ''
+      const subPlay = player.plays?.find((p) => p.substitution)
+      if (!subPlay) continue
+      const minute = parseEspnMinute(subPlay.clock?.displayValue ?? '0')
+      if (player.subbedIn)  ins.push({ name, minute })
+      if (player.subbedOut) outs.push({ name, minute })
     }
 
+    ins.sort((a, b) => a.minute - b.minute)
+    outs.sort((a, b) => a.minute - b.minute)
+
+    // Group by minute and pair in/out players
+    const byMinute = new Map<number, { ins: string[]; outs: string[] }>()
+    for (const p of ins) {
+      if (!byMinute.has(p.minute)) byMinute.set(p.minute, { ins: [], outs: [] })
+      byMinute.get(p.minute)!.ins.push(p.name)
+    }
+    for (const p of outs) {
+      if (!byMinute.has(p.minute)) byMinute.set(p.minute, { ins: [], outs: [] })
+      byMinute.get(p.minute)!.outs.push(p.name)
+    }
+
+    for (const [minute, { ins: inPlayers, outs: outPlayers }] of byMinute) {
+      const count = Math.min(inPlayers.length, outPlayers.length)
+      for (let i = 0; i < count; i++) {
+        subs.push({ minute, playerIn: inPlayers[i], playerOut: outPlayers[i], team })
+      }
+    }
+  }
+
+  return subs.sort((a, b) => a.minute - b.minute)
+}
+
+function extractLineups(rosters: EspnRoster[]): {
+  homeLineup: LivePlayer[]
+  awayLineup: LivePlayer[]
+  homeBench:  LivePlayer[]
+  awayBench:  LivePlayer[]
+} {
+  const homeLineup: LivePlayer[] = []
+  const awayLineup: LivePlayer[] = []
+  const homeBench:  LivePlayer[] = []
+  const awayBench:  LivePlayer[] = []
+
+  for (const roster of rosters) {
+    const isHome = roster.homeAway === 'home'
+    for (const player of roster.roster ?? []) {
+      const entry: LivePlayer = {
+        name: player.athlete?.displayName ?? '',
+        position: player.position?.name ?? null,
+        shirtNumber: player.jersey ? parseInt(player.jersey) : null,
+      }
+      if (player.starter) {
+        (isHome ? homeLineup : awayLineup).push(entry)
+      } else if (player.active) {
+        (isHome ? homeBench : awayBench).push(entry)
+      }
+    }
+  }
+
+  return { homeLineup, awayLineup, homeBench, awayBench }
+}
+
+function extractStats(
+  boxscoreTeams: Array<{ team: { displayName: string }; statistics?: EspnStat[] }> | undefined,
+  rosters: EspnRoster[]
+): { homeStats: LiveMatchStats | null; awayStats: LiveMatchStats | null } {
+  if (!boxscoreTeams?.length) return { homeStats: null, awayStats: null }
+
+  const homeTeamName = rosters.find((r) => r.homeAway === 'home')?.team.displayName
+  const awayTeamName = rosters.find((r) => r.homeAway === 'away')?.team.displayName
+
+  function parseStat(stats: EspnStat[] | undefined, name: string): number | null {
+    const s = stats?.find((x) => x.name === name)
+    if (!s) return null
+    const v = parseFloat(s.displayValue)
+    return isNaN(v) ? null : v
+  }
+
+  function buildStats(stats: EspnStat[] | undefined): LiveMatchStats | null {
+    if (!stats?.length) return null
+    return {
+      possession:    parseStat(stats, 'possessionPct'),
+      shots:         parseStat(stats, 'totalShots'),
+      shotsOnTarget: parseStat(stats, 'shotsOnTarget'),
+      corners:       parseStat(stats, 'wonCorners'),
+      fouls:         parseStat(stats, 'foulsCommitted'),
+      yellowCards:   parseStat(stats, 'yellowCards'),
+      redCards:      parseStat(stats, 'redCards'),
+    }
+  }
+
+  const homeTeam = boxscoreTeams.find((t) => t.team.displayName === homeTeamName)
+  const awayTeam = boxscoreTeams.find((t) => t.team.displayName === awayTeamName)
+
+  // Fallback: als teamnamen niet matchen, gebruik volgorde (index 0 = home, 1 = away)
+  const homeSrc = homeTeam ?? boxscoreTeams[0]
+  const awaySrc = awayTeam ?? boxscoreTeams[1]
+
+  return {
+    homeStats: buildStats(homeSrc?.statistics),
+    awayStats: buildStats(awaySrc?.statistics),
+  }
+}
+
+// ─── Fetch ────────────────────────────────────────────────────────────────────
+
+async function fetchEspnSummary(eventId: number, competition: string): Promise<EspnSummary | null> {
+  try {
+    const res = await fetch(
+      `${ESPN_BASE}/${competition}/summary?event=${eventId}`,
+      { next: { revalidate: 0 } }
+    )
     if (!res.ok) return null
-    const json = await res.json()
-    return json.match ?? json ?? null
+    return await res.json() as EspnSummary
   } catch {
     return null
   }
 }
+
+// ─── Route ────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -151,95 +376,80 @@ export async function GET(req: NextRequest) {
 
   const liveMatches: LiveMatchData[] = []
 
-  // Local-only test mapping via .env.local (never deployed)
-  const effectiveIds: Record<number, number> = { ...FDO_MATCH_IDS }
-  const testMatch = process.env.FDO_TEST_MATCH
+  // Test-override via .env.local: ESPN_TEST_MATCH=internalId:espnEventId
+  // Optioneel: ESPN_TEST_COMPETITION=esp.1 (default: fifa.world)
+  const effectiveIds: Record<number, number> = { ...ESPN_MATCH_IDS }
+  const testMatch = process.env.ESPN_TEST_MATCH
   if (testMatch) {
-    const [internalStr, fdoStr] = testMatch.split(':')
+    const [internalStr, espnStr] = testMatch.split(':')
     const internal = parseInt(internalStr)
-    const fdo = parseInt(fdoStr)
-    if (!isNaN(internal) && !isNaN(fdo)) effectiveIds[internal] = fdo
+    const espnId   = parseInt(espnStr)
+    if (!isNaN(internal) && !isNaN(espnId)) effectiveIds[internal] = espnId
   }
+  const competition = process.env.ESPN_TEST_COMPETITION ?? DEFAULT_COMPETITION
 
   for (const matchId of matchIds) {
-    const fdoId = effectiveIds[matchId]
-    if (!fdoId) continue
+    const espnId = effectiveIds[matchId]
+    if (!espnId) continue
 
-    const cacheKey = `live:${matchId}`
-    let fdoMatch = await kvGet<FdoMatch>(cacheKey)
+    const cacheKey = `live:espn:${matchId}`
+    let summary = await kvGet<EspnSummary>(cacheKey)
 
-    if (!fdoMatch) {
-      fdoMatch = await fetchFdoMatch(fdoId)
-      if (fdoMatch) {
-        await kvSetEx(cacheKey, fdoMatch, LIVE_CACHE_TTL)
+    if (!summary) {
+      summary = await fetchEspnSummary(espnId, competition)
+      if (summary) {
+        await kvSetEx(cacheKey, summary, LIVE_CACHE_TTL)
       }
     }
 
-    if (!fdoMatch) continue
+    if (!summary) continue
 
-    const status = fdoMatch.status
-    if (status !== 'IN_PLAY' && status !== 'PAUSED' && status !== 'FINISHED') continue
-    // Only include recently finished (treat FINISHED same as live for the slide)
-    // Slide will be hidden by MatchdayDrawer once a configurable time passes post-match
+    const comp = summary.header?.competitions?.[0]
+    if (!comp) continue
 
-    const scoreHome = fdoMatch.score.fullTime.home ?? fdoMatch.score.halfTime.home ?? 0
-    const scoreAway = fdoMatch.score.fullTime.away ?? fdoMatch.score.halfTime.away ?? 0
-    const totoNow = currentToto(scoreHome, scoreAway)
+    const statusDesc = comp.status?.type?.description ?? ''
+    const internalStatus = espnStatusToInternal(statusDesc)
+    if (!internalStatus) continue
+
+    const homeComp = comp.competitors?.find((c) => c.homeAway === 'home')
+    const awayComp = comp.competitors?.find((c) => c.homeAway === 'away')
+    const scoreHome = parseInt(homeComp?.score ?? '0') || 0
+    const scoreAway = parseInt(awayComp?.score ?? '0') || 0
+
+    const homeTeamAbbr = homeComp?.team.abbreviation ?? null
+    const awayTeamAbbr = awayComp?.team.abbreviation ?? null
+    const homeTeamLogo = homeComp?.team.logos?.[0]?.href ?? null
+    const awayTeamLogo = awayComp?.team.logos?.[0]?.href ?? null
+
+    const rosters = summary.rosters ?? []
+    const { goals, goalsByScorer, assistsByScorer } = extractGoals(rosters)
+    const bookings      = extractBookings(rosters)
+    const substitutions = extractSubs(rosters)
+    const { homeLineup, awayLineup, homeBench, awayBench } = extractLineups(rosters)
+
+    const totoNow    = currentToto(scoreHome, scoreAway)
     const uitslagNow = `${scoreHome}-${scoreAway}`
-
-    const goals: LiveGoalEvent[] = (fdoMatch.goals ?? []).map((g) => ({
-      scorer: g.scorer.name,
-      minute: g.minute,
-      team: g.team.name.toLowerCase().includes('home') ? 'home' : 'away',
-      type: (g.type as LiveGoalEvent['type']) ?? 'REGULAR',
-    }))
-
-    // Determine home/away team names for the match (to tag goal teams correctly)
-    const match = MATCHES.find((m) => m.id === matchId)
-    const fdoGoals: LiveGoalEvent[] = (fdoMatch.goals ?? []).map((g) => {
-      const teamName = g.team?.name ?? ''
-      const isHome = match
-        ? teamName.toLowerCase().includes(match.home.toLowerCase().split(' ')[0].toLowerCase())
-        : false
-      return {
-        scorer: g.scorer.name,
-        minute: g.minute,
-        team: isHome ? 'home' : 'away',
-        type: (g.type as LiveGoalEvent['type']) ?? 'REGULAR',
-      }
-    })
-
-    // goal scorer names from fdo for fantasy matching
-    const goalsByScorer: Record<string, number> = {}
-    const assistsByScorer: Record<string, number> = {}
-    for (const g of fdoMatch.goals ?? []) {
-      const sName = g.scorer.name
-      goalsByScorer[sName] = (goalsByScorer[sName] ?? 0) + 1
-      if (g.assist?.name) {
-        const aName = g.assist.name
-        assistsByScorer[aName] = (assistsByScorer[aName] ?? 0) + 1
-      }
-    }
+    const match      = MATCHES.find((m) => m.id === matchId)
 
     const quoteEntry = config?.quotes.find((q) => q.matchId === matchId)
-    const totoOdds = quoteEntry?.totoOdds ?? 1
-    const uitslagOdds = quoteEntry?.uitslagOdds ?? 1
 
     const participantRows: LiveParticipantRow[] = groupParticipants.map((p) => {
-      const pred = predsByInitials[p.initials]?.[matchId]
+      const pred   = predsByInitials[p.initials]?.[matchId]
       const tokens = pred?.tokens ?? 0
-      const toto = pred?.toto ?? null
+      const toto   = pred?.toto   ?? null
       const uitslag = pred?.uitslag ?? null
 
-      const totoCorrect = toto === totoNow
+      const totoCorrect    = toto === totoNow
       const uitslagCorrect = uitslag === uitslagNow
       const { impossible: uitslagImpossible, possible: uitslagPossible } =
-        computeUitslagState(uitslag, scoreHome, scoreAway, status)
+        computeUitslagState(uitslag, scoreHome, scoreAway, internalStatus)
 
-      const potentialTotoPoints = totoCorrect ? Math.round(tokens * totoOdds * 100) / 100 : 0
+      const totoOdds    = resolveTotoOdds(quoteEntry, toto)
+      const uitslagOdds = resolveUitslagOdds(quoteEntry, uitslag)
+
+      const potentialTotoPoints    = totoCorrect    ? Math.round(tokens * totoOdds    * 100) / 100 : 0
       const potentialUitslagPoints = uitslagCorrect ? Math.round(tokens * uitslagOdds * 100) / 100 : 0
 
-      // Fantasy: find home/away player separately (max 1 per country per spelregel)
       const squad: FantasySquad = squadsByInitials[p.initials] ?? {}
       let fantasyHomePlayer: { name: string; goals: number; assists: number } | null = null
       let fantasyAwayPlayer: { name: string; goals: number; assists: number } | null = null
@@ -251,20 +461,20 @@ export async function GET(req: NextRequest) {
           if (player.country === match.home && !fantasyHomePlayer) {
             fantasyHomePlayer = {
               name: player.name,
-              goals: goalsByScorer[player.name] ?? 0,
+              goals:   goalsByScorer[player.name]   ?? 0,
               assists: assistsByScorer[player.name] ?? 0,
             }
           } else if (player.country === match.away && !fantasyAwayPlayer) {
             fantasyAwayPlayer = {
               name: player.name,
-              goals: goalsByScorer[player.name] ?? 0,
+              goals:   goalsByScorer[player.name]   ?? 0,
               assists: assistsByScorer[player.name] ?? 0,
             }
           }
         }
       }
 
-      let fantasyGoals = 0
+      let fantasyGoals   = 0
       let fantasyAssists = 0
       let potentialFantasyPoints = 0
       for (const fp of [fantasyHomePlayer, fantasyAwayPlayer]) {
@@ -272,13 +482,15 @@ export async function GET(req: NextRequest) {
         const playerEntry = Object.values(squad).find((sp) => sp?.name === fp.name)
         if (!playerEntry) continue
         const quote = computePlayerQuote(playerEntry)
-        fantasyGoals += fp.goals
+        fantasyGoals   += fp.goals
         fantasyAssists += fp.assists
         potentialFantasyPoints += (fp.goals + fp.assists) * quote
       }
       potentialFantasyPoints = Math.round(potentialFantasyPoints * 100) / 100
 
-      const totalPotential = Math.round((potentialTotoPoints + potentialUitslagPoints + potentialFantasyPoints) * 100) / 100
+      const totalPotential = Math.round(
+        (potentialTotoPoints + potentialUitslagPoints + potentialFantasyPoints) * 100
+      ) / 100
 
       return {
         initials: p.initials,
@@ -317,86 +529,29 @@ export async function GET(req: NextRequest) {
       return 0
     })
 
-    // New fields from FDO
-    const homeTeamId = fdoMatch.homeTeam?.id
-    const isHomeTeam = (teamId: number) => teamId === homeTeamId
-
-    const venue = fdoMatch.venue ?? null
-    const attendance = fdoMatch.attendance ?? null
-
-    const bookings: LiveBookingEvent[] = (fdoMatch.bookings ?? []).map((b) => ({
-      minute: b.minute,
-      player: b.player.name,
-      team: isHomeTeam(b.team.id) ? 'home' : 'away',
-      card: normalizeCard(b.card),
-    }))
-
-    const substitutions: LiveSubstitutionEvent[] = (fdoMatch.substitutions ?? []).map((s) => ({
-      minute: s.minute,
-      playerOut: s.playerOut.name,
-      playerIn: s.playerIn.name,
-      team: isHomeTeam(s.team.id) ? 'home' : 'away',
-    }))
-
-    const penalties: LivePenaltyEvent[] = (fdoMatch.penalties ?? []).map((p) => ({
-      player: p.player.name,
-      team: isHomeTeam(p.team.id) ? 'home' : 'away',
-      scored: p.scored,
-    }))
-
-    const mapPlayer = (e: { player: { name: string }; position: string | null; shirtNumber: number | null }): LivePlayer => ({
-      name: e.player.name,
-      position: e.position ?? null,
-      shirtNumber: e.shirtNumber ?? null,
-    })
-
-    const homeLineup = (fdoMatch.homeTeam?.lineup ?? []).map(mapPlayer)
-    const awayLineup = (fdoMatch.awayTeam?.lineup ?? []).map(mapPlayer)
-    const homeBench  = (fdoMatch.homeTeam?.bench ?? []).map(mapPlayer)
-    const awayBench  = (fdoMatch.awayTeam?.bench ?? []).map(mapPlayer)
-    const homeFormation = fdoMatch.homeTeam?.formation ?? null
-    const awayFormation = fdoMatch.awayTeam?.formation ?? null
-
-    const homeStats: LiveMatchStats | null = fdoMatch.homeTeam?.statistics ? {
-      possession:    extractStat(fdoMatch.homeTeam.statistics, 'ball_possession'),
-      shots:         extractStat(fdoMatch.homeTeam.statistics, 'total_shots'),
-      shotsOnTarget: extractStat(fdoMatch.homeTeam.statistics, 'shots_on_goal'),
-      corners:       extractStat(fdoMatch.homeTeam.statistics, 'corner_kicks'),
-      fouls:         extractStat(fdoMatch.homeTeam.statistics, 'fouls'),
-      yellowCards:   extractStat(fdoMatch.homeTeam.statistics, 'yellow_cards'),
-      redCards:      extractStat(fdoMatch.homeTeam.statistics, 'red_cards'),
-    } : null
-
-    const awayStats: LiveMatchStats | null = fdoMatch.awayTeam?.statistics ? {
-      possession:    extractStat(fdoMatch.awayTeam.statistics, 'ball_possession'),
-      shots:         extractStat(fdoMatch.awayTeam.statistics, 'total_shots'),
-      shotsOnTarget: extractStat(fdoMatch.awayTeam.statistics, 'shots_on_goal'),
-      corners:       extractStat(fdoMatch.awayTeam.statistics, 'corner_kicks'),
-      fouls:         extractStat(fdoMatch.awayTeam.statistics, 'fouls'),
-      yellowCards:   extractStat(fdoMatch.awayTeam.statistics, 'yellow_cards'),
-      redCards:      extractStat(fdoMatch.awayTeam.statistics, 'red_cards'),
-    } : null
-
     liveMatches.push({
       matchId,
-      status: status as LiveMatchData['status'],
-      score: { home: scoreHome, away: scoreAway },
-      minute: fdoMatch.minute ?? null,
-      goals: fdoGoals,
+      status:  internalStatus,
+      score:   { home: scoreHome, away: scoreAway },
+      minute:  getMatchMinute(comp.status),
+      goals,
       participantRows,
-      venue,
-      attendance,
+      venue:      summary.gameInfo?.venue?.fullName ?? comp.venue?.fullName ?? null,
+      attendance: summary.gameInfo?.attendance ?? comp.attendance ?? null,
       bookings,
       substitutions,
-      penalties,
+      penalties:    [],   // ESPN heeft geen aparte penalty-shootout lijst
       homeLineup,
       awayLineup,
       homeBench,
       awayBench,
-      homeFormation,
-      awayFormation,
-      homeStats,
-      awayStats,
+      homeFormation: null,  // ESPN geeft formatie niet als string
+      awayFormation: null,
+      ...extractStats(summary.boxscore?.teams, rosters),
+      homeTeamAbbr,
+      awayTeamAbbr,
+      homeTeamLogo,
+      awayTeamLogo,
     })
   }
 

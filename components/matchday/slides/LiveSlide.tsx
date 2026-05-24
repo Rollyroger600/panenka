@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useState } from 'react'
+import { forwardRef, useState, useEffect, useRef } from 'react'
 import { SlideWrapper } from '@/components/matchday/SlideWrapper'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { COUNTRY_ABB } from '@/lib/data/countries'
@@ -61,7 +61,7 @@ function TimelineTab({ lm }: { lm: LiveMatchData }) {
 
   if (events.length === 0 && !hasPenalties) {
     return (
-      <div className="text-center font-heading text-[11px]" style={{ color: MUTED }}>
+      <div className="text-center font-heading text-[12px]" style={{ color: MUTED }}>
         Nog geen events
       </div>
     )
@@ -119,16 +119,16 @@ function TimelineTab({ lm }: { lm: LiveMatchData }) {
           const s = ev.data as LiveSubstitutionEvent
           const subIcon = (
             <div className="flex flex-col items-center justify-center" style={{ gap: 1 }}>
-              <span style={{ color: '#4ade80', fontSize: 9, lineHeight: 1 }}>↑</span>
-              <span style={{ color: '#f87171', fontSize: 9, lineHeight: 1 }}>↓</span>
+              <span style={{ color: '#4ade80', fontSize: 12, lineHeight: 1 }}>↑</span>
+              <span style={{ color: '#f87171', fontSize: 12, lineHeight: 1 }}>↓</span>
             </div>
           )
           return (
             <div key={i} className="grid items-start" style={{ gridTemplateColumns: '1fr 20px 1fr' }}>
               {isHome ? (
                 <div className="flex flex-col items-end pr-2">
-                  <span className="font-heading text-[11px]" style={{ color: '#4ade80' }}>{s.minute}' {s.playerIn}</span>
-                  <span className="font-heading text-[11px]" style={{ color: '#f87171' }}>{s.playerOut}</span>
+                  <span className="font-heading text-[12px]" style={{ color: '#4ade80' }}>{s.minute}' {s.playerIn}</span>
+                  <span className="font-heading text-[12px]" style={{ color: '#f87171' }}>{s.playerOut}</span>
                 </div>
               ) : <span />}
               <div className="flex items-center justify-center pt-0.5">{subIcon}</div>
@@ -147,7 +147,7 @@ function TimelineTab({ lm }: { lm: LiveMatchData }) {
 
       {hasPenalties && (
         <div className="mt-2">
-          <div className="text-center font-heading text-[11px] uppercase tracking-wider mb-1.5" style={{ color: MUTED }}>
+          <div className="text-center font-heading text-[12px] uppercase tracking-wider mb-1.5" style={{ color: MUTED }}>
             Strafschoppenreeks
           </div>
           {(lm.penalties ?? []).map((p, i) => {
@@ -187,7 +187,7 @@ function OpstellingenTab({ lm, homeAbb, awayAbb }: { lm: LiveMatchData; homeAbb:
 
   if (homeLineup.length === 0 && awayLineup.length === 0) {
     return (
-      <div className="text-center font-heading text-[11px]" style={{ color: MUTED }}>
+      <div className="text-center font-heading text-[12px]" style={{ color: MUTED }}>
         Nog geen opstellingen beschikbaar
       </div>
     )
@@ -199,10 +199,10 @@ function OpstellingenTab({ lm, homeAbb, awayAbb }: { lm: LiveMatchData; homeAbb:
   return (
     <div>
       <div className="grid mb-1" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <div className="font-heading text-[11px] text-white text-center">
+        <div className="font-heading text-[14px] text-white text-center">
           {homeAbb}{lm.homeFormation ? ` (${lm.homeFormation})` : ''}
         </div>
-        <div className="font-heading text-[11px] text-white text-center">
+        <div className="font-heading text-[14px] text-white text-center">
           {awayAbb}{lm.awayFormation ? ` (${lm.awayFormation})` : ''}
         </div>
       </div>
@@ -212,10 +212,10 @@ function OpstellingenTab({ lm, homeAbb, awayAbb }: { lm: LiveMatchData; homeAbb:
         const ap = awayLineup[i]
         return (
           <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1fr', borderBottom: ROW_BOTTOM, paddingTop: 2, paddingBottom: 2 }}>
-            <span className="font-heading text-[10px] text-white text-center truncate px-1">
+            <span className="font-heading text-[12px] text-white text-center truncate px-1">
               {hp ? `${hp.shirtNumber != null ? hp.shirtNumber + ' ' : ''}${hp.name}` : ''}
             </span>
-            <span className="font-heading text-[10px] text-white text-center truncate px-1">
+            <span className="font-heading text-[12px] text-white text-center truncate px-1">
               {ap ? `${ap.shirtNumber != null ? ap.shirtNumber + ' ' : ''}${ap.name}` : ''}
             </span>
           </div>
@@ -223,7 +223,7 @@ function OpstellingenTab({ lm, homeAbb, awayAbb }: { lm: LiveMatchData; homeAbb:
       })}
 
       {maxBench > 0 && (
-        <div className="text-center font-heading text-[10px] uppercase tracking-wider my-1.5" style={{ color: MUTED }}>
+        <div className="text-center font-heading text-[14px] uppercase tracking-wider my-1.5" style={{ color: MUTED }}>
           Bank
         </div>
       )}
@@ -233,10 +233,10 @@ function OpstellingenTab({ lm, homeAbb, awayAbb }: { lm: LiveMatchData; homeAbb:
         const ap = awayBench[i]
         return (
           <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1fr', borderBottom: ROW_BOTTOM, paddingTop: 1, paddingBottom: 1 }}>
-            <span className="font-heading text-[10px] text-center truncate px-1" style={{ color: MUTED }}>
+            <span className="font-heading text-[12px] text-center truncate px-1" style={{ color: MUTED }}>
               {hp ? `${hp.shirtNumber != null ? hp.shirtNumber + ' ' : ''}${hp.name}` : ''}
             </span>
-            <span className="font-heading text-[10px] text-center truncate px-1" style={{ color: MUTED }}>
+            <span className="font-heading text-[12px] text-center truncate px-1" style={{ color: MUTED }}>
               {ap ? `${ap.shirtNumber != null ? ap.shirtNumber + ' ' : ''}${ap.name}` : ''}
             </span>
           </div>
@@ -264,7 +264,7 @@ function StatsTab({ lm, homeAbb, awayAbb }: { lm: LiveMatchData; homeAbb: string
 
   if (!hs && !as_) {
     return (
-      <div className="text-center font-heading text-[11px]" style={{ color: MUTED }}>
+      <div className="text-center font-heading text-[12px]" style={{ color: MUTED }}>
         Statistieken niet beschikbaar
       </div>
     )
@@ -272,7 +272,7 @@ function StatsTab({ lm, homeAbb, awayAbb }: { lm: LiveMatchData; homeAbb: string
 
   return (
     <div>
-      <div className="grid font-heading text-[11px] text-white mb-1" style={{ gridTemplateColumns: '1fr 2fr 1fr' }}>
+      <div className="grid font-heading text-[12px] text-white mb-1" style={{ gridTemplateColumns: '1fr 2fr 1fr' }}>
         <span className="text-center">{homeAbb}</span>
         <span />
         <span className="text-center">{awayAbb}</span>
@@ -291,13 +291,34 @@ function StatsTab({ lm, homeAbb, awayAbb }: { lm: LiveMatchData; homeAbb: string
             style={{ gridTemplateColumns: '1fr 2fr 1fr', borderBottom: ROW_BOTTOM, paddingTop: 3, paddingBottom: 3 }}
           >
             <span className="font-heading text-[12px] text-white text-center">{hvStr}</span>
-            <span className="font-heading text-[10px] text-center uppercase tracking-wide" style={{ color: MUTED }}>{label}</span>
+            <span className="font-heading text-[12px] text-center uppercase tracking-wide" style={{ color: MUTED }}>{label}</span>
             <span className="font-heading text-[12px] text-white text-center">{avStr}</span>
           </div>
         )
       })}
     </div>
   )
+}
+
+// ─── TeamLogo ─────────────────────────────────────────────────────────────────
+
+function TeamLogo({ lm, side, match, size }: { lm: LiveMatchData; side: 'home' | 'away'; match: Match; size: number }) {
+  const logo = side === 'home' ? lm.homeTeamLogo : lm.awayTeamLogo
+  const country = side === 'home' ? match.home : match.away
+  if (logo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={logo}
+        alt={country}
+        width={size}
+        height={size}
+        className="rounded-full object-contain"
+        style={{ minWidth: size, background: 'rgba(255,255,255,0.08)' }}
+      />
+    )
+  }
+  return <FlagImage country={country} size={size} />
 }
 
 // ─── LiveMatchPanel ───────────────────────────────────────────────────────────
@@ -310,33 +331,52 @@ const PANEL_LABELS: Record<PanelKey, string> = {
   stats:        'Stats',
 }
 
+type Trend = 'up' | 'down' | 'same'
+
 function LiveMatchPanel({ lm, match, exporting }: { lm: LiveMatchData; match: Match; exporting: boolean }) {
   const [openPanel, setOpenPanel] = useState<PanelKey | null>(null)
+
+  const prevOrderRef = useRef<string[]>([])
+  const [trends, setTrends] = useState<Map<string, Trend>>(new Map())
+
+  useEffect(() => {
+    const currentOrder = lm.participantRows.map((r) => r.initials)
+    const prevOrder = prevOrderRef.current
+    if (prevOrder.length > 0 && currentOrder.join(',') !== prevOrder.join(',')) {
+      const next = new Map<string, Trend>()
+      currentOrder.forEach((initials, ci) => {
+        const pi = prevOrder.indexOf(initials)
+        next.set(initials, pi === -1 ? 'same' : ci < pi ? 'up' : ci > pi ? 'down' : 'same')
+      })
+      setTrends(next)
+    }
+    prevOrderRef.current = currentOrder
+  }, [lm.participantRows])
 
   const togglePanel = (key: PanelKey) =>
     setOpenPanel((prev) => (prev === key ? null : key))
 
-  const homeAbb = COUNTRY_ABB[match.home] ?? match.home
-  const awayAbb = COUNTRY_ABB[match.away] ?? match.away
-  const minuteStr = lm.status === 'PAUSED' ? 'HT' : lm.minute != null ? `${lm.minute}'` : ''
+  const homeAbb = lm.homeTeamAbbr ?? COUNTRY_ABB[match.home] ?? match.home
+  const awayAbb = lm.awayTeamAbbr ?? COUNTRY_ABB[match.away] ?? match.away
+  const minuteStr = lm.status === 'PAUSED' ? 'HT' : lm.status === 'FINISHED' ? 'FT' : lm.minute != null ? `${lm.minute}'` : ''
 
   return (
     <div className="relative mb-4">
 
       {/* Score header */}
       <div className="flex items-center justify-center gap-3 pt-2">
-        <FlagImage country={match.home} size={28} />
+        <TeamLogo lm={lm} side="home" match={match} size={28} />
         <span className="font-accent font-light text-base text-white">{homeAbb}</span>
         <span className="font-heading text-white text-xl" style={{ minWidth: 48, textAlign: 'center' }}>
           {lm.score.home} – {lm.score.away}
         </span>
         <span className="font-accent font-light text-base text-white">{awayAbb}</span>
-        <FlagImage country={match.away} size={28} />
+        <TeamLogo lm={lm} side="away" match={match} size={28} />
       </div>
 
       {/* Venue + attendance */}
       {(lm.venue || lm.attendance != null) && (
-        <div className="text-center font-heading text-[11px] mt-1" style={{ color: MUTED }}>
+        <div className="text-center font-heading text-[12px] mt-1" style={{ color: MUTED }}>
           {[lm.venue, lm.attendance != null ? fmtAttendance(lm.attendance) : null]
             .filter(Boolean)
             .join(' • ')}
@@ -374,7 +414,7 @@ function LiveMatchPanel({ lm, match, exporting }: { lm: LiveMatchData; match: Ma
 
       {/* Knoppen */}
       {!exporting && (
-        <div className="flex justify-center gap-1 mt-5 mb-5">
+        <div className="flex justify-center gap-1 mt-5 mb-2">
           {(['timeline', 'opstellingen', 'stats'] as PanelKey[]).map((key) => (
             <button
               key={key}
@@ -392,14 +432,37 @@ function LiveMatchPanel({ lm, match, exporting }: { lm: LiveMatchData; match: Ma
         </div>
       )}
 
+      {/* Deelnemerstabel + zwevend panel (overlay over de tabel, knoppen blijven zichtbaar) */}
+      <div className="relative">
+
+        {/* Zwevend panel */}
+        {!exporting && openPanel && (
+          <div
+            className="absolute inset-0 z-10 overflow-y-auto rounded"
+            style={{ background: 'rgba(14,16,26,0.97)', padding: '10px 12px 12px' }}
+          >
+            <button
+              onClick={() => setOpenPanel(null)}
+              className="absolute top-1.5 right-2 font-heading text-[28px] leading-none"
+              style={{ color: 'rgba(255,255,255,0.45)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px' }}
+            >
+              ×
+            </button>
+            {openPanel === 'timeline'     && <TimelineTab    lm={lm} />}
+            {openPanel === 'opstellingen' && <OpstellingenTab lm={lm} homeAbb={homeAbb} awayAbb={awayAbb} />}
+            {openPanel === 'stats'        && <StatsTab        lm={lm} homeAbb={homeAbb} awayAbb={awayAbb} />}
+          </div>
+        )}
+
       {/* Deelnemerstabel */}
       {(() => {
-        const TG = '45px 22px 20px 22px 36px 22px minmax(0,1fr) minmax(0,1fr) 32px'
+        const TG = '14px 45px 22px 20px 22px 36px 22px minmax(0,1fr) minmax(0,1fr) 32px'
         const VL = '1px solid rgba(255,255,255,0.14)'
         return (
           <>
             <div style={{ borderBottom: HDR_BOTTOM, paddingBottom: 3, marginBottom: 3 }}>
               <div className="grid font-heading text-[12px] uppercase tracking-wider text-white" style={{ gridTemplateColumns: TG }}>
+                <span />
                 <span />
                 <span className="text-center" style={{ borderLeft: VL }}>Inzet</span>
                 <span className="text-center" style={{ gridColumn: 'span 2', borderLeft: VL }}>Toto</span>
@@ -429,6 +492,16 @@ function LiveMatchPanel({ lm, match, exporting }: { lm: LiveMatchData; match: Ma
                   className="grid items-center"
                   style={{ gridTemplateColumns: TG, borderBottom: ROW_BOTTOM, paddingTop: 3, paddingBottom: 3 }}
                 >
+                  {/* Trend */}
+                  {(() => {
+                    const t = trends.get(row.initials)
+                    return t === 'up'
+                      ? <span className="font-heading text-[11px] text-center leading-none" style={{ color: '#4ade80' }}>↑</span>
+                      : t === 'down'
+                      ? <span className="font-heading text-[11px] text-center leading-none" style={{ color: '#f87171' }}>↓</span>
+                      : <span />
+                  })()}
+
                   {/* Naam */}
                   <span className="font-heading font-normal text-[12px] text-white truncate">
                     {row.name.split(' ')[0]}
@@ -480,31 +553,7 @@ function LiveMatchPanel({ lm, match, exporting }: { lm: LiveMatchData; match: Ma
         )
       })()}
 
-      {/* Zwevend venster */}
-      {!exporting && openPanel && (
-        <div
-          className="absolute inset-0 z-10 overflow-y-auto rounded"
-          style={{ background: 'rgba(14,16,26,0.97)', padding: '10px 12px 12px' }}
-        >
-          {/* Header venster */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-heading text-[12px] uppercase tracking-wider text-white">
-              {PANEL_LABELS[openPanel]}
-            </span>
-            <button
-              onClick={() => setOpenPanel(null)}
-              className="font-heading text-[13px] leading-none"
-              style={{ color: MUTED }}
-            >
-              ✕
-            </button>
-          </div>
-
-          {openPanel === 'timeline'     && <TimelineTab    lm={lm} />}
-          {openPanel === 'opstellingen' && <OpstellingenTab lm={lm} homeAbb={homeAbb} awayAbb={awayAbb} />}
-          {openPanel === 'stats'        && <StatsTab        lm={lm} homeAbb={homeAbb} awayAbb={awayAbb} />}
-        </div>
-      )}
+      </div> {/* einde relative wrapper */}
     </div>
   )
 }
@@ -531,7 +580,7 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
 
         {liveMatches.length === 0 && (
           <div className="flex items-center justify-center flex-1">
-            <span className="font-heading text-[11px]" style={{ color: MUTED }}>
+            <span className="font-heading text-[12px]" style={{ color: MUTED }}>
               Geen live wedstrijden
             </span>
           </div>

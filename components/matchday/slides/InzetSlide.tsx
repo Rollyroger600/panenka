@@ -2,6 +2,7 @@
 import { forwardRef } from 'react'
 import { SlideWrapper } from '@/components/matchday/SlideWrapper'
 import { FlagImage } from '@/components/ui/FlagImage'
+import { resolveTotoOdds, resolveUitslagOdds } from '@/lib/matchday'
 import type { MatchdayConfig, MatchdayQuote } from '@/lib/matchday'
 import type { MatchSlideData, PotPoint } from '@/lib/types/matchday'
 import { PotChart } from '@/components/matchday/charts/PotChart'
@@ -75,7 +76,7 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
               <div key={match.id} className={`flex items-center py-1 ${isLast ? 'pb-4' : ''}`}>
                 {/* Kolom 1: toto quotering */}
                 <div style={{ flex: 1 }} className="font-heading text-[18px] text-white text-center">
-                  {quote.totoOdds.toFixed(2)}
+                  {resolveTotoOdds(quote, participantToto).toFixed(2)}
                 </div>
 
                 {/* Kolom 2: vlag thuis — uitslag — vlag uit */}
@@ -95,7 +96,7 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
 
                 {/* Kolom 3: uitslag quotering */}
                 <div style={{ flex: 1 }} className="font-heading text-[18px] text-white flex items-center justify-center">
-                  {quote.uitslagOdds.toFixed(2)}
+                  {resolveUitslagOdds(quote, participantUitslag).toFixed(2)}
                 </div>
               </div>
             )

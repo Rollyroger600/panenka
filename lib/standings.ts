@@ -14,7 +14,7 @@ export interface StandingRow {
 }
 
 export function parseScore(uitslag: string): [number, number] | null {
-  const parts = uitslag.split(' - ')
+  const parts = uitslag.split(/\s*-\s*/)
   if (parts.length !== 2) return null
   const h = parseInt(parts[0], 10)
   const a = parseInt(parts[1], 10)
