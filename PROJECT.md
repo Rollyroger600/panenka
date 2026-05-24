@@ -845,6 +845,11 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-24 — Export + UX fixes (Claude Code)
+
+- `app/api/export/route.ts`: kladblokspelers (scratchpad) worden nu geëxporteerd per deelnemer in het `FT_` tabblad, startend vanaf cel D34. Zelfde `middleName` format als de 15 basisspelers. Werkt voor zowel OG als ASC.
+- `components/oranje/VraagIndienenCard.tsx`: knoptekst bleef "Vraag indienen" na eerste submit (verwarring). Fix: lokale `localIngediend` state wordt `true` na succesvolle save, waardoor knop permanent wisselt naar "Vraag bijwerken" en de "✓ Ingediend" badge in de header zichtbaar blijft.
+
 ### 2026-05-24 — Quoteringen update (Claude Code)
 
 - `npm run update_quoteringen` uitgevoerd: 50 wedstrijden + 48 landen bijgewerkt

@@ -22,6 +22,7 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
   const [type, setType] = useState<AntwoordType>(bestaandeVraag?.type ?? 'ja_nee')
   const [suggestie, setSuggestie] = useState(bestaandeVraag?.suggestie ?? '')
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [localIngediend, setLocalIngediend] = useState(!!bestaandeVraag)
 
   async function opslaan() {
     if (!tekst.trim()) return
@@ -33,11 +34,12 @@ export function VraagIndienenCard({ match, bestaandeVraag, isPast }: Props) {
       ...(type === 'anders' && suggestie.trim() ? { suggestie: suggestie.trim() } : {}),
     }
     await saveOranjeVraag(match.id, vraag)
+    setLocalIngediend(true)
     setStatus('saved')
     setTimeout(() => setStatus('idle'), 2000)
   }
 
-  const ingediend = !!bestaandeVraag
+  const ingediend = localIngediend
 
   return (
     <div className="rounded-xl border border-[#FF6B00]/30 overflow-hidden mb-4" style={{ background: 'rgba(22,22,22,0.82)' }}>

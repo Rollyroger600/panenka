@@ -12,7 +12,8 @@ import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import type { CountryKOQuotes } from '@/lib/data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 import { kvGet, participantKey, groupKey } from '@/lib/kv/kv'
-import type { Prediction, KnockoutPicks, FantasySquad } from '@/store/gameStore'
+import type { Prediction, KnockoutPicks, FantasySquad, Scratchpad } from '@/store/gameStore'
+import { SCRATCHPAD_SLOTS } from '@/lib/data/slots'
 import { WK_PLAYERS } from '@/lib/data/players'
 import type { OranjeAntwoordenMap, OranjeVragenMap } from '@/lib/types/oranjeVragen'
 
@@ -157,6 +158,7 @@ export async function GET(req: Request) {
     knockoutPicks: KnockoutPicks
     fantasySquad: FantasySquad | null
     fantasyTeamName: string | null
+    fantasyScratchpad: Scratchpad
     antwoorden: OranjeAntwoordenMap
   }
 
@@ -175,6 +177,7 @@ export async function GET(req: Request) {
         knockoutPicks: knockoutPicks ?? {},
         fantasySquad: fantasyKV?.squad ?? null,
         fantasyTeamName: fantasyKV?.teamName ?? null,
+        fantasyScratchpad: (fantasyKV as { squad: FantasySquad; teamName: string; scratchpad?: Scratchpad } | null)?.scratchpad ?? {},
         antwoorden: antwoorden ?? {},
       }
     })
@@ -183,7 +186,7 @@ export async function GET(req: Request) {
   // ── Write per-participant data ──────────────────────────────────────────────
   for (const participant of groupParticipants) {
     const { initials, name } = participant
-    const { predictions, knockoutPicks, fantasySquad, fantasyTeamName } = participantData[initials]
+    const { predictions, knockoutPicks, fantasySquad, fantasyTeamName, fantasyScratchpad } = participantData[initials]
 
     // ── Poule sheet ────────────────────────────────────────────────────────
     const pouleSheet = workbook.sheet(POULE_SHEET[initials])
@@ -257,6 +260,12 @@ export async function GET(req: Request) {
           if (!stored) return
           const player = PLAYER_BY_ID[stored.id] ?? stored
           cv(ftSheet, `D${24 + i}`, player.middleName)
+        })
+        const filledScratchpad = SCRATCHPAD_SLOTS.map((k) => fantasyScratchpad[k]).filter(Boolean)
+        filledScratchpad.forEach((stored, i) => {
+          if (!stored) return
+          const player = PLAYER_BY_ID[stored.id] ?? stored
+          cv(ftSheet, `D${34 + i}`, player.middleName)
         })
       }
     }
