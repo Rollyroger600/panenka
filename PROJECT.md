@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-24 — Quoteringen update (Claude Code)
+
+- `npm run update_quoteringen` uitgevoerd: 50 wedstrijden + 48 landen bijgewerkt
+- 7 match-odds gewijzigd t.o.v. vorige run; 2 KO-outright quotes gewijzigd
+- Match 69 (Colombia vs Portugal): nog geen "Correcte Score" markt op Kambi
+- 22 wedstrijden (ronde 3 groepsfase) nog niet beschikbaar op Kambi
+
 ### 2026-05-24 — Data-herstel: restore-predictions.mjs script (Claude Code)
 
 #### Incident samenvatting
