@@ -2470,4 +2470,10 @@ Omdat open antwoorden niet 1-op-1 vergeleken kunnen worden (bijv. "Gakpo" vs "Co
 
 #### Scoring uitgebreid (`lib/scoring.ts`)
 
+### 2026-05-25 — Handmatig speler G. Mora (79399) toevoegen aan Fantasy XV (Claude Code)
+
+#### Speler toegevoegd (`lib/data/players.ts`)
+
+Gilberto Rafael Mora Zambrano (SoFIFA ID 79399) handmatig toegevoegd aan de spelerlijst. Overall 73, dus boven de automatische drempel van 68, maar niet aanwezig in de huidige master Excel. Speelt voor Club Tijuana in Liga MX (leagueId 888887), positie CAM/LW/CM, Mexico / CONCACAF, geboren 2008-10-14.
+
 `scoreOranjeNieuw` accepteert nu `participantKey` en `beoordeling`. Voor vragen zonder correcte-antwoord-string (type 'open') wordt de beoordeling gecheckt: `beoordeling[matchId][questionKey][participantKey] === true` → +0,5 token. `scoreParticipant` heeft twee extra optionele parameters gekregen en wordt vanuit `computeAndSaveScores` aangeroepen met participantKey + beoordeling.
