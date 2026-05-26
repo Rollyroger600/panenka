@@ -2470,6 +2470,18 @@ Omdat open antwoorden niet 1-op-1 vergeleken kunnen worden (bijv. "Gakpo" vs "Co
 
 #### Scoring uitgebreid (`lib/scoring.ts`)
 
+### 2026-05-26 — Quoteringen update (Claude Code)
+
+#### Wedstrijdquotes bijgewerkt (`lib/data/odds.ts`, `lib/data/odds_trends.ts`)
+
+72 groepswedstrijden gescraped via Unibet/Kambi API; 35 wedstrijden met gewijzigde quotes t.o.v. vorige run.
+
+#### KO-outrights bijgewerkt (`lib/data/knockoutQuotes.ts`, `lib/data/knockoutQuotes_trends.ts`)
+
+48 landen bijgewerkt (winnaar, finale, r4, r8, r16, groepswinnaar, doorstoot KO); 8 landen met gewijzigde quotes.
+
+---
+
 ### 2026-05-25 — Handmatig speler G. Mora (79399) toevoegen aan Fantasy XV (Claude Code)
 
 #### Speler toegevoegd (`lib/data/players.ts`)

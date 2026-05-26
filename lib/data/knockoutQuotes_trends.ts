@@ -13,19 +13,19 @@ export interface KOTrends {
   winnaar: OddsTrend
 }
 
-export const KO_QUOTES_UPDATED_AT = '2026-05-24T19:34:46.197Z'
+export const KO_QUOTES_UPDATED_AT = '2026-05-26T11:41:17.375Z'
 
 export const KO_TRENDS: Record<string, KOTrends> = {
   'Algerije': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
-  'Argentinië': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
+  'Argentinië': { poulewinnaar: "up", tweede: "down", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Australië': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'België': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
-  'Bosnië en Herzegovina': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
+  'Bosnië en Herzegovina': { poulewinnaar: "up", tweede: "up", derde: "up", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Brazilië': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Canada': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Colombia': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Curaçao': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
-  'DR Congo': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
+  'DR Congo': { poulewinnaar: "same", tweede: "up", derde: "up", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Duitsland': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Ecuador': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Egypte': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
@@ -35,7 +35,7 @@ export const KO_TRENDS: Record<string, KOTrends> = {
   'Haïti': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Irak': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Iran': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
-  'Ivoorkust': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
+  'Ivoorkust': { poulewinnaar: "same", tweede: "up", derde: "up", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Japan': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Jordanië': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Kaapverdië': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
@@ -46,12 +46,12 @@ export const KO_TRENDS: Record<string, KOTrends> = {
   'Nieuw-Zeeland': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Noorwegen': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Oezbekistan': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
-  'Oostenrijk': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
+  'Oostenrijk': { poulewinnaar: "down", tweede: "up", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Panama': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Paraguay': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
-  'Portugal': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
+  'Portugal': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "down", r4: "same", finale: "same", winnaar: "same" },
   'Qatar': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
-  'Saoedi-Arabië': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
+  'Saoedi-Arabië': { poulewinnaar: "same", tweede: "up", derde: "up", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Schotland': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Senegal': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Spanje': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
@@ -63,5 +63,5 @@ export const KO_TRENDS: Record<string, KOTrends> = {
   'Zuid-Afrika': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Zuid-Korea': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
   'Zweden': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
-  'Zwitserland': { poulewinnaar: "same", tweede: "same", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
+  'Zwitserland': { poulewinnaar: "down", tweede: "up", derde: "same", r16: "same", r8: "same", r4: "same", finale: "same", winnaar: "same" },
 }
