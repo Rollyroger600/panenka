@@ -2634,3 +2634,33 @@ Van 4 knoppen (📷 GIF 😊 📊) naar 2:
 #### Push-notificatie popup verwijderd (`components/chat/ChatPage.tsx`)
 
 De automatische `setupPush()` aanroep (die `Notification.requestPermission()` triggerde) is verwijderd. De push-infrastructuur (service worker, VAPID, API-routes) blijft intact voor later gebruik.
+
+---
+
+### 2026-05-27 — Chat: iOS keyboard fix, poll voter details, last-read, @mention contrast (Claude Code)
+
+#### iOS keyboard fix: height-based aanpak (`components/chat/ChatPage.tsx`, `app/(app)/chat/page.tsx`)
+
+De oude aanpak (`bottom: calc(... + kbH)` waarbij `kbH = window.innerHeight − vv.height`) werkte niet op bepaalde iOS-versies waarbij `window.innerHeight` meeschaalt met het toetsenbord, waardoor `kbH` altijd 0 uitkwam en de invoerbalk achter het toetsenbord verdween.
+
+Nieuwe aanpak:
+- `baseHeight` wordt bij mount vastgelegd als `vv.height` (niet `window.innerHeight`) — immuun voor iOS-bugs.
+- `kbH = baseHeight − vv.height` is daardoor altijd correct.
+- De container gebruikt nu `height: calc(var(--chat-vvp-h) − header − nav − safe-inset)` i.p.v. `bottom: calc(...)` — `vv.height` wordt direct als CSS-variabele `--chat-vvp-h` gezet, zodat de containerhoogte altijd exact de zichtbare viewport vult.
+- Bij open toetsenbord wordt `--chat-safe-inset` op `0px` gezet (safe-area zit al verdisconteerd in de toetsenbordhoogte, anders dubbeltelling).
+
+#### Poll voter details (`components/chat/ChatMessage.tsx`)
+
+Onderaan elke poll met minstens één stem staat een oranje "Wie stemde?"-link. Klikken klapt een lijst uit per optie met de namen van alle stemmers als pills. Klikken nogmaals verbergt de lijst. Namen worden opgezocht in de `participantsMap` (initials → naam uit berichtgeschiedenis).
+
+#### Last-read tracking + "Nieuwe berichten" divider + ↓-knop (`components/chat/ChatPage.tsx`)
+
+- Bij elke bezoek aan de chat wordt `localStorage` gelezen voor de laatste geziene timestamp (sleutel `chat-last-read-{initials}`).
+- Als er ongelezen berichten zijn, scrolt de chat naar een oranje **"── Nieuwe berichten ──"** divider vóór het eerste ongelezen bericht.
+- Als de gebruiker al bij het einde was, wordt direct naar beneden gescrold en als gelezen gemarkeerd.
+- Een zwevende **↓-knop** rechtsonder verschijnt zodra de gebruiker niet meer onderaan zit — met een oranje badge met het aantal ongelezen berichten.
+- Scrollen naar beneden (of klikken op de knop) markeert alle berichten als gelezen en slaat de nieuwe timestamp op in `localStorage`.
+
+#### @mention contrast in eigen berichten (`components/chat/ChatMessage.tsx`)
+
+In het oranje berichtenvlak (`bg-[#FF6B00]`) was `text-[#FF8C33]` voor @mentions nauwelijks leesbaar. Oplossing: in eigen berichten krijgen mentions nu `font-bold text-white bg-white/25 rounded px-1` (wit tekst met subtiel wit pill-achtergrond); in berichten van anderen blijft de oranje kleur behouden.

@@ -9,10 +9,12 @@ interface PollProps {
   options: PollOption[]
   multiple: boolean
   currentInitials: string
+  participants: Record<string, string>
   onVote: (optionIndex: number) => void
 }
 
-function PollBubble({ question, options, multiple, currentInitials, onVote }: PollProps) {
+function PollBubble({ question, options, multiple, currentInitials, participants, onVote }: PollProps) {
+  const [showVoters, setShowVoters] = useState(false)
   const totalVotes = options.reduce((sum, o) => sum + o.votes.length, 0)
   const votedIndices = options.reduce<number[]>((acc, o, i) => o.votes.includes(currentInitials) ? [...acc, i] : acc, [])
   const hasVoted = votedIndices.length > 0
@@ -53,10 +55,42 @@ function PollBubble({ question, options, multiple, currentInitials, onVote }: Po
           )
         })}
       </div>
-      <p className="text-[10px] text-[#555]">
-        {totalVotes === 0 ? 'Nog geen stemmen' : `${totalVotes} stem${totalVotes !== 1 ? 'men' : ''}`}
-        {hasVoted && (multiple ? ' · Tik nogmaals om stem in te trekken' : ' · Tik om stem te wijzigen')}
-      </p>
+
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] text-[#555]">
+          {totalVotes === 0 ? 'Nog geen stemmen' : `${totalVotes} stem${totalVotes !== 1 ? 'men' : ''}`}
+          {hasVoted && (multiple ? ' · Tik nogmaals om stem in te trekken' : ' · Tik om stem te wijzigen')}
+        </p>
+        {totalVotes > 0 && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowVoters((v) => !v) }}
+            className="text-[10px] text-[#FF6B00] hover:text-[#ff8c33] transition-colors flex-shrink-0"
+          >
+            {showVoters ? 'Verberg stemmen' : 'Wie stemde?'}
+          </button>
+        )}
+      </div>
+
+      {showVoters && (
+        <div className="flex flex-col gap-2 pt-2 border-t border-[#2a2a2a]">
+          {options.map((opt, i) => (
+            <div key={i}>
+              <p className="text-[10px] text-[#666] mb-1 font-semibold">{opt.text}</p>
+              {opt.votes.length === 0 ? (
+                <p className="text-[10px] text-[#444] italic">Niemand</p>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {opt.votes.map((ini) => (
+                    <span key={ini} className="text-[10px] font-bold text-[#FF6B00] bg-[#FF6B00]/10 rounded-full px-2 py-0.5">
+                      {participants[ini] ?? ini}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -65,6 +99,7 @@ interface Props {
   msg: ChatMessage
   isOwn: boolean
   currentInitials: string
+  participants: Record<string, string>
   onReact: (msgId: string, emoji: string) => void
   onReply: (msg: ChatMessage) => void
   onVotePoll: (msgId: string, optionIndex: number) => void
@@ -88,7 +123,7 @@ export function ChatDateDivider({ ts }: { ts: number }) {
   )
 }
 
-export function ChatMessageBubble({ msg, isOwn, currentInitials, onReact, onReply, onVotePoll }: Props) {
+export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, onReact, onReply, onVotePoll }: Props) {
   const [showActions, setShowActions] = useState(false)
   const [showReactions, setShowReactions] = useState(false)
   const [swipeDelta, setSwipeDelta] = useState(0)
@@ -209,6 +244,7 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, onReact, onRepl
                 options={msg.pollOptions}
                 multiple={msg.pollMultiple ?? false}
                 currentInitials={currentInitials}
+                participants={participants}
                 onVote={(i) => onVotePoll(msg.id, i)}
               />
             )}
@@ -217,7 +253,7 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, onReact, onRepl
               <span>
                 {msg.text.split(/(@\w+)/g).map((part, i) =>
                   /^@\w+$/.test(part)
-                    ? <span key={i} className="font-semibold text-[#FF8C33]">{part}</span>
+                    ? <span key={i} className={isOwn ? 'font-bold text-white bg-white/25 rounded px-1' : 'font-semibold text-[#FF8C33]'}>{part}</span>
                     : <span key={i}>{part}</span>,
                 )}
               </span>
