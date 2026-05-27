@@ -2566,3 +2566,47 @@ Nieuwe aanpak: sla het grootste geziene formaat op als referentie en bereken `vi
 `@all` (📢 Iedereen) verschijnt nu altijd als eerste suggestie zodra de query leeg is of begint met "all" of "iedereen". Eerder was de lijst leeg zolang er nog geen berichten geladen waren (participants wordt afgeleid van geladen berichten).
 
 `scoreOranjeNieuw` accepteert nu `participantKey` en `beoordeling`. Voor vragen zonder correcte-antwoord-string (type 'open') wordt de beoordeling gecheckt: `beoordeling[matchId][questionKey][participantKey] === true` → +0,5 token. `scoreParticipant` heeft twee extra optionele parameters gekregen en wordt vanuit `computeAndSaveScores` aangeroepen met participantKey + beoordeling.
+
+---
+
+### 2026-05-27 — Popup uitgeschakeld op /chat (Claude Code)
+
+#### `components/ui/PopupToast.tsx`
+
+De grappige popups (uit `lib/popups.ts`) werden ook getoond op de chat-pagina, wat afleidend is. Twee aanpassingen:
+
+- In de timer-callback: als `pathnameRef.current` begint met `/chat`, wordt de popup overgeslagen.
+- Nieuw `useEffect` op `pathname`: bij navigatie naar `/chat` wordt een eventueel al-zichtbare popup direct via `dismiss()` gesloten.
+
+Alle andere tabbladen zijn ongewijzigd.
+
+---
+
+### 2026-05-27 — Groepschat UI redesign: emoji/GIF panel, plus-menu, tab bar verbergen (Claude Code)
+
+#### Gecombineerd emoji/GIF-panel (`components/chat/EmojiGifPanel.tsx`)
+
+Nieuw component dat het aparte `EmojiPickerPanel` en de losse GIF-knop vervangt:
+
+- Twee tabs: **EMOJI** en **GIF** (zoeken via GIPHY, ingebouwd in hetzelfde panel).
+- 270+ emoji's in 9 categorieën: Voetbal & Sport, Smileys & Emoties, Mensen & Gebaren, Dieren & Natuur, Eten & Drinken, Reizen & Plekken, Objecten & Activiteiten, Symbolen & Hart, Vlaggen.
+- Hoogte = CSS-variabele `--chat-locked-kb-h` (de laatst gemeten toetsenbordhoogte), zodat het scherm niet springt bij wisselen tussen toetsenbord en panel.
+
+#### Nieuwe knoppenstructuur (`components/chat/ChatInput.tsx`)
+
+Van 4 knoppen (📷 GIF 😊 📊) naar 2:
+
+- **😊 / ⌨️**: toggle tussen het emoji/GIF-panel (toetsenbord sluit) en het native toetsenbord. Als het panel open is, verandert het icoon in een toetsenbord-icoon om terug te schakelen.
+- **+**: opent een mini-popup met twee opties — "📷 Foto / Camera" en "📊 Poll aanmaken". De `+` verandert in `✕` als het menu open is.
+- Textarea-focus sluit een open panel automatisch (toetsenbord neemt over).
+
+#### Tab bar verbergen bij open toetsenbord (`components/layout/BottomNav.tsx`, `components/chat/ChatPage.tsx`, `app/(app)/chat/page.tsx`)
+
+- `ChatPage.tsx` zet class `chat-kb-open` op `document.body` en CSS-variabele `--chat-nav-h: 0px` zodra het toetsenbord zichtbaar is (kbH > 0); bij sluiten wordt `--chat-nav-h: 3.5rem` hersteld.
+- `--chat-locked-kb-h` wordt eenmalig opgeslagen als de toetsenbordhoogte > 0 is, zodat het emoji/GIF-panel die hoogte kan overnemen.
+- `BottomNav` luistert via `MutationObserver` op de `chat-kb-open` class en schuift weg met `translateY(100%)` + `transition-transform` zodra het toetsenbord opent.
+- `chat/page.tsx` gebruikt `var(--chat-nav-h, 3.5rem)` in de `bottom`-berekening van de vaste container, zodat de invoerbalk direct boven het toetsenbord zit zonder gap.
+
+#### Push-notificatie popup verwijderd (`components/chat/ChatPage.tsx`)
+
+De automatische `setupPush()` aanroep (die `Notification.requestPermission()` triggerde) is verwijderd. De push-infrastructuur (service worker, VAPID, API-routes) blijft intact voor later gebruik.
