@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-27 — Groepschat bugfixes + @mention feature + mobiel toetsenbord (Claude Code)
+
+Drie verbeteringen aan de groepschat.
+
+- `components/chat/ChatInput.tsx`: tekst wordt pas gewist ná succesvolle verzending (niet meer vóór) zodat bij een fout de inhoud bewaard blijft. Textarea-hoogte wordt gereset na verzenden. @mention-functie toegevoegd: typ `@` (aan het begin of na een spatie) om een dropdown te zien met deelnemers; selecteer via klik of sluit met Escape. Deelnemers worden afgeleid uit berichten die al geladen zijn. `participants` prop toegevoegd.
+- `components/chat/ChatMessage.tsx`: @mentions worden oranje getoond in berichttekst (`@Naam` → `#FF8C33`).
+- `components/chat/ChatPage.tsx`: race-condition in de initiële lading opgelost — `setMessages` doet nu een merge i.p.v. een replace, zodat optimistisch toegevoegde berichten niet verloren gaan als de server-response eerder teruggaat dan het POST. `handleSendText` gooit nu een error bij een mislukt verzoek. `useMemo` voor deelnemerslijst. Keyboard-handler via `window.visualViewport` resize-event: zet CSS-variabele `--chat-kb-h` (toetsenbordhoogte in px). Body-scroll vergrendeld terwijl de chatpagina actief is zodat de header niet verschuift bij openen toetsenbord op mobiel.
+- `app/(app)/chat/page.tsx`: `bottom` style gebruikt nu `var(--chat-kb-h, 0px)` zodat de chat-container automatisch boven het toetsenbord blijft op iOS en Android.
+
 ### 2026-05-27 — In-app groepschat (Claude Code)
 
 Volledige WhatsApp-vervanging gebouwd als 6e tab in de navigatie.

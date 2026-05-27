@@ -8,6 +8,11 @@ import type { ChatMessage } from '@/lib/types/chat'
 
 type Panel = 'none' | 'emoji' | 'gif' | 'poll'
 
+interface Participant {
+  name: string
+  initials: string
+}
+
 interface Props {
   replyTo: ChatMessage | null
   onCancelReply: () => void
@@ -16,6 +21,7 @@ interface Props {
   onSendGif: (url: string) => Promise<void>
   onSendPoll: (question: string, options: string[], multiple: boolean) => Promise<void>
   disabled?: boolean
+  participants?: Participant[]
 }
 
 function IconPoll({ className }: { className?: string }) {
@@ -26,10 +32,12 @@ function IconPoll({ className }: { className?: string }) {
   )
 }
 
-export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onSendGif, onSendPoll, disabled }: Props) {
+export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onSendGif, onSendPoll, disabled, participants = [] }: Props) {
   const [text, setText] = useState('')
   const [panel, setPanel] = useState<Panel>('none')
   const [uploading, setUploading] = useState(false)
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null)
+  const [mentionStart, setMentionStart] = useState(0)
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -40,17 +48,77 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
   async function handleSend() {
     const trimmed = text.trim()
     if (!trimmed || disabled) return
-    setText('')
     setPanel('none')
-    await onSendText(trimmed)
+    setMentionQuery(null)
+    try {
+      await onSendText(trimmed)
+      setText('')
+      if (textareaRef.current) textareaRef.current.style.height = ''
+    } catch {
+      // tekst blijft staan zodat gebruiker opnieuw kan proberen
+    }
+  }
+
+  function handleTextChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const val = e.target.value
+    const pos = e.target.selectionStart ?? val.length
+    setText(val)
+
+    e.target.style.height = 'auto'
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+
+    // Detecteer @mention: zoek laatste @ vóór cursor, alleen na whitespace of regel begin
+    const before = val.slice(0, pos)
+    const lastAt = before.lastIndexOf('@')
+    if (lastAt >= 0) {
+      const charBeforeAt = lastAt > 0 ? before[lastAt - 1] : ' '
+      const afterAt = before.slice(lastAt + 1)
+      if ((/\s/.test(charBeforeAt) || lastAt === 0) && /^\w*$/.test(afterAt)) {
+        setMentionQuery(afterAt)
+        setMentionStart(lastAt)
+        return
+      }
+    }
+    setMentionQuery(null)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (mentionQuery !== null && e.key === 'Escape') {
+      e.preventDefault()
+      setMentionQuery(null)
+      return
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
     }
   }
+
+  function selectMention(participant: Participant) {
+    if (mentionQuery === null || !textareaRef.current) return
+    const before = text.slice(0, mentionStart)
+    const after = text.slice(mentionStart + 1 + mentionQuery.length)
+    const mention = `@${participant.name} `
+    const newText = before + mention + after
+    setText(newText)
+    setMentionQuery(null)
+    const newPos = before.length + mention.length
+    textareaRef.current.focus()
+    textareaRef.current.style.height = 'auto'
+    textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px'
+    setTimeout(() => {
+      textareaRef.current?.setSelectionRange(newPos, newPos)
+    }, 0)
+  }
+
+  const mentionSuggestions = mentionQuery !== null
+    ? participants
+        .filter((p) =>
+          p.name.toLowerCase().startsWith(mentionQuery!.toLowerCase()) ||
+          p.initials.toLowerCase().startsWith(mentionQuery!.toLowerCase()),
+        )
+        .slice(0, 5)
+    : []
 
   function handleEmojiSelect(emoji: string) {
     setText((t) => t + emoji)
@@ -104,7 +172,25 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
         </div>
       )}
 
-      <div className="flex items-end gap-2 px-3 py-2">
+      <div className="relative flex items-end gap-2 px-3 py-2">
+        {/* @mention dropdown */}
+        {mentionQuery !== null && mentionSuggestions.length > 0 && (
+          <div className="absolute bottom-full left-3 right-3 mb-1 bg-[#1E1E1E] border border-[#333] rounded-xl overflow-hidden z-10 shadow-lg">
+            {mentionSuggestions.map((p) => (
+              <button
+                key={p.initials}
+                onMouseDown={(e) => { e.preventDefault(); selectMention(p) }}
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#2a2a2a] text-left"
+              >
+                <span className="text-[10px] font-bold text-[#FF6B00] bg-[#FF6B00]/10 rounded-full px-1.5 py-0.5 flex-shrink-0">
+                  {p.initials}
+                </span>
+                <span className="text-sm text-white">{p.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-1 flex-shrink-0 pb-1">
           <button
             onClick={() => fileRef.current?.click()}
@@ -149,7 +235,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
         <textarea
           ref={textareaRef}
           value={text}
-          onChange={(e) => { setText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px' }}
+          onChange={handleTextChange}
           onKeyDown={handleKeyDown}
           placeholder="Bericht..."
           rows={1}

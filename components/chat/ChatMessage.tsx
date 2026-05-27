@@ -213,7 +213,15 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, onReact, onRepl
               />
             )}
 
-            {msg.text && <span>{msg.text}</span>}
+            {msg.text && (
+              <span>
+                {msg.text.split(/(@\w+)/g).map((part, i) =>
+                  /^@\w+$/.test(part)
+                    ? <span key={i} className="font-semibold text-[#FF8C33]">{part}</span>
+                    : <span key={i}>{part}</span>,
+                )}
+              </span>
+            )}
 
             <span className={`block text-[10px] mt-0.5 ${isOwn && msg.type !== 'poll' ? 'text-orange-200' : 'text-[#555]'}`}>
               {timeStr(msg.ts)}

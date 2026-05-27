@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import type { ChatMessage } from '@/lib/types/chat'
 import { ChatMessageBubble, ChatDateDivider } from './ChatMessage'
 import { ChatInput } from './ChatInput'
@@ -66,14 +66,50 @@ export function ChatPage({ initials }: Props) {
     }
   }
 
+  // Vergrendel body-scroll + volg toetsenbordhoogte via visualViewport
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+
+    function onViewportChange() {
+      if (!window.visualViewport) return
+      const kbH = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop)
+      document.documentElement.style.setProperty('--chat-kb-h', `${kbH}px`)
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', onViewportChange)
+      window.visualViewport.addEventListener('scroll', onViewportChange)
+      onViewportChange()
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', onViewportChange)
+        window.visualViewport.removeEventListener('scroll', onViewportChange)
+      }
+      document.documentElement.style.removeProperty('--chat-kb-h')
+    }
+  }, [])
+
   // Initial load
   useEffect(() => {
     fetch('/api/chat/messages')
       .then((r) => r.json())
       .then((d) => {
         const msgs: ChatMessage[] = d.messages ?? []
-        setMessages(msgs)
-        if (msgs.length) lastTsRef.current = msgs[msgs.length - 1].ts
+        // Merge met eventueel al optimistisch toegevoegde berichten (race-condition fix)
+        setMessages((prev) => {
+          if (prev.length === 0) {
+            if (msgs.length) lastTsRef.current = msgs[msgs.length - 1].ts
+            return msgs
+          }
+          const serverIds = new Set(msgs.map((m) => m.id))
+          const extraLocal = prev.filter((m) => !serverIds.has(m.id))
+          const merged = [...msgs, ...extraLocal].sort((a, b) => a.ts - b.ts)
+          if (merged.length) lastTsRef.current = Math.max(lastTsRef.current, merged[merged.length - 1].ts)
+          return merged
+        })
         setTimeout(() => scrollToBottom(true), 50)
       })
       .catch(() => setError('Kon berichten niet laden'))
@@ -114,12 +150,12 @@ export function ChatPage({ initials }: Props) {
     }
     setReplyTo(null)
     const res = await fetch('/api/chat/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) throw new Error('Verzenden mislukt')
     const d = await res.json()
-    if (d.message) {
-      setMessages((prev) => [...prev, d.message])
-      lastTsRef.current = d.message.ts
-      scrollToBottom(true)
-    }
+    if (!d.message) throw new Error('Ongeldig antwoord')
+    setMessages((prev) => [...prev, d.message])
+    lastTsRef.current = d.message.ts
+    scrollToBottom(true)
   }
 
   async function handleSendImage(file: File) {
@@ -194,6 +230,14 @@ export function ChatPage({ initials }: Props) {
     }
   }
 
+  const participants = useMemo(() => {
+    const seen = new Map<string, string>()
+    for (const msg of messages) {
+      if (!seen.has(msg.senderInitials)) seen.set(msg.senderInitials, msg.sender)
+    }
+    return Array.from(seen, ([initials, name]) => ({ initials, name }))
+  }, [messages])
+
   // Render with date dividers
   const rendered: React.ReactNode[] = []
   let lastDay = 0
@@ -240,6 +284,7 @@ export function ChatPage({ initials }: Props) {
         onSendImage={handleSendImage}
         onSendGif={handleSendGif}
         onSendPoll={handleSendPoll}
+        participants={participants}
       />
     </div>
   )
