@@ -1,8 +1,10 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import type { ChatMessage, PollOption } from '@/lib/types/chat'
+import { EmojiPickerPanel } from './EmojiPickerPanel'
 
-const REACTION_EMOJIS = ['⚽', '🏆', '🔥', '😂', '👏', '🤦', '💪', '😮', '❤️', '🎉']
+const DEFAULT_QUICK_EMOJIS = ['⚽', '🔥', '😂', '👏', '❤️']
 
 interface PollProps {
   question: string
@@ -103,6 +105,7 @@ interface Props {
   onReact: (msgId: string, emoji: string) => void
   onReply: (msg: ChatMessage) => void
   onVotePoll: (msgId: string, optionIndex: number) => void
+  topEmojis: string[]
 }
 
 function timeStr(ts: number) {
@@ -123,27 +126,70 @@ export function ChatDateDivider({ ts }: { ts: number }) {
   )
 }
 
-export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, onReact, onReply, onVotePoll }: Props) {
-  const [showActions, setShowActions] = useState(false)
-  const [showReactions, setShowReactions] = useState(false)
+export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, onReact, onReply, onVotePoll, topEmojis }: Props) {
+  const [showQuickReact, setShowQuickReact] = useState(false)
+  const [showEmojiPanel, setShowEmojiPanel] = useState(false)
+  const [quickReactStyle, setQuickReactStyle] = useState<React.CSSProperties>({})
   const [swipeDelta, setSwipeDelta] = useState(0)
+  const [mounted, setMounted] = useState(false)
+
+  const bubbleRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   const isSwiping = useRef(false)
-  const preventNextClick = useRef(false)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressFired = useRef(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const reactionEntries = Object.entries(msg.reactions ?? {})
   const hasReactions = reactionEntries.length > 0
+
+  const quickEmojis = topEmojis.length >= 5 ? topEmojis.slice(0, 5) : [
+    ...topEmojis,
+    ...DEFAULT_QUICK_EMOJIS.filter((e) => !topEmojis.includes(e)),
+  ].slice(0, 5)
+
+  function openQuickReact() {
+    if (!bubbleRef.current) return
+    const rect = bubbleRef.current.getBoundingClientRect()
+    const barWidth = 232
+    let left = isOwn ? rect.right - barWidth : rect.left
+    left = Math.max(8, Math.min(left, window.innerWidth - barWidth - 8))
+    const top = Math.max(8, rect.top - 56)
+    setQuickReactStyle({ position: 'fixed', top, left, zIndex: 9999 })
+    setShowQuickReact(true)
+  }
+
+  function closeAll() {
+    setShowQuickReact(false)
+    setShowEmojiPanel(false)
+  }
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
     isSwiping.current = false
+    longPressFired.current = false
+    if (msg.type !== 'poll') {
+      longPressTimer.current = setTimeout(() => {
+        longPressFired.current = true
+        openQuickReact()
+      }, 500)
+    }
   }
 
   function handleTouchMove(e: React.TouchEvent) {
     const deltaX = e.touches[0].clientX - touchStartX.current
     const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current)
+
+    if (Math.abs(deltaX) > 10 || deltaY > 10) {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current)
+        longPressTimer.current = null
+      }
+    }
+
     const isRightSwipe = !isOwn && deltaX > 0
     const isLeftSwipe = isOwn && deltaX < 0
 
@@ -155,22 +201,15 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, o
   }
 
   function handleTouchEnd() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
     if (isSwiping.current) {
       if (Math.abs(swipeDelta) > 50) onReply(msg)
-      preventNextClick.current = true
       isSwiping.current = false
     }
     setSwipeDelta(0)
-  }
-
-  function handleBubbleClick() {
-    if (msg.type === 'poll') return
-    if (preventNextClick.current) {
-      preventNextClick.current = false
-      return
-    }
-    setShowActions((v) => !v)
-    setShowReactions(false)
   }
 
   const arrowOpacity = Math.min(Math.abs(swipeDelta) / 50, 1)
@@ -197,15 +236,15 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, o
 
         {/* Swipeable bubble wrapper */}
         <div
+          ref={bubbleRef}
           className="relative"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onClick={handleBubbleClick}
+          onContextMenu={(e) => e.preventDefault()}
           style={{
             transform: `translateX(${swipeDelta}px)`,
             transition: swipeDelta === 0 ? 'transform 0.2s ease' : 'none',
-            cursor: 'pointer',
             userSelect: 'none',
           }}
         >
@@ -284,40 +323,59 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, o
             ))}
           </div>
         )}
+      </div>
 
-        {/* Action buttons — zichtbaar na tik */}
-        {showActions && (
-          <div className={`flex gap-3 mt-1 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-            <button
-              onClick={(e) => { e.stopPropagation(); onReply(msg); setShowActions(false) }}
-              className="text-[11px] text-[#888] hover:text-[#aaa] transition-colors"
-            >
-              ↩ Reageer
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowReactions((v) => !v) }}
-              className="text-[11px] text-[#888] hover:text-[#aaa] transition-colors"
-            >
-              😊 Reactie
-            </button>
-          </div>
-        )}
-
-        {/* Emoji picker */}
-        {showReactions && (
-          <div className="flex gap-1 flex-wrap bg-[#161616] border border-[#2a2a2a] rounded-2xl px-3 py-2 mt-1">
-            {REACTION_EMOJIS.map((e) => (
+      {/* Quick reaction bar — via portal zodat scroll-container het niet afknipt */}
+      {mounted && showQuickReact && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={closeAll} />
+          <div
+            style={quickReactStyle}
+            className="flex items-center gap-0.5 bg-[#1a1a1a] border border-[#333] rounded-full px-2 py-1.5 shadow-2xl"
+          >
+            {quickEmojis.map((e) => (
               <button
                 key={e}
-                onClick={() => { onReact(msg.id, e); setShowReactions(false); setShowActions(false) }}
-                className="text-xl hover:scale-125 transition-transform"
+                onPointerDown={(ev) => ev.stopPropagation()}
+                onClick={(ev) => {
+                  ev.stopPropagation()
+                  onReact(msg.id, e)
+                  closeAll()
+                }}
+                className="w-10 h-10 flex items-center justify-center text-2xl hover:scale-125 active:scale-110 transition-transform leading-none"
               >
                 {e}
               </button>
             ))}
+            <button
+              onPointerDown={(ev) => ev.stopPropagation()}
+              onClick={(ev) => {
+                ev.stopPropagation()
+                setShowQuickReact(false)
+                setShowEmojiPanel(true)
+              }}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-[#252525] border border-[#333] text-[#888] text-lg font-bold hover:text-[#aaa] transition-colors"
+            >
+              +
+            </button>
           </div>
-        )}
-      </div>
+        </>,
+        document.body,
+      )}
+
+      {/* Volledige emoji picker — onderaan het scherm */}
+      {mounted && showEmojiPanel && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998] bg-black/50" onClick={closeAll} />
+          <div className="fixed bottom-0 left-0 right-0 z-[9999]">
+            <EmojiPickerPanel
+              onSelect={(e) => { onReact(msg.id, e); closeAll() }}
+              onClose={closeAll}
+            />
+          </div>
+        </>,
+        document.body,
+      )}
     </div>
   )
 }

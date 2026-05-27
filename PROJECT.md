@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-27 — Chat: lang indrukken voor emoji-reactie (Claude Code)
+
+Dropdown bij klikken op berichtje vervangen door lang-indruk-interactie voor emoji-reacties.
+
+- `components/chat/ChatMessage.tsx`: `handleBubbleClick`, `showActions` en `showReactions` verwijderd. Lange druk (500ms) via `touchStart`/`touchMove`/`touchEnd` toegevoegd — beweging > 10px annuleert de lange druk, zodat swipe-to-reply ongestoord werkt. Bij lange druk verschijnt een zwevende balk (via `createPortal` op `document.body`) met de 5 meest gebruikte emojis van de gebruiker + een `+`-knop. `+` opent `EmojiPickerPanel` als een fixed sheet onderaan het scherm. `onContextMenu` preventDefault toegevoegd om het native iOS lang-druk-menu te blokkeren.
+- `components/chat/ChatPage.tsx`: `topEmojis` berekend via `useMemo` — telt per emoji hoe vaak de huidige gebruiker die heeft gebruikt in alle berichtreacties, sorteert aflopend. Valt terug op standaard (⚽ 🔥 😂 👏 ❤️) als de gebruiker nog geen reactiehistorie heeft. `topEmojis` als prop doorgegeven aan elke `ChatMessageBubble`.
+
 ### 2026-05-27 — Chat: iOS keyboard fix + tikken-om-te-sluiten + emoji zoek uitgebreid (Claude Code)
 
 iOS-toetsenbord reparatie, UX-verbeteringen en betere emoji-zoekopdracht.

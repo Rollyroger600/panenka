@@ -325,6 +325,16 @@ export function ChatPage({ initials }: Props) {
     [participants],
   )
 
+  const topEmojis = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const msg of messages) {
+      for (const [emoji, users] of Object.entries(msg.reactions ?? {})) {
+        if (users.includes(initials)) counts.set(emoji, (counts.get(emoji) ?? 0) + 1)
+      }
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([e]) => e)
+  }, [messages, initials])
+
   // Render with date dividers + "nieuwe berichten" divider
   const rendered: React.ReactNode[] = []
   let lastDay = 0
@@ -356,6 +366,7 @@ export function ChatPage({ initials }: Props) {
         onReact={handleReact}
         onReply={setReplyTo}
         onVotePoll={handleVotePoll}
+        topEmojis={topEmojis}
       />,
     )
   }
