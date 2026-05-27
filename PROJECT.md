@@ -2539,4 +2539,30 @@ Omdat open antwoorden niet 1-op-1 vergeleken kunnen worden (bijv. "Gakpo" vs "Co
 
 Gilberto Rafael Mora Zambrano (SoFIFA ID 79399) handmatig toegevoegd aan de spelerlijst. Overall 73, dus boven de automatische drempel van 68, maar niet aanwezig in de huidige master Excel. Speelt voor Club Tijuana in Liga MX (leagueId 888887), positie CAM/LW/CM, Mexico / CONCACAF, geboren 2008-10-14.
 
+---
+
+### 2026-05-27 — Groepschat bugfixes: berichten laden, toetsenbord Android, @all (Claude Code)
+
+#### Berichten laadden niet (`lib/kv/chat.ts`, `app/api/chat/messages/route.ts`)
+
+`@upstash/redis` v1.37+ deserialiseert JSON-members in sorted sets soms automatisch naar JavaScript-objecten. De code deed vervolgens `JSON.parse(object)`, wat een `SyntaxError` gooide. Next.js stuurde dan een HTML-errorpagina terug; de client kon `.json()` daar niet op toepassen en toonde "Kon berichten niet laden".
+
+- Nieuwe `parseMember(raw: unknown)` helper in `lib/kv/chat.ts` — vangt zowel `string` als al-geparsed object op. Toegepast op alle `zrange`-aanroepen in `chatGetMessages`, `chatGetRecent`, `chatGetAllMessages`, `chatUpdateReactions` en `chatUpdatePoll`.
+- `GET /api/chat/messages` omgeven met try/catch — bij een serverfout wordt nu altijd `{ error, messages: [] }` met HTTP 500 geretourneerd in plaats van een HTML-crashpagina.
+- Client-foutmelding uitgebreid: toont nu ook de technische oorzaak (`Kon berichten niet laden: Opslag niet bereikbaar`).
+
+#### Toetsenbord-gap op Android (`components/chat/ChatPage.tsx`)
+
+De oude formule `window.innerHeight − visualViewport.height` gaf op Android altijd 0: bij `resizes-content`-gedrag (standaard Chrome Android) krimpen layout- én visual-viewport gelijk mee, zodat het verschil nul is. Gevolg: invoerbalk bleef achter het toetsenbord staan.
+
+Nieuwe aanpak: sla het grootste geziene formaat op als referentie en bereken `visualShrink − layoutShrink` als netto toetsenbordhoogte.
+
+- iOS (layout onveranderd, visual krimpt): `kbH = visualShrink` ✓
+- Android `resizes-visual` (alleen visual krimpt): zelfde als iOS ✓
+- Android `resizes-content` (beide krimpen gelijk): `kbH = 0` — layout viewport handelt het al af ✓
+
+#### @mention: `@all` toegevoegd (`components/chat/ChatInput.tsx`)
+
+`@all` (📢 Iedereen) verschijnt nu altijd als eerste suggestie zodra de query leeg is of begint met "all" of "iedereen". Eerder was de lijst leeg zolang er nog geen berichten geladen waren (participants wordt afgeleid van geladen berichten).
+
 `scoreOranjeNieuw` accepteert nu `participantKey` en `beoordeling`. Voor vragen zonder correcte-antwoord-string (type 'open') wordt de beoordeling gecheckt: `beoordeling[matchId][questionKey][participantKey] === true` → +0,5 token. `scoreParticipant` heeft twee extra optionele parameters gekregen en wordt vanuit `computeAndSaveScores` aangeroepen met participantKey + beoordeling.
