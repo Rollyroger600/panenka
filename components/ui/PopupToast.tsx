@@ -25,6 +25,11 @@ export function PopupToast({ currentUserName, groupId }: { currentUserName: stri
     setTimeout(() => setMessage(null), 300)
   }, [])
 
+  // Sluit eventuele zichtbare popup direct bij navigatie naar chat
+  useEffect(() => {
+    if (pathname.startsWith('/chat')) dismiss()
+  }, [pathname, dismiss])
+
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) {
       // Eerste bezoek: toon na 2–5 minuten
@@ -37,6 +42,8 @@ export function PopupToast({ currentUserName, groupId }: { currentUserName: stri
     const delay = nextTime > now ? nextTime - now : 30_000 + Math.random() * 30_000
 
     const scheduleTimer = setTimeout(() => {
+      if (pathnameRef.current.startsWith('/chat')) return
+
       const groupPopups = POPUPS[groupId] ?? {}
       const msgs = [
         ...(groupPopups.global ?? []),
