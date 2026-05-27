@@ -112,12 +112,18 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
   }
 
   const mentionSuggestions = mentionQuery !== null
-    ? participants
-        .filter((p) =>
-          p.name.toLowerCase().startsWith(mentionQuery!.toLowerCase()) ||
-          p.initials.toLowerCase().startsWith(mentionQuery!.toLowerCase()),
-        )
-        .slice(0, 5)
+    ? (() => {
+        const q = mentionQuery.toLowerCase()
+        const allEntry: Participant = { name: 'all', initials: '📢' }
+        const showAll = 'all'.startsWith(q) || 'iedereen'.startsWith(q)
+        const matched = participants
+          .filter((p) =>
+            p.name.toLowerCase().startsWith(q) ||
+            p.initials.toLowerCase().startsWith(q),
+          )
+          .slice(0, showAll ? 4 : 5)
+        return showAll ? [allEntry, ...matched] : matched
+      })()
     : []
 
   function handleEmojiSelect(emoji: string) {
@@ -182,10 +188,13 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
                 onMouseDown={(e) => { e.preventDefault(); selectMention(p) }}
                 className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#2a2a2a] text-left"
               >
-                <span className="text-[10px] font-bold text-[#FF6B00] bg-[#FF6B00]/10 rounded-full px-1.5 py-0.5 flex-shrink-0">
-                  {p.initials}
+                {p.name === 'all'
+                  ? <span className="text-base flex-shrink-0">📢</span>
+                  : <span className="text-[10px] font-bold text-[#FF6B00] bg-[#FF6B00]/10 rounded-full px-1.5 py-0.5 flex-shrink-0">{p.initials}</span>
+                }
+                <span className="text-sm text-white">
+                  {p.name === 'all' ? '@all — Iedereen' : p.name}
                 </span>
-                <span className="text-sm text-white">{p.name}</span>
               </button>
             ))}
           </div>

@@ -9,20 +9,26 @@ const redis = new Redis({
 const MESSAGES_KEY = 'chat:messages'
 const MAX_MESSAGES = 2000
 
+// Upstash SDK v1.37+ kan JSON-strings auto-deserializeren naar objecten; beide gevallen afhandelen
+function parseMember(raw: unknown): ChatMessage {
+  if (typeof raw === 'string') return JSON.parse(raw) as ChatMessage
+  return raw as ChatMessage
+}
+
 export async function chatGetMessages(since: number, limit: number = 50): Promise<ChatMessage[]> {
   const raw = await redis.zrange(MESSAGES_KEY, since + 1, '+inf', {
     byScore: true,
     offset: 0,
     count: limit,
   })
-  return (raw as string[]).map((s) => JSON.parse(s) as ChatMessage)
+  return (raw as unknown[]).map(parseMember)
 }
 
 export async function chatGetRecent(limit: number = 60): Promise<ChatMessage[]> {
   const count = await redis.zcard(MESSAGES_KEY)
   const start = Math.max(0, count - limit)
   const raw = await redis.zrange(MESSAGES_KEY, start, -1)
-  return (raw as string[]).map((s) => JSON.parse(s) as ChatMessage)
+  return (raw as unknown[]).map(parseMember)
 }
 
 export async function chatAddMessage(msg: ChatMessage): Promise<void> {
@@ -37,10 +43,10 @@ export async function chatUpdateReactions(
   msgId: string,
   reactions: Record<string, string[]>,
 ): Promise<boolean> {
-  const raw = await redis.zrange(MESSAGES_KEY, 0, -1) as string[]
+  const raw = await redis.zrange(MESSAGES_KEY, 0, -1) as unknown[]
   for (const member of raw) {
     let msg: ChatMessage
-    try { msg = JSON.parse(member) } catch { continue }
+    try { msg = parseMember(member) } catch { continue }
     if (msg.id !== msgId) continue
 
     const score = await redis.zscore(MESSAGES_KEY, member)
@@ -56,7 +62,7 @@ export async function chatUpdateReactions(
 
 export async function chatGetAllMessages(): Promise<ChatMessage[]> {
   const raw = await redis.zrange(MESSAGES_KEY, 0, -1)
-  return (raw as string[]).map((s) => JSON.parse(s) as ChatMessage)
+  return (raw as unknown[]).map(parseMember)
 }
 
 export async function chatUpdatePoll(
@@ -64,10 +70,10 @@ export async function chatUpdatePoll(
   optionIndex: number,
   voterInitials: string,
 ): Promise<PollOption[] | null> {
-  const raw = await redis.zrange(MESSAGES_KEY, 0, -1) as string[]
+  const raw = await redis.zrange(MESSAGES_KEY, 0, -1) as unknown[]
   for (const member of raw) {
     let msg: ChatMessage
-    try { msg = JSON.parse(member) } catch { continue }
+    try { msg = parseMember(member) } catch { continue }
     if (msg.id !== msgId || !msg.pollOptions) continue
 
     const score = await redis.zscore(MESSAGES_KEY, member)

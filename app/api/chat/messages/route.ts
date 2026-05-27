@@ -6,14 +6,19 @@ import type { ChatMessage } from '@/lib/types/chat'
 
 // GET /api/chat/messages?since=<ts>&limit=<n>
 export async function GET(req: NextRequest) {
-  const since = parseInt(req.nextUrl.searchParams.get('since') ?? '0', 10)
-  const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '50', 10), 100)
+  try {
+    const since = parseInt(req.nextUrl.searchParams.get('since') ?? '0', 10)
+    const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '50', 10), 100)
 
-  const messages = since > 0
-    ? await chatGetMessages(since, limit)
-    : await chatGetRecent(limit)
+    const messages = since > 0
+      ? await chatGetMessages(since, limit)
+      : await chatGetRecent(limit)
 
-  return NextResponse.json({ messages })
+    return NextResponse.json({ messages })
+  } catch (err) {
+    console.error('[chat/messages GET]', err)
+    return NextResponse.json({ error: 'Opslag niet bereikbaar', messages: [] }, { status: 500 })
+  }
 }
 
 // POST /api/chat/messages

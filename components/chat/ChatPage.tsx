@@ -59,6 +59,8 @@ export function ChatPage({ initials }: Props) {
   const lastTsRef = useRef(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const isAtBottomRef = useRef(true)
+  const maxVpHeightRef = useRef(0)
+  const maxInnerHeightRef = useRef(0)
 
   function scrollToBottom(force = false) {
     if (force || isAtBottomRef.current) {
@@ -72,7 +74,18 @@ export function ChatPage({ initials }: Props) {
 
     function onViewportChange() {
       if (!window.visualViewport) return
-      const kbH = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop)
+      const vpH = window.visualViewport.height
+      const innerH = window.innerHeight
+
+      // Sla het grootste geziene formaat op (= zonder toetsenbord / na rotatie)
+      if (vpH > maxVpHeightRef.current) maxVpHeightRef.current = vpH
+      if (innerH > maxInnerHeightRef.current) maxInnerHeightRef.current = innerH
+
+      // Visual viewport krimp – layout viewport krimp = netto toetsenbord hoogte
+      // (op Android resizes-content krimpen beide gelijk → kbH = 0, geen dubbeltelling)
+      const visualShrink = Math.max(0, maxVpHeightRef.current - vpH)
+      const layoutShrink = Math.max(0, maxInnerHeightRef.current - innerH)
+      const kbH = Math.max(0, visualShrink - layoutShrink)
       document.documentElement.style.setProperty('--chat-kb-h', `${kbH}px`)
     }
 
@@ -95,7 +108,11 @@ export function ChatPage({ initials }: Props) {
   // Initial load
   useEffect(() => {
     fetch('/api/chat/messages')
-      .then((r) => r.json())
+      .then(async (r) => {
+        const d = await r.json()
+        if (!r.ok) throw new Error(d.error ?? 'Serverfout')
+        return d
+      })
       .then((d) => {
         const msgs: ChatMessage[] = d.messages ?? []
         // Merge met eventueel al optimistisch toegevoegde berichten (race-condition fix)
@@ -112,7 +129,7 @@ export function ChatPage({ initials }: Props) {
         })
         setTimeout(() => scrollToBottom(true), 50)
       })
-      .catch(() => setError('Kon berichten niet laden'))
+      .catch((e: unknown) => setError(`Kon berichten niet laden${e instanceof Error ? `: ${e.message}` : ''}`))
 
     setupPush()
   }, [])
