@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { IconPoule, IconKO, IconOranje, IconFantasy, IconOverzicht, IconChat } from '@/components/icons/NavIcons'
@@ -14,9 +15,22 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname()
+  const [kbOpen, setKbOpen] = useState(false)
+
+  useEffect(() => {
+    const check = () => setKbOpen(document.body.classList.contains('chat-kb-open'))
+    const obs = new MutationObserver(check)
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [])
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md border-t border-[#2a2a2a]/60" style={{ background: 'rgba(13,13,13,0.75)' }}>
+    <nav
+      className={`fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md border-t border-[#2a2a2a]/60 transition-transform duration-150 ${
+        kbOpen ? 'translate-y-full' : ''
+      }`}
+      style={{ background: 'rgba(13,13,13,0.75)' }}
+    >
       <div className="max-w-[700px] mx-auto flex items-stretch">
         {TABS.map(({ href, Icon }) => {
           const isActive = pathname.startsWith(href)

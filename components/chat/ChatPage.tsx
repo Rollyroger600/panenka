@@ -82,11 +82,22 @@ export function ChatPage({ initials }: Props) {
       if (innerH > maxInnerHeightRef.current) maxInnerHeightRef.current = innerH
 
       // Visual viewport krimp – layout viewport krimp = netto toetsenbord hoogte
-      // (op Android resizes-content krimpen beide gelijk → kbH = 0, geen dubbeltelling)
       const visualShrink = Math.max(0, maxVpHeightRef.current - vpH)
       const layoutShrink = Math.max(0, maxInnerHeightRef.current - innerH)
       const kbH = Math.max(0, visualShrink - layoutShrink)
+
       document.documentElement.style.setProperty('--chat-kb-h', `${kbH}px`)
+
+      if (kbH > 0) {
+        // Sla toetsenbordhoogte op zodat het emoji/GIF-panel dezelfde hoogte krijgt
+        document.documentElement.style.setProperty('--chat-locked-kb-h', `${kbH}px`)
+        // Verberg de bottom nav en verklein de nav-offset
+        document.body.classList.add('chat-kb-open')
+        document.documentElement.style.setProperty('--chat-nav-h', '0px')
+      } else {
+        document.body.classList.remove('chat-kb-open')
+        document.documentElement.style.setProperty('--chat-nav-h', '3.5rem')
+      }
     }
 
     if (window.visualViewport) {
@@ -97,11 +108,13 @@ export function ChatPage({ initials }: Props) {
 
     return () => {
       document.body.style.overflow = ''
+      document.body.classList.remove('chat-kb-open')
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', onViewportChange)
         window.visualViewport.removeEventListener('scroll', onViewportChange)
       }
       document.documentElement.style.removeProperty('--chat-kb-h')
+      document.documentElement.style.removeProperty('--chat-nav-h')
     }
   }, [])
 
@@ -130,8 +143,6 @@ export function ChatPage({ initials }: Props) {
         setTimeout(() => scrollToBottom(true), 50)
       })
       .catch((e: unknown) => setError(`Kon berichten niet laden${e instanceof Error ? `: ${e.message}` : ''}`))
-
-    setupPush()
   }, [])
 
   // Polling

@@ -1,12 +1,11 @@
 'use client'
 import { useState, useRef } from 'react'
-import { EmojiPickerPanel } from './EmojiPickerPanel'
-import { GifPickerPanel } from './GifPickerPanel'
+import { EmojiGifPanel } from './EmojiGifPanel'
 import { PollCreatorPanel } from './PollCreatorPanel'
-import { IconCamera, IconSmile } from '@/components/icons/NavIcons'
+import { IconSmile } from '@/components/icons/NavIcons'
 import type { ChatMessage } from '@/lib/types/chat'
 
-type Panel = 'none' | 'emoji' | 'gif' | 'poll'
+type Panel = 'none' | 'emoji-gif' | 'poll' | 'plus'
 
 interface Participant {
   name: string
@@ -24,10 +23,10 @@ interface Props {
   participants?: Participant[]
 }
 
-function IconPoll({ className }: { className?: string }) {
+function IconKeyboard({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zM16.2 13h2.8v6h-2.8v-6z"/>
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M20 5H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zM4 15V7h16v8H4zm2-5h2v2H6zm0-3h2v2H6zm3 0h2v2H9zm0 3h2v2H9zm3-3h2v2h-2zm0 3h2v2h-2zm3 0h2v2h-2zm0-3h2v2h-2zm-8 6h8v2H7zm11 0h-2v-2h2z"/>
     </svg>
   )
 }
@@ -41,8 +40,21 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  function togglePanel(p: Panel) {
-    setPanel((cur) => (cur === p ? 'none' : p))
+  function openEmojiPanel() {
+    setPanel('emoji-gif')
+    setMentionQuery(null)
+    // Blur zodat het toetsenbord sluit; het panel neemt de hoogte over
+    textareaRef.current?.blur()
+  }
+
+  function closeEmojiPanel() {
+    setPanel('none')
+    // Focus opent het toetsenbord weer
+    setTimeout(() => textareaRef.current?.focus(), 50)
+  }
+
+  function togglePlus() {
+    setPanel((cur) => (cur === 'plus' ? 'none' : 'plus'))
   }
 
   async function handleSend() {
@@ -67,7 +79,6 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
     e.target.style.height = 'auto'
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
 
-    // Detecteer @mention: zoek laatste @ vóór cursor, alleen na whitespace of regel begin
     const before = val.slice(0, pos)
     const lastAt = before.lastIndexOf('@')
     if (lastAt >= 0) {
@@ -92,6 +103,12 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
       e.preventDefault()
       handleSend()
     }
+  }
+
+  function handleTextareaFocus() {
+    // Sluit emoji panel als toetsenbord terugkomt
+    if (panel === 'emoji-gif') setPanel('none')
+    if (panel === 'plus') setPanel('none')
   }
 
   function selectMention(participant: Participant) {
@@ -128,7 +145,6 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
 
   function handleEmojiSelect(emoji: string) {
     setText((t) => t + emoji)
-    setPanel('none')
     textareaRef.current?.focus()
   }
 
@@ -164,10 +180,17 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
 
   return (
     <div className="border-t border-[#2a2a2a] bg-[#0D0D0D]">
-      {panel === 'emoji' && <EmojiPickerPanel onSelect={handleEmojiSelect} onClose={() => setPanel('none')} />}
-      {panel === 'gif' && <GifPickerPanel onSelect={handleGifSelect} onClose={() => setPanel('none')} />}
-      {panel === 'poll' && <PollCreatorPanel onSubmit={handlePollSubmit} onClose={() => setPanel('none')} />}
+      {/* Gecombineerd Emoji/GIF panel */}
+      {panel === 'emoji-gif' && (
+        <EmojiGifPanel onSelectEmoji={handleEmojiSelect} onSelectGif={handleGifSelect} />
+      )}
 
+      {/* Poll aanmaken */}
+      {panel === 'poll' && (
+        <PollCreatorPanel onSubmit={handlePollSubmit} onClose={() => setPanel('none')} />
+      )}
+
+      {/* Reply preview */}
       {replyTo && (
         <div className="flex items-center gap-2 px-3 py-2 bg-[#161616] border-t border-[#2a2a2a] border-b border-[#FF6B00]/30">
           <div className="flex-1 min-w-0">
@@ -192,60 +215,78 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
                   ? <span className="text-base flex-shrink-0">📢</span>
                   : <span className="text-[10px] font-bold text-[#FF6B00] bg-[#FF6B00]/10 rounded-full px-1.5 py-0.5 flex-shrink-0">{p.initials}</span>
                 }
-                <span className="text-sm text-white">
-                  {p.name === 'all' ? '@all — Iedereen' : p.name}
-                </span>
+                <span className="text-sm text-white">{p.name === 'all' ? '@all — Iedereen' : p.name}</span>
               </button>
             ))}
           </div>
         )}
 
+        {/* Plus-menu popup */}
+        {panel === 'plus' && (
+          <div className="absolute bottom-full left-3 mb-2 z-20">
+            <div className="bg-[#1E1E1E] border border-[#333] rounded-2xl overflow-hidden shadow-xl">
+              <button
+                onMouseDown={(e) => { e.preventDefault(); fileRef.current?.click(); setPanel('none') }}
+                disabled={disabled || uploading}
+                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-[#2a2a2a] active:bg-[#333] text-left disabled:opacity-40"
+              >
+                <span className="text-xl">{uploading ? '⏳' : '📷'}</span>
+                <span className="text-sm text-white">Foto / Camera</span>
+              </button>
+              <div className="h-px bg-[#333]" />
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setPanel('poll') }}
+                disabled={disabled}
+                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-[#2a2a2a] active:bg-[#333] text-left disabled:opacity-40"
+              >
+                <span className="text-xl">📊</span>
+                <span className="text-sm text-white">Poll aanmaken</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Knoppen: emoji-toggle en plus */}
         <div className="flex gap-1 flex-shrink-0 pb-1">
+          {/* Emoji / toetsenbord toggle */}
           <button
-            onClick={() => fileRef.current?.click()}
-            disabled={disabled || uploading}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-[#555] hover:text-[#FF6B00] hover:bg-[#1E1E1E] transition-colors disabled:opacity-40"
-            title="Afbeelding sturen"
-          >
-            {uploading ? <span className="text-xs animate-spin">⏳</span> : <IconCamera className="w-5 h-5" />}
-          </button>
-          <button
-            onClick={() => togglePanel('gif')}
-            disabled={disabled}
-            className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors disabled:opacity-40 ${
-              panel === 'gif' ? 'text-[#FF6B00] bg-[#FF6B00]/10' : 'text-[#555] hover:text-[#FF6B00] hover:bg-[#1E1E1E]'
-            }`}
-            title="GIF sturen"
-          >
-            GIF
-          </button>
-          <button
-            onClick={() => togglePanel('emoji')}
-            disabled={disabled}
-            className={`w-8 h-8 flex items-center justify-center rounded-full text-lg transition-colors disabled:opacity-40 ${
-              panel === 'emoji' ? 'text-[#FF6B00] bg-[#FF6B00]/10' : 'text-[#555] hover:text-[#FF6B00] hover:bg-[#1E1E1E]'
-            }`}
-            title="Emoji"
-          >
-            <IconSmile className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => togglePanel('poll')}
+            onClick={panel === 'emoji-gif' ? closeEmojiPanel : openEmojiPanel}
             disabled={disabled}
             className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors disabled:opacity-40 ${
-              panel === 'poll' ? 'text-[#FF6B00] bg-[#FF6B00]/10' : 'text-[#555] hover:text-[#FF6B00] hover:bg-[#1E1E1E]'
+              panel === 'emoji-gif'
+                ? 'text-[#FF6B00] bg-[#FF6B00]/10'
+                : 'text-[#555] hover:text-[#FF6B00] hover:bg-[#1E1E1E]'
             }`}
-            title="Poll aanmaken"
+            title={panel === 'emoji-gif' ? 'Toetsenbord' : 'Emoji & GIF'}
           >
-            <IconPoll className="w-5 h-5" />
+            {panel === 'emoji-gif'
+              ? <IconKeyboard className="w-5 h-5" />
+              : <IconSmile className="w-5 h-5" />
+            }
+          </button>
+
+          {/* Plus knop */}
+          <button
+            onClick={togglePlus}
+            disabled={disabled}
+            className={`w-8 h-8 flex items-center justify-center rounded-full text-xl font-light leading-none transition-colors disabled:opacity-40 ${
+              panel === 'plus'
+                ? 'text-[#FF6B00] bg-[#FF6B00]/10'
+                : 'text-[#555] hover:text-[#FF6B00] hover:bg-[#1E1E1E]'
+            }`}
+            title="Meer opties"
+          >
+            {panel === 'plus' ? '✕' : '+'}
           </button>
         </div>
 
+        {/* Tekstvak */}
         <textarea
           ref={textareaRef}
           value={text}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
+          onFocus={handleTextareaFocus}
           placeholder="Bericht..."
           rows={1}
           disabled={disabled}
@@ -253,6 +294,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
           style={{ minHeight: '2.5rem', maxHeight: '7.5rem' }}
         />
 
+        {/* Verzendknop */}
         <button
           onClick={handleSend}
           disabled={!text.trim() || disabled}

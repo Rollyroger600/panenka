@@ -9,7 +9,7 @@ export default async function ChatRoute() {
       className="fixed inset-x-0 flex flex-col"
       style={{
         top: '7.5rem',
-        bottom: 'calc(3.5rem + env(safe-area-inset-bottom) + var(--chat-kb-h, 0px))',
+        bottom: 'calc(var(--chat-nav-h, 3.5rem) + env(safe-area-inset-bottom) + var(--chat-kb-h, 0px))',
         fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
       }}
     >
