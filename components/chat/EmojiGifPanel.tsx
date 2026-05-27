@@ -40,6 +40,62 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
   },
 ]
 
+// Nederlandse zoekindex: termen → emojis (ondersteunt gedeeltelijke overeenkomst)
+const SEARCH_MAP: { terms: string[]; emojis: string[] }[] = [
+  { terms: ['liefde', 'verliefd', 'hart', 'hartje', 'harten', 'valentijn', 'kus'], emojis: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','❤️‍🔥','💔','❣️','💕','💞','💓','💗','💖','💝','💟','😍','🥰','😘','😗','😚'] },
+  { terms: ['blij', 'gelukkig', 'lachen', 'grappig', 'humor', 'vrolijk', 'haha', 'lol'], emojis: ['😀','😃','😄','😁','😆','😅','🤣','😂','😊','😇','🥳','😉','😋','😛','😜','🤪'] },
+  { terms: ['verdriet', 'huilen', 'tranen', 'droef', 'triest', 'janken', 'snot'], emojis: ['😢','😭','🥺','😞','😟','😦','😧','😰','😥','😔','😪'] },
+  { terms: ['boos', 'kwaad', 'woede', 'irritant', 'frustratie', 'razend'], emojis: ['😤','😡','😠','🤬','👿','💀'] },
+  { terms: ['verrast', 'verbaasd', 'shock', 'wow', 'wauw', 'ongeloof'], emojis: ['😮','😯','😲','🤯','🫣','😱'] },
+  { terms: ['cool', 'stoer', 'zonnebril', 'swag'], emojis: ['😎','🤩','🥸','🤓','🧐'] },
+  { terms: ['ziek', 'misselijk', 'corona', 'grieperig', 'koorts'], emojis: ['😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴'] },
+  { terms: ['slapen', 'moe', 'gapen', 'slaap', 'rust'], emojis: ['😴','🥱','😪','💤'] },
+  { terms: ['schouders', 'weet niet', 'geen idee', 'whatever', 'mja'], emojis: ['🤷','🤦','🙄','😶','😑','😐'] },
+  { terms: ['voetbal', 'bal', 'sport', 'wedstrijd', 'match', 'goal', 'keeper'], emojis: ['⚽','🏟️','🥅','🎽','🧤','🏃','🤸','⛹️','🏋️','🤾'] },
+  { terms: ['trofee', 'award', 'winnen', 'prijs', 'kampioen', 'goud', 'zilver', 'brons', 'medaille'], emojis: ['🏆','🥇','🥈','🥉','🏅','🎖️','👑'] },
+  { terms: ['geel', 'kaart'], emojis: ['🟨','🟡'] },
+  { terms: ['rood', 'kaart'], emojis: ['🟥','🔴'] },
+  { terms: ['feest', 'vieren', 'jubel', 'party', 'verjaardag', 'jarig', 'gefeliciteerd'], emojis: ['🎉','🎊','🥳','🎈','🎁','🎂','🍰'] },
+  { terms: ['vuur', 'heet', 'brand', 'vlam', 'fire'], emojis: ['🔥','⚡','❤️‍🔥'] },
+  { terms: ['sterk', 'kracht', 'spier'], emojis: ['💪','✊','👊','🤛','🤜'] },
+  { terms: ['klap', 'applaus', 'klappen'], emojis: ['👏','🙌','🤝','🫶'] },
+  { terms: ['duim', 'omhoog', 'goed', 'top', 'prima', 'akkoord', 'ok'], emojis: ['👍','✅','💯','✔️'] },
+  { terms: ['nee', 'fout', 'slecht', 'verkeerd', 'af', 'afwijzen'], emojis: ['👎','❌','🚫'] },
+  { terms: ['hand', 'handen', 'gebaar', 'hallo', 'dag', 'bye', 'doei', 'groet'], emojis: ['👋','🤚','🖐️','✋','🤙','🫱','🫲'] },
+  { terms: ['vrede', 'oke', 'peace', 'overwinning', 'twee'], emojis: ['✌️','🤞','🖖'] },
+  { terms: ['gebed', 'bidden', 'dank', 'please', 'alsjeblieft'], emojis: ['🙏','🤲'] },
+  { terms: ['kroon', 'koning', 'koningin', 'baas'], emojis: ['👑','🏆'] },
+  { terms: ['hond', 'puppy', 'doggo'], emojis: ['🐶'] },
+  { terms: ['kat', 'poes', 'kitten', 'miauw'], emojis: ['🐱'] },
+  { terms: ['varken', 'pig'], emojis: ['🐷'] },
+  { terms: ['aap', 'monkey'], emojis: ['🐵'] },
+  { terms: ['beer', 'panda', 'koala'], emojis: ['🐻','🐼','🐨'] },
+  { terms: ['nederland', 'oranje', 'hollands', 'dutch', 'holland'], emojis: ['🇳🇱'] },
+  { terms: ['duitsland', 'german', 'duits'], emojis: ['🇩🇪'] },
+  { terms: ['frankrijk', 'french', 'frans'], emojis: ['🇫🇷'] },
+  { terms: ['brazilië', 'brazilie', 'braziliaan'], emojis: ['🇧🇷'] },
+  { terms: ['argentinië', 'argentinie', 'argentijn', 'messi'], emojis: ['🇦🇷'] },
+  { terms: ['spanje', 'spaans'], emojis: ['🇪🇸'] },
+  { terms: ['portugal', 'portugees', 'ronaldo'], emojis: ['🇵🇹'] },
+  { terms: ['belgie', 'belgisch'], emojis: ['🇧🇪'] },
+  { terms: ['italië', 'italie', 'italiaans', 'pasta'], emojis: ['🇮🇹'] },
+  { terms: ['pizza', 'italiaans'], emojis: ['🍕'] },
+  { terms: ['eten', 'lekker', 'food', 'hamburger', 'burger'], emojis: ['🍔','🍟','🌮','🌯','🥪','🌭'] },
+  { terms: ['bier', 'drinken', 'alcohol', 'biertje', 'feest'], emojis: ['🍺','🍻','🥂','🍷','🥃'] },
+  { terms: ['koffie', 'thee', 'warm'], emojis: ['☕','🧋','🍹'] },
+  { terms: ['snoep', 'zoet', 'chocolade', 'lekker'], emojis: ['🍫','🍬','🍭','🍦','🧁','🍪'] },
+  { terms: ['ster', 'mooi', 'geweldig', 'schitterend', 'top'], emojis: ['⭐','🌟','💫','✨','🌈'] },
+  { terms: ['zon', 'zomer', 'warm', 'zonnig', 'strand'], emojis: ['☀️','🌤️','🌅','🏖️'] },
+  { terms: ['sneeuw', 'koud', 'winter', 'ijs'], emojis: ['❄️','🥶','⛷️','🏊'] },
+  { terms: ['regen', 'nat', 'buiten'], emojis: ['🌧️','⛅','🌈'] },
+  { terms: ['muziek', 'lied', 'song', 'zingen', 'danssen', 'gitaar'], emojis: ['🎵','🎶','🎸','🎹','🎺','🎷','🥁'] },
+  { terms: ['vliegtuig', 'vliegen', 'reizen', 'vakantie', 'vlieg'], emojis: ['✈️','🚀','🛸','🚂','🚢'] },
+  { terms: ['telefoon', 'bellen', 'mobiel', 'sms'], emojis: ['📱','💻'] },
+  { terms: ['foto', 'camera', 'selfie'], emojis: ['📷','📸'] },
+  { terms: ['waarschuwing', 'gevaar', 'let op'], emojis: ['⚠️','🆘','🔔','📢'] },
+  { terms: ['vlag', 'flag'], emojis: ['🏴󠁧󠁢󠁥󠁮󠁧󠁿','🏴󠁧󠁢󠁷󠁬󠁳󠁿'] },
+]
+
 interface GifItem { id: string; title: string; preview: string; original: string }
 
 interface Props {
@@ -56,9 +112,20 @@ export function EmojiGifPanel({ onSelectEmoji, onSelectGif }: Props) {
   const [gifFetched, setGifFetched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const filteredEmojiGroups = emojiQuery.trim()
-    ? EMOJI_GROUPS.filter((g) => g.label.toLowerCase().includes(emojiQuery.trim().toLowerCase()))
-    : EMOJI_GROUPS
+  const filteredEmojiGroups = (() => {
+    const q = emojiQuery.trim().toLowerCase()
+    if (!q) return EMOJI_GROUPS
+    const hits = new Set<string>()
+    // Zoek via Nederlandse trefwoorden (gedeeltelijke match)
+    for (const { terms, emojis } of SEARCH_MAP) {
+      if (terms.some((t) => t.includes(q))) emojis.forEach((e) => hits.add(e))
+    }
+    // Zoek ook op groeplabel als fallback
+    EMOJI_GROUPS.filter((g) => g.label.toLowerCase().includes(q))
+      .flatMap((g) => g.emojis)
+      .forEach((e) => hits.add(e))
+    return hits.size > 0 ? [{ label: 'Resultaten', emojis: [...hits] }] : []
+  })()
 
   useEffect(() => {
     if (tab === 'gif' && !gifFetched) fetchGifs('')

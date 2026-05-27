@@ -261,6 +261,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
         <div className="flex gap-1 flex-shrink-0 pb-1">
           {/* Emoji / toetsenbord toggle */}
           <button
+            tabIndex={-1}
             onClick={panel === 'emoji-gif' ? closeEmojiPanel : openEmojiPanel}
             disabled={disabled}
             className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors disabled:opacity-40 ${
@@ -278,6 +279,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
 
           {/* Plus knop */}
           <button
+            tabIndex={-1}
             onClick={togglePlus}
             disabled={disabled}
             className={`w-8 h-8 flex items-center justify-center rounded-full text-xl font-light leading-none transition-colors disabled:opacity-40 ${
@@ -309,6 +311,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
 
         {/* Verzendknop */}
         <button
+          tabIndex={-1}
           onClick={handleSend}
           disabled={!text.trim() || disabled}
           className="w-10 h-10 flex-shrink-0 rounded-full bg-[#FF6B00] flex items-center justify-center text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#FF8C33] active:scale-95"

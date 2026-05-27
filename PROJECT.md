@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-27 — Chat: iOS keyboard fix + tikken-om-te-sluiten + emoji zoek uitgebreid (Claude Code)
+
+iOS-toetsenbord reparatie, UX-verbeteringen en betere emoji-zoekopdracht.
+
+- `components/chat/ChatPage.tsx`: `overflow: hidden` verwijderd van `document.documentElement` — dit blokkeerde `visualViewport` resize-events op iOS Safari waardoor `--chat-kb-h` nooit werd gezet en de input achter het toetsenbord bleef. Keyboard-hoogte formule vereenvoudigd naar `window.innerHeight - window.visualViewport.height` (betrouwbaarder dan de max-tracking aanpak). Ongebruikte `maxVpHeightRef` en `maxInnerHeightRef` refs verwijderd. `onClick` toegevoegd op de berichtenlijst om het toetsenbord te sluiten bij tikken (zoals WhatsApp).
+- `components/chat/ChatInput.tsx`: `tabIndex={-1}` toegevoegd op emoji-knop, plus-knop en verzendknop zodat iOS de ^ v navigatiepijlen uit de keyboard-accessory-bar weglaat (textarea is enige tabbable element).
+- `components/chat/EmojiGifPanel.tsx`: Nederlandse zoekindex `SEARCH_MAP` toegevoegd met ~50 trefwoordgroepen. Zoeken werkt nu op semantische termen (`liefde` → harten, `huilen` → tranemoji's, `feest` → confetti/taart/bier, `kaart` → geel/rood, `kampioen` → trofeeën). Gedeeltelijke matching: `lief` vindt `liefde`, `hart` vindt `hartje`/`harten`. Zoekresultaten worden als platte grid getoond.
+
 ### 2026-05-27 — Chat iOS keyboard fixes: scroll preventie + accessory bar (Claude Code)
 
 iOS-specifieke problemen opgelost bij het openen van het toetsenbord in de chat.

@@ -59,8 +59,6 @@ export function ChatPage({ initials }: Props) {
   const lastTsRef = useRef(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const isAtBottomRef = useRef(true)
-  const maxVpHeightRef = useRef(0)
-  const maxInnerHeightRef = useRef(0)
 
   function scrollToBottom(force = false) {
     if (force || isAtBottomRef.current) {
@@ -71,10 +69,8 @@ export function ChatPage({ initials }: Props) {
   // Vergrendel body-scroll + volg toetsenbordhoogte via visualViewport
   useEffect(() => {
     document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
+    // NIET op documentElement zetten — dat blokkeert visualViewport resize-events op iOS Safari
 
-    // iOS scrollt de pagina bij keyboard open (omzeilt overflow:hidden op body)
-    // Dit reset elke scroll direct, zodat kbH correct berekend wordt via visualViewport
     function resetScroll() {
       if (window.scrollY !== 0) window.scrollTo(0, 0)
     }
@@ -82,17 +78,12 @@ export function ChatPage({ initials }: Props) {
 
     function onViewportChange() {
       if (!window.visualViewport) return
-      const vpH = window.visualViewport.height
-      const innerH = window.innerHeight
+      // Reset scroll voor meting — iOS scrollt de pagina bij keyboard open
+      if (window.scrollY !== 0) window.scrollTo(0, 0)
 
-      // Sla het grootste geziene formaat op (= zonder toetsenbord / na rotatie)
-      if (vpH > maxVpHeightRef.current) maxVpHeightRef.current = vpH
-      if (innerH > maxInnerHeightRef.current) maxInnerHeightRef.current = innerH
-
-      // Visual viewport krimp – layout viewport krimp = netto toetsenbord hoogte
-      const visualShrink = Math.max(0, maxVpHeightRef.current - vpH)
-      const layoutShrink = Math.max(0, maxInnerHeightRef.current - innerH)
-      const kbH = Math.max(0, visualShrink - layoutShrink)
+      // innerHeight daalt mee met adresbalk (iOS), visualViewport.height daalt ook met keyboard
+      // Dus het verschil = uitsluitend de toetsenbordhoogte
+      const kbH = Math.max(0, window.innerHeight - window.visualViewport.height)
 
       document.documentElement.style.setProperty('--chat-kb-h', `${kbH}px`)
 
@@ -114,7 +105,6 @@ export function ChatPage({ initials }: Props) {
 
     return () => {
       document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
       document.body.classList.remove('chat-kb-open')
       window.removeEventListener('scroll', resetScroll)
       if (window.visualViewport) {
@@ -301,6 +291,7 @@ export function ChatPage({ initials }: Props) {
       <div
         className="flex-1 overflow-y-auto py-3"
         onScroll={handleScroll}
+        onClick={() => { (document.activeElement as HTMLElement)?.blur() }}
       >
         {error && <p className="text-center text-red-400 text-sm py-8">{error}</p>}
         {!error && messages.length === 0 && (
