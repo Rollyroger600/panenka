@@ -89,9 +89,7 @@ export function ChatPage({ initials }: Props) {
       document.documentElement.style.setProperty('--chat-kb-h', `${kbH}px`)
 
       if (kbH > 0) {
-        // Sla toetsenbordhoogte op zodat het emoji/GIF-panel dezelfde hoogte krijgt
         document.documentElement.style.setProperty('--chat-locked-kb-h', `${kbH}px`)
-        // Verberg de bottom nav en verklein de nav-offset
         document.body.classList.add('chat-kb-open')
         document.documentElement.style.setProperty('--chat-nav-h', '0px')
       } else {

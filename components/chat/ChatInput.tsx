@@ -31,6 +31,22 @@ function IconKeyboard({ className }: { className?: string }) {
   )
 }
 
+function IconCamera({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2 7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/>
+    </svg>
+  )
+}
+
+function IconPoll({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </svg>
+  )
+}
+
 export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onSendGif, onSendPoll, disabled, participants = [] }: Props) {
   const [text, setText] = useState('')
   const [panel, setPanel] = useState<Panel>('none')
@@ -180,16 +196,6 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
 
   return (
     <div className="border-t border-[#2a2a2a] bg-[#0D0D0D]">
-      {/* Gecombineerd Emoji/GIF panel */}
-      {panel === 'emoji-gif' && (
-        <EmojiGifPanel onSelectEmoji={handleEmojiSelect} onSelectGif={handleGifSelect} />
-      )}
-
-      {/* Poll aanmaken */}
-      {panel === 'poll' && (
-        <PollCreatorPanel onSubmit={handlePollSubmit} onClose={() => setPanel('none')} />
-      )}
-
       {/* Reply preview */}
       {replyTo && (
         <div className="flex items-center gap-2 px-3 py-2 bg-[#161616] border-t border-[#2a2a2a] border-b border-[#FF6B00]/30">
@@ -230,8 +236,8 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
                 disabled={disabled || uploading}
                 className="flex items-center gap-3 w-full px-4 py-3 hover:bg-[#2a2a2a] active:bg-[#333] text-left disabled:opacity-40"
               >
-                <span className="text-xl">{uploading ? '⏳' : '📷'}</span>
-                <span className="text-sm text-white">Foto / Camera</span>
+                <IconCamera className="w-5 h-5 text-[#888] flex-shrink-0" />
+                <span className="text-sm text-white">{uploading ? 'Bezig…' : 'Foto / Camera'}</span>
               </button>
               <div className="h-px bg-[#333]" />
               <button
@@ -239,7 +245,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
                 disabled={disabled}
                 className="flex items-center gap-3 w-full px-4 py-3 hover:bg-[#2a2a2a] active:bg-[#333] text-left disabled:opacity-40"
               >
-                <span className="text-xl">📊</span>
+                <IconPoll className="w-5 h-5 text-[#888] flex-shrink-0" />
                 <span className="text-sm text-white">Poll aanmaken</span>
               </button>
             </div>
@@ -290,8 +296,10 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
           placeholder="Bericht..."
           rows={1}
           disabled={disabled}
-          className="flex-1 bg-[#1E1E1E] border border-[#2a2a2a] rounded-2xl px-4 py-2 text-sm text-white placeholder:text-[#555] outline-none focus:border-[#FF6B00]/50 resize-none overflow-hidden disabled:opacity-40"
-          style={{ minHeight: '2.5rem', maxHeight: '7.5rem' }}
+          inputMode="text"
+          enterKeyHint="send"
+          className="flex-1 bg-[#1E1E1E] border border-[#2a2a2a] rounded-2xl px-4 py-2 text-white placeholder:text-[#555] outline-none focus:border-[#FF6B00]/50 resize-none overflow-hidden disabled:opacity-40"
+          style={{ minHeight: '2.5rem', maxHeight: '7.5rem', fontSize: '16px' }}
         />
 
         {/* Verzendknop */}
@@ -306,7 +314,17 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
         </button>
       </div>
 
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+      {/* Gecombineerd Emoji/GIF panel — onder de invoerbalk */}
+      {panel === 'emoji-gif' && (
+        <EmojiGifPanel onSelectEmoji={handleEmojiSelect} onSelectGif={handleGifSelect} />
+      )}
+
+      {/* Poll aanmaken — onder de invoerbalk */}
+      {panel === 'poll' && (
+        <PollCreatorPanel onSubmit={handlePollSubmit} onClose={() => setPanel('none')} />
+      )}
+
+      <input ref={fileRef} type="file" accept="image/*" tabIndex={-1} className="hidden" onChange={handleFileChange} />
     </div>
   )
 }

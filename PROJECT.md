@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-27 — Chat UI mobiele fixes: Android + iOS (Claude Code)
+
+Meerdere mobiele verbeteringen aan de in-app groepschat.
+
+- `components/chat/ChatInput.tsx`: emoji/GIF-panel en poll-panel verplaatst naar **onder** de invoerbalk (was: erboven) zodat de invoerbalk visueel op dezelfde hoogte blijft als het toetsenbord — identiek aan WhatsApp. Monochrome SVG-iconen (camera, staafdiagram) in het plus-menu ter vervanging van gekleurde emoji-iconen. Textarea `fontSize: 16px` om iOS-inzoom bij focus te voorkomen. `tabIndex={-1}` op de verborgen file-input om de iOS-pijltjesbalk boven het toetsenbord te onderdrukken. `enterKeyHint="send"` toegevoegd.
+- `components/chat/EmojiGifPanel.tsx`: zoekfunctie toegevoegd aan het emoji-tab (zelfde stijl als GIF-zoek). Filtert op groepsnaam; toont "Geen resultaten" bij geen treffer.
+- `components/chat/ChatPage.tsx`: `chat-kb-open` class-beheer en `--chat-nav-h` CSS-variabele hersteld en vereenvoudigd.
+
 ### 2026-05-27 — Groepschat bugfixes + @mention feature + mobiel toetsenbord (Claude Code)
 
 Drie verbeteringen aan de groepschat.

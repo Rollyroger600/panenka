@@ -49,11 +49,16 @@ interface Props {
 
 export function EmojiGifPanel({ onSelectEmoji, onSelectGif }: Props) {
   const [tab, setTab] = useState<'emoji' | 'gif'>('emoji')
+  const [emojiQuery, setEmojiQuery] = useState('')
   const [query, setQuery] = useState('')
   const [gifs, setGifs] = useState<GifItem[]>([])
   const [gifLoading, setGifLoading] = useState(false)
   const [gifFetched, setGifFetched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const filteredEmojiGroups = emojiQuery.trim()
+    ? EMOJI_GROUPS.filter((g) => g.label.toLowerCase().includes(emojiQuery.trim().toLowerCase()))
+    : EMOJI_GROUPS
 
   useEffect(() => {
     if (tab === 'gif' && !gifFetched) fetchGifs('')
@@ -100,24 +105,38 @@ export function EmojiGifPanel({ onSelectEmoji, onSelectGif }: Props) {
 
       {/* Emoji tab */}
       {tab === 'emoji' && (
-        <div className="flex-1 overflow-y-auto px-3 pt-2 space-y-3">
-          {EMOJI_GROUPS.map((group) => (
-            <div key={group.label}>
-              <p className="text-[10px] text-[#444] uppercase tracking-wide mb-1">{group.label}</p>
-              <div className="flex flex-wrap">
-                {group.emojis.map((e) => (
-                  <button
-                    key={e}
-                    onMouseDown={(ev) => { ev.preventDefault(); onSelectEmoji(e) }}
-                    className="text-2xl leading-none p-1 active:scale-95 transition-transform"
-                  >
-                    {e}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-          <div className="h-2" />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="px-3 py-2 flex-shrink-0">
+            <input
+              value={emojiQuery}
+              onChange={(e) => setEmojiQuery(e.target.value)}
+              placeholder="Zoek een emoji..."
+              className="w-full bg-[#252525] rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-[#555] outline-none focus:ring-1 focus:ring-[#FF6B00]"
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-3">
+            {filteredEmojiGroups.length === 0 ? (
+              <p className="text-center text-[#555] text-sm pt-8">Geen resultaten</p>
+            ) : (
+              filteredEmojiGroups.map((group) => (
+                <div key={group.label}>
+                  <p className="text-[10px] text-[#444] uppercase tracking-wide mb-1">{group.label}</p>
+                  <div className="flex flex-wrap">
+                    {group.emojis.map((e) => (
+                      <button
+                        key={e}
+                        onMouseDown={(ev) => { ev.preventDefault(); onSelectEmoji(e) }}
+                        className="text-2xl leading-none p-1 active:scale-95 transition-transform"
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+            <div className="h-2" />
+          </div>
         </div>
       )}
 
