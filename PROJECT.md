@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-27 — Chat iOS keyboard fixes: scroll preventie + accessory bar (Claude Code)
+
+iOS-specifieke problemen opgelost bij het openen van het toetsenbord in de chat.
+
+- `components/chat/ChatPage.tsx`: `document.documentElement.style.overflow = 'hidden'` toegevoegd (naast body) zodat iOS niet meer de html-scrollcontainer kan verschuiven. Scroll reset listener toegevoegd (`window.addEventListener('scroll', () => scrollTo(0,0))`) die elke iOS keyboard-scroll direct terugzet zodat de `visualViewport.height` correct daalt → `kbH > 0` → `chat-kb-open` gezet → BottomNav verborgen. Cleanup bijgewerkt.
+- `components/chat/ChatInput.tsx`: `window.scrollTo(0, 0)` als eerste regel in `handleTextareaFocus` als directe back-up bij focus. Persistente `<input type="file">` volledig verwijderd uit DOM; vervangen door dynamische aanmaak in `openFilePicker()` — hierdoor detecteert iOS geen tweede form field meer en verdwijnen de ↑ ↓ pijlen uit de keyboard accessory bar. `fileRef` useRef verwijderd.
+- `app/layout.tsx`: `viewport` export toegevoegd (`width: device-width, initialScale: 1`) — Next.js 13+ best practice voor correcte viewport meta tag.
+
 ### 2026-05-27 — Chat UI mobiele fixes: Android + iOS (Claude Code)
 
 Meerdere mobiele verbeteringen aan de in-app groepschat.

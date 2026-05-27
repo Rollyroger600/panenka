@@ -71,6 +71,14 @@ export function ChatPage({ initials }: Props) {
   // Vergrendel body-scroll + volg toetsenbordhoogte via visualViewport
   useEffect(() => {
     document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    // iOS scrollt de pagina bij keyboard open (omzeilt overflow:hidden op body)
+    // Dit reset elke scroll direct, zodat kbH correct berekend wordt via visualViewport
+    function resetScroll() {
+      if (window.scrollY !== 0) window.scrollTo(0, 0)
+    }
+    window.addEventListener('scroll', resetScroll)
 
     function onViewportChange() {
       if (!window.visualViewport) return
@@ -106,7 +114,9 @@ export function ChatPage({ initials }: Props) {
 
     return () => {
       document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
       document.body.classList.remove('chat-kb-open')
+      window.removeEventListener('scroll', resetScroll)
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', onViewportChange)
         window.visualViewport.removeEventListener('scroll', onViewportChange)

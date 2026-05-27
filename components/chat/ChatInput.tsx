@@ -53,7 +53,6 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
   const [uploading, setUploading] = useState(false)
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
   const [mentionStart, setMentionStart] = useState(0)
-  const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   function openEmojiPanel() {
@@ -122,7 +121,8 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
   }
 
   function handleTextareaFocus() {
-    // Sluit emoji panel als toetsenbord terugkomt
+    // iOS scrollt de pagina bij keyboard open — reset direct zodat de header zichtbaar blijft
+    window.scrollTo(0, 0)
     if (panel === 'emoji-gif') setPanel('none')
     if (panel === 'plus') setPanel('none')
   }
@@ -164,17 +164,22 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
     textareaRef.current?.focus()
   }
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = ''
-    setUploading(true)
-    setPanel('none')
-    try {
-      await onSendImage(file)
-    } finally {
-      setUploading(false)
+  function openFilePicker() {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file) return
+      setUploading(true)
+      setPanel('none')
+      try {
+        await onSendImage(file)
+      } finally {
+        setUploading(false)
+      }
     }
+    input.click()
   }
 
   async function handleGifSelect(url: string) {
@@ -232,7 +237,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
           <div className="absolute bottom-full left-3 mb-2 z-20">
             <div className="bg-[#1E1E1E] border border-[#333] rounded-2xl overflow-hidden shadow-xl">
               <button
-                onMouseDown={(e) => { e.preventDefault(); fileRef.current?.click(); setPanel('none') }}
+                onMouseDown={(e) => { e.preventDefault(); openFilePicker(); setPanel('none') }}
                 disabled={disabled || uploading}
                 className="flex items-center gap-3 w-full px-4 py-3 hover:bg-[#2a2a2a] active:bg-[#333] text-left disabled:opacity-40"
               >
@@ -324,7 +329,6 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
         <PollCreatorPanel onSubmit={handlePollSubmit} onClose={() => setPanel('none')} />
       )}
 
-      <input ref={fileRef} type="file" accept="image/*" tabIndex={-1} className="hidden" onChange={handleFileChange} />
     </div>
   )
 }
