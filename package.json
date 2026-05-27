@@ -13,8 +13,10 @@
     "update_quoteringen": "npm run scrape-match-odds && npm run scrape-ko-odds"
   },
   "dependencies": {
+    "@types/web-push": "^3.6.4",
     "@upstash/redis": "^1.37.0",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.4.0",
     "@vercel/speed-insights": "^2.0.0",
     "exceljs": "^4.4.0",
     "html-to-image": "^1.11.13",
@@ -23,6 +25,7 @@
     "react": "^19",
     "react-dom": "^19",
     "recharts": "^3.8.1",
+    "web-push": "^3.6.7",
     "xlsx": "^0.18.5",
     "xlsx-populate": "^1.21.0",
     "zustand": "^5"

@@ -1,4 +1,4 @@
-# Panenka — WK 2026 Pool App
+   # Panenka — WK 2026 Pool App
 
 ## What is this?
 
@@ -844,6 +844,48 @@ The following decisions were made during implementation that deviate from or ext
 ---
 
 ## Changelog
+
+### 2026-05-27 — In-app groepschat (Claude Code)
+
+Volledige WhatsApp-vervanging gebouwd als 6e tab in de navigatie.
+
+- `lib/types/chat.ts`: `ChatMessage` type (tekst/afbeelding/GIF, replyTo, reactions)
+- `lib/kv/chat.ts`: Redis sorted set voor berichten (max 2000) + push subscription index
+- `lib/push.ts`: web-push helper — stuurt notificatie naar alle subscribers behalve de verzender
+- `public/sw.js`: service worker voor push notificaties (ontvangt + toont, navigeert naar /chat bij klik)
+- `app/api/chat/messages/route.ts`: GET (poll nieuwe berichten) + POST (stuur bericht)
+- `app/api/chat/react/route.ts`: emoji-reacties toggle per deelnemer
+- `app/api/chat/upload/route.ts`: afbeelding upload via Vercel Blob (max 10MB)
+- `app/api/chat/gif/route.ts`: GIPHY search proxy (trending + zoeken)
+- `app/api/push/subscribe/route.ts`: Web Push subscribe/unsubscribe
+- `app/api/push/vapid-public-key/route.ts`: geeft VAPID public key terug aan client
+- `components/chat/ChatPage.tsx`: hoofdcomponent — polling elke 5s, push setup, stuur/ontvang berichten
+- `components/chat/ChatMessage.tsx`: berichtbubbels met datum-dividers, reply-preview, emoji-reacties
+- `components/chat/ChatInput.tsx`: invoerbalk met afbeelding/GIF/emoji knoppen + send
+- `components/chat/EmojiPickerPanel.tsx`: voetbal-thematische emoji groepen
+- `components/chat/GifPickerPanel.tsx`: GIPHY zoekpanel (3-koloms grid)
+- `app/(app)/chat/page.tsx`: 6e tab in navigatie
+- `components/layout/BottomNav.tsx`: Beker-knop verwijderd, `IconChat` toegevoegd als 6e tab
+- `components/layout/AppHeader.tsx`: Beker-knop (+ FifaInfoDrawer) verplaatst naar header links
+- `components/icons/NavIcons.tsx`: `IconChat` (speech bubble SVG) toegevoegd
+- Dependencies toegevoegd: `@vercel/blob`, `web-push`, `@types/web-push`
+- VAPID keys gegenereerd en in `.env.local` gezet (ook in Vercel dashboard instellen)
+- GIPHY API key in `.env.local` (ook in Vercel dashboard instellen)
+
+### 2026-05-27 — Groepschat UI verfijning + poll feature (Claude Code)
+
+Uitgebreide verbeteringen aan de groepschat-interface en een volledig poll-systeem toegevoegd.
+
+- `app/(app)/chat/page.tsx`: layout omgezet naar `position: fixed` zodat de invoerbalk altijd zichtbaar is boven de navigatie (geen scroll meer nodig); Helvetica Neue lettertype ingesteld voor de chat
+- `components/icons/NavIcons.tsx`: `IconCamera` en `IconSmile` SVG-iconen toegevoegd ter vervanging van emoji-iconen in de invoerbalk
+- `components/chat/ChatMessage.tsx`: naam afzender als eerste regel in het berichtbubbel; datumscheider-lijn en -tekst lichter gemaakt (`#aaa`); chat-header volledig verwijderd; hover-knoppen vervangen door tap-op-bericht interactie (`showActions` state); swipe-rechts (anderen) / swipe-links (eigen) om te reageren op een bericht (swipe-drempel 50px, `preventNextClick` guard); `PollBubble` component toegevoegd met voortgangsbalken, procentages, meerkeuze-ondersteuning
+- `components/chat/ChatInput.tsx`: `onSendPoll` prop toegevoegd; `IconPoll` staafdiagram SVG; `PollCreatorPanel` geïntegreerd
+- `components/chat/PollCreatorPanel.tsx`: nieuw component — vraag-invoer, 2–4 opties, "meerdere antwoorden mogelijk" toggle, verstuurknop
+- `components/chat/ChatPage.tsx`: `handleSendPoll` en `handleVotePoll` toegevoegd; chat-header volledig verwijderd
+- `lib/types/chat.ts`: `ChatMessageType` uitgebreid met `'poll'`; `PollOption` interface toegevoegd (`text`, `votes: string[]`); `ChatMessage` uitgebreid met `pollQuestion?`, `pollOptions?`, `pollMultiple?`
+- `lib/kv/chat.ts`: `chatUpdatePoll` functie toegevoegd — toggle-stemmen (enkelvoudig: klik zelfde = unstem; meervoudig: per optie togglen)
+- `app/api/chat/poll/route.ts`: nieuw POST-endpoint voor stemmen op polls
+- `app/api/chat/messages/route.ts`: POST verwerkt nu ook `type: 'poll'` inclusief push-notificatie (`📊 vraag`)
 
 ### 2026-05-24 — Fantasy XV speler toegevoegd: R. Bounida (Claude Code)
 
