@@ -77,7 +77,13 @@ function playerAge(dob: string): number {
   return Math.floor((WK_START.getTime() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000))
 }
 
-type PanelKey = 'land' | 'conf' | 'comp' | 'pos' | null
+type PanelKey = 'land' | 'conf' | 'comp' | 'club' | 'pos' | null
+
+function clubAbbrev(name: string): string {
+  const words = name.split(/\s+/).filter(Boolean)
+  if (words.length === 1) return name.slice(0, 3).toUpperCase()
+  return words.map((w) => w[0]).join('').slice(0, 3).toUpperCase()
+}
 
 interface Props {
   slotKey: string
@@ -94,6 +100,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
   const [filterPos, setFilterPos] = useState<string | null>(null)
   const [filterCountry, setFilterCountry] = useState<string | null>(null)
   const [filterLeague, setFilterLeague] = useState<string | null>(null)
+  const [filterClub, setFilterClub] = useState<string | null>(null)
   const [openPanel, setOpenPanel] = useState<PanelKey>(null)
 
   const alreadyPicked = useMemo(
@@ -101,7 +108,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
     [fantasySquad],
   )
 
-  const results = useMemo(() => {
+  const { results, clubsInPool } = useMemo(() => {
     let pool = WK_PLAYERS
     if (filterU22) pool = pool.filter(IS_TALENT)
     if (filterConf) pool = pool.filter((p) => p.confederation === filterConf)
@@ -114,8 +121,12 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
         (p) => p.name.toLowerCase().includes(q) || p.fullName.toLowerCase().includes(q) || p.country.toLowerCase().includes(q),
       )
     }
-    return pool
-  }, [search, filterConf, filterU22, filterPos, filterCountry, filterLeague])
+    const clubCounts = new Map<string, number>()
+    for (const p of pool) clubCounts.set(p.club, (clubCounts.get(p.club) ?? 0) + 1)
+    const clubsInPool = [...clubCounts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c)
+    const results = filterClub ? pool.filter((p) => p.club === filterClub) : pool
+    return { results, clubsInPool }
+  }, [search, filterConf, filterU22, filterPos, filterCountry, filterLeague, filterClub])
 
   function select(player: Player) {
     if (onSelect) {
@@ -152,7 +163,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
     )
   }
 
-  const hasFilters = !!(search.trim() || filterConf || filterPos || filterCountry || filterLeague || (filterU22 && !talentOnly))
+  const hasFilters = !!(search.trim() || filterConf || filterPos || filterCountry || filterLeague || filterClub || (filterU22 && !talentOnly))
 
   return (
     <>
@@ -175,6 +186,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
           {pill('LAND', !!filterCountry, 'land')}
           {pill('CONF', !!filterConf, 'conf')}
           {pill('COMP', !!filterLeague, 'comp')}
+          {pill('CLUB', !!filterClub, 'club')}
           {pill('POS', !!filterPos, 'pos')}
           <button
             onClick={() => { if (!talentOnly) setFilterU22((v) => !v) }}
@@ -268,6 +280,31 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
           </div>
         )}
 
+        {/* CLUB slicer */}
+        {openPanel === 'club' && (
+          <div className="px-4 pb-3 shrink-0">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              {clubsInPool.map((club) => {
+                const selected = filterClub === club
+                return (
+                  <button
+                    key={club}
+                    onClick={() => setFilterClub(selected ? null : club)}
+                    className="shrink-0 flex flex-col items-center gap-1"
+                  >
+                    <div className={`w-12 h-12 flex items-center justify-center rounded-xl border transition-colors ${
+                      selected ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-[#666] bg-white/30 backdrop-blur hover:border-[#888]'
+                    }`}>
+                      <span className={`text-[9px] font-bold ${selected ? 'text-[#FF6B00]' : 'text-[#555]'}`}>{clubAbbrev(club)}</span>
+                    </div>
+                    <span className={`text-[9px] font-bold max-w-[44px] text-center leading-tight truncate ${selected ? 'text-[#FF6B00]' : 'text-[#555]'}`}>{club}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* POS slicer */}
         {openPanel === 'pos' && (
           <div className="px-4 pb-3 shrink-0">
@@ -301,7 +338,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
               onClick={() => {
                 setSearch('')
                 setFilterConf(null); setFilterPos(null)
-                setFilterCountry(null); setFilterLeague(null)
+                setFilterCountry(null); setFilterLeague(null); setFilterClub(null)
                 setOpenPanel(null)
                 if (!talentOnly) setFilterU22(false)
               }}

@@ -44,12 +44,15 @@ export function AppHeader({ name, initials }: Props) {
           }}
         />
 
-        <img
-          src="/Logo/Artboard 1@4x.png"
-          alt="Panenka"
-          className="transition-all duration-200 relative"
-          style={{ height: compact ? '1.75rem' : '3rem' }}
-        />
+        <div className="relative flex items-center justify-center w-full px-4">
+          <img
+            src="/Logo/Artboard 1@4x.png"
+            alt="Panenka"
+            className="transition-all duration-200 relative"
+            style={{ height: compact ? '1.75rem' : '3rem' }}
+          />
+          <div id="header-chat-toggle" className="absolute right-4 flex items-center" />
+        </div>
         <div className="relative flex items-center justify-center w-full mt-1 px-8">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-white">{name}</span>
@@ -65,7 +68,8 @@ export function AppHeader({ name, initials }: Props) {
               <IconBeker className="w-7 h-7" />
             </button>
           </div>
-          <div className="absolute right-4">
+          <div className="absolute right-4 flex items-center gap-1">
+            <div id="header-chat-extras" className="flex items-center gap-1" />
             <button
               onClick={() => setOnboardingOpen(true)}
               className="w-8 h-8 rounded-full border border-[#333] flex items-center justify-center font-heading text-sm font-bold transition-colors hover:border-[#555] hover:text-[#aaa]"

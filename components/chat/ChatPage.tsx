@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import type { ChatMessage } from '@/lib/types/chat'
 import type { GroupId } from '@/lib/groups'
 import { ChatMessageBubble, ChatDateDivider } from './ChatMessage'
@@ -46,6 +47,8 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
   const [notifStatus, setNotifStatus] = useState<NotificationPermission | 'unsupported'>('default')
   const [showIosHint, setShowIosHint] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [headerToggleEl, setHeaderToggleEl] = useState<Element | null>(null)
+  const [headerBellEl, setHeaderBellEl] = useState<Element | null>(null)
   const lastTsRef = useRef(0)
   const lastReadTsRef = useRef(0)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -207,6 +210,8 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
     registerServiceWorker()
     if ('Notification' in window) setNotifStatus(Notification.permission)
     else setNotifStatus('unsupported')
+    setHeaderToggleEl(document.getElementById('header-chat-toggle'))
+    setHeaderBellEl(document.getElementById('header-chat-extras'))
   }, [])
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -320,14 +325,15 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
       return
     }
     try {
+      // Permission request moet direct na user gesture komen — geen awaits daarvoor
+      const permission = await Notification.requestPermission()
+      setNotifStatus(permission)
+      if (permission !== 'granted') return
+
       const reg = await navigator.serviceWorker.ready
       const keyRes = await fetch('/api/push/vapid-public-key')
       if (!keyRes.ok) return
       const { publicKey } = await keyRes.json()
-
-      const permission = await Notification.requestPermission()
-      setNotifStatus(permission)
-      if (permission !== 'granted') return
 
       const existing = await reg.pushManager.getSubscription()
       if (existing) {
@@ -350,7 +356,7 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
       return
     }
     setShowIosHint(false)
-    if (notifStatus !== 'granted') await enableNotifications()
+    await enableNotifications()
   }
 
   function handleGroupSwitch(group: GroupId) {
@@ -419,52 +425,8 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
   }
 
   return (
+    <>
     <div className="flex flex-col h-full">
-      {/* Chat header — groepstoggle + notificatieknop */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-1 shrink-0">
-        <div className="w-8 shrink-0" />
-        {isDualGroup ? (
-          <div className="flex rounded-full bg-[#1E1E1E] border border-[#333] p-0.5 gap-0.5">
-            {(['og', 'asc'] as GroupId[]).map((g) => (
-              <button
-                key={g}
-                onClick={() => handleGroupSwitch(g)}
-                className={`px-4 py-1 rounded-full text-xs font-semibold transition-all ${
-                  activeGroup === g ? 'bg-[#FF6B00] text-white' : 'text-[#888] hover:text-white'
-                }`}
-              >
-                {g.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        ) : <div />}
-        <div className="relative w-8 shrink-0">
-          <button
-            onClick={handleBellClick}
-            className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-              notifStatus === 'granted' ? 'text-[#FF6B00]' : 'text-[#444] hover:text-[#888]'
-            }`}
-            title={notifStatus === 'granted' ? 'Notificaties aan' : 'Notificaties inschakelen'}
-          >
-            {notifStatus === 'granted' ? (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zM18 15v1H6v-1l2-2v-2c0-2.76 1.58-4.99 4-5.72V4.5c0-.28.22-.5.5-.5s.5.22.5.5v.78c2.42.73 4 2.96 4 5.72v2l2 2z"/>
-              </svg>
-            )}
-          </button>
-          {showIosHint && (
-            <div className="absolute right-0 top-10 w-64 bg-[#1A1A1A] border border-[#333] rounded-2xl p-4 text-xs text-[#aaa] z-20 shadow-2xl">
-              <p className="text-white font-semibold mb-2">Notificaties op iPhone/iPad</p>
-              <p>Open Panenka in <strong className="text-white">Safari</strong>, tik op <strong className="text-white">Delen</strong> → <strong className="text-white">Zet op beginscherm</strong>. Open dan de app via het beginscherm.</p>
-              <button onClick={() => setShowIosHint(false)} className="mt-3 text-[#FF6B00] font-semibold">Begrepen</button>
-            </div>
-          )}
-        </div>
-      </div>
       {/* Messages + scroll-naar-beneden knop */}
       <div className="flex-1 relative overflow-hidden">
         <div
@@ -512,5 +474,51 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
         participants={participants}
       />
     </div>
+    {headerToggleEl && isDualGroup && createPortal(
+      <div className="flex rounded-full bg-[#1E1E1E] border border-[#333] p-0.5 gap-0.5">
+        {(['og', 'asc'] as GroupId[]).map((g) => (
+          <button
+            key={g}
+            onClick={() => handleGroupSwitch(g)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+              activeGroup === g ? 'bg-[#FF6B00] text-white' : 'text-[#888] hover:text-white'
+            }`}
+          >
+            {g.toUpperCase()}
+          </button>
+        ))}
+      </div>,
+      headerToggleEl
+    )}
+    {headerBellEl && createPortal(
+      <div className="relative">
+        <button
+          onClick={handleBellClick}
+          className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+            notifStatus === 'granted' ? 'text-[#FF6B00]' : 'text-[#444] hover:text-[#888]'
+          }`}
+          title={notifStatus === 'granted' ? 'Notificaties aan' : 'Notificaties inschakelen'}
+        >
+          {notifStatus === 'granted' ? (
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zM18 15v1H6v-1l2-2v-2c0-2.76 1.58-4.99 4-5.72V4.5c0-.28.22-.5.5-.5s.5.22.5.5v.78c2.42.73 4 2.96 4 5.72v2l2 2z"/>
+            </svg>
+          )}
+        </button>
+        {showIosHint && (
+          <div className="absolute right-0 top-10 w-64 bg-[#1A1A1A] border border-[#333] rounded-2xl p-4 text-xs text-[#aaa] z-[100] shadow-2xl">
+            <p className="text-white font-semibold mb-2">Notificaties op iPhone/iPad</p>
+            <p>Open Panenka in <strong className="text-white">Safari</strong>, tik op <strong className="text-white">Delen</strong> → <strong className="text-white">Zet op beginscherm</strong>. Open dan de app via het beginscherm.</p>
+            <button onClick={() => setShowIosHint(false)} className="mt-3 text-[#FF6B00] font-semibold">Begrepen</button>
+          </div>
+        )}
+      </div>,
+      headerBellEl
+    )}
+    </>
   )
 }

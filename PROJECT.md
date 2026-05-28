@@ -845,6 +845,23 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-28 — Chat toggle + bel naar header; club-filter Fantasy XV (Claude Code)
+
+**Chat — toggle en bel verplaatst naar AppHeader**
+
+De OG/ASC pill-toggle (voor Robert en Wouter) en de notificatiebel zijn verplaatst uit de chat-subheader naar de algemene `AppHeader`. De toggle verschijnt rechts naast het logo (via React portal naar `#header-chat-toggle`), de bel verschijnt naast de `?`-knop (via portal naar `#header-chat-extras`). Beide worden geleegd zodra de gebruiker de chatpagina verlaat. De chat-subheader is daarmee verwijderd, waardoor het berichtenvenster groter wordt.
+
+Push-notificatie bug op Android/iOS PWA opgelost: `Notification.requestPermission()` werd eerder aangeroepen na twee `await`-operaties, waardoor Android Chrome het niet meer als user-gesture beschouwde en de permissievraag oversloeg. Fix: permission request als eerste call in `enableNotifications()`. Bell-klik roept nu altijd `enableNotifications()` aan (ook als status al `granted` is, voor hernieuwd abonnement).
+
+- `components/layout/AppHeader.tsx`: `<div id="header-chat-toggle">` toegevoegd rechts naast logo; `<div id="header-chat-extras">` als slot naast `?`-knop.
+- `components/chat/ChatPage.tsx`: sub-header verwijderd; twee portals toegevoegd voor toggle en bel; `Notification.requestPermission()` naar boven verplaatst in `enableNotifications()`; `handleBellClick` altijd `enableNotifications()` aanroepen.
+
+**Fantasy XV — club-filter toegevoegd**
+
+Nieuw filter `CLUB` toegevoegd tussen `COMP` en `POS` in de spelersmodal. Clubs worden dynamisch afgeleid uit de huidige gefilterde pool (vóór club-filter), gesorteerd op spelercount — zodat na selectie van een competitie alleen clubs uit die competitie verschijnen.
+
+- `components/fantasy/PlayerModal.tsx`: `filterClub` state; `clubAbbrev()` helper voor 3-letter afkorting; `useMemo` splitst pool-berekening en club-derivatie; CLUB slicer panel toegevoegd; `hasFilters` en "Wis filters" bijgewerkt.
+
 ### 2026-05-28 — Chat push notificaties gerepareerd + bell-knop + iOS-instructie (Claude Code)
 
 Push notificaties werkten op geen enkel platform omdat `setupPush()` nooit werd aangeroepen. Opgelost door service worker-registratie te automatiseren en permission-aanvraag te koppelen aan een expliciete gebruikersinteractie (bell-knop).
