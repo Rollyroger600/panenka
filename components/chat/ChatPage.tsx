@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import type { ChatMessage } from '@/lib/types/chat'
+import type { GroupId } from '@/lib/groups'
 import { ChatMessageBubble, ChatDateDivider } from './ChatMessage'
 import { ChatInput } from './ChatInput'
 
@@ -8,6 +9,8 @@ const POLL_INTERVAL = 5000
 
 interface Props {
   initials: string
+  defaultGroup: GroupId
+  isDualGroup: boolean
 }
 
 function isSameDay(a: number, b: number) {
@@ -52,9 +55,14 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)))
 }
 
-const LAST_READ_KEY = (ini: string) => `chat-last-read-${ini}`
+const LAST_READ_KEY = (ini: string, group: GroupId) => `chat-last-read-${ini}-${group}`
+const ACTIVE_GROUP_KEY = (ini: string) => `chat-active-group-${ini}`
 
-export function ChatPage({ initials }: Props) {
+export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
+  const [activeGroup, setActiveGroup] = useState<GroupId>(() => {
+    try { return (localStorage.getItem(ACTIVE_GROUP_KEY(initials)) as GroupId) ?? defaultGroup }
+    catch { return defaultGroup }
+  })
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -76,7 +84,7 @@ export function ChatPage({ initials }: Props) {
   function markAsRead(latestTs: number) {
     if (latestTs <= lastReadTsRef.current) return
     lastReadTsRef.current = latestTs
-    try { localStorage.setItem(LAST_READ_KEY(initials), String(latestTs)) } catch { /* ignore */ }
+    try { localStorage.setItem(LAST_READ_KEY(initials, activeGroup), String(latestTs)) } catch { /* ignore */ }
     setUnreadCount(0)
   }
 
@@ -146,13 +154,19 @@ export function ChatPage({ initials }: Props) {
     }
   }, [])
 
-  // Initial load
+  // Initial load — herstart ook bij groepswisseling
   useEffect(() => {
+    setMessages([])
+    lastTsRef.current = 0
+    setFirstUnreadId(null)
+    setUnreadCount(0)
+    setError(null)
+
     let lastRead = 0
-    try { lastRead = Number(localStorage.getItem(LAST_READ_KEY(initials)) ?? '0') } catch { /* ignore */ }
+    try { lastRead = Number(localStorage.getItem(LAST_READ_KEY(initials, activeGroup)) ?? '0') } catch { /* ignore */ }
     lastReadTsRef.current = lastRead
 
-    fetch('/api/chat/messages')
+    fetch(`/api/chat/messages?group=${activeGroup}`)
       .then(async (r) => {
         const d = await r.json()
         if (!r.ok) throw new Error(d.error ?? 'Serverfout')
@@ -189,13 +203,13 @@ export function ChatPage({ initials }: Props) {
         }
       })
       .catch((e: unknown) => setError(`Kon berichten niet laden${e instanceof Error ? `: ${e.message}` : ''}`))
-  }, [initials])
+  }, [initials, activeGroup])
 
-  // Polling
+  // Polling — herstart ook bij groepswisseling
   useEffect(() => {
     const id = setInterval(async () => {
       try {
-        const res = await fetch(`/api/chat/messages?since=${lastTsRef.current}&limit=50`)
+        const res = await fetch(`/api/chat/messages?since=${lastTsRef.current}&limit=50&group=${activeGroup}`)
         const d = await res.json()
         const newMsgs: ChatMessage[] = d.messages ?? []
         if (newMsgs.length === 0) return
@@ -209,7 +223,7 @@ export function ChatPage({ initials }: Props) {
       } catch { /* ignore */ }
     }, POLL_INTERVAL)
     return () => clearInterval(id)
-  }, [])
+  }, [activeGroup])
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget
@@ -226,6 +240,7 @@ export function ChatPage({ initials }: Props) {
 
   async function handleSendText(text: string) {
     const body = {
+      group: activeGroup,
       text,
       type: 'text',
       ...(replyTo && { replyTo: { id: replyTo.id, sender: replyTo.sender, text: replyTo.type === 'image' ? '[Afbeelding]' : replyTo.type === 'gif' ? '[GIF]' : replyTo.text.slice(0, 100), type: replyTo.type } }),
@@ -247,6 +262,7 @@ export function ChatPage({ initials }: Props) {
     const { url } = await uploadRes.json()
     if (!url) return
     const body = {
+      group: activeGroup,
       text: '',
       type: 'image',
       imageUrl: url,
@@ -264,6 +280,7 @@ export function ChatPage({ initials }: Props) {
 
   async function handleSendGif(gifUrl: string) {
     const body = {
+      group: activeGroup,
       text: '',
       type: 'gif',
       gifUrl,
@@ -281,6 +298,7 @@ export function ChatPage({ initials }: Props) {
 
   async function handleSendPoll(question: string, options: string[], multiple: boolean) {
     const body = {
+      group: activeGroup,
       type: 'poll',
       text: '',
       pollQuestion: question,
@@ -297,7 +315,7 @@ export function ChatPage({ initials }: Props) {
   }
 
   async function handleVotePoll(msgId: string, optionIndex: number) {
-    const res = await fetch('/api/chat/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ msgId, optionIndex }) })
+    const res = await fetch('/api/chat/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ group: activeGroup, msgId, optionIndex }) })
     const d = await res.json()
     if (d.pollOptions) {
       setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, pollOptions: d.pollOptions } : m))
@@ -305,11 +323,17 @@ export function ChatPage({ initials }: Props) {
   }
 
   async function handleReact(msgId: string, emoji: string) {
-    const res = await fetch('/api/chat/react', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ msgId, emoji }) })
+    const res = await fetch('/api/chat/react', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ group: activeGroup, msgId, emoji }) })
     const d = await res.json()
     if (d.reactions) {
       setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, reactions: d.reactions } : m))
     }
+  }
+
+  function handleGroupSwitch(group: GroupId) {
+    if (group === activeGroup) return
+    try { localStorage.setItem(ACTIVE_GROUP_KEY(initials), group) } catch { /* ignore */ }
+    setActiveGroup(group)
   }
 
   const participants = useMemo(() => {
@@ -373,6 +397,26 @@ export function ChatPage({ initials }: Props) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Groepstoggle — alleen zichtbaar voor dual-group users (Wouter en Robert) */}
+      {isDualGroup && (
+        <div className="flex justify-center pt-5 pb-1 shrink-0">
+          <div className="flex rounded-full bg-[#1E1E1E] border border-[#333] p-0.5 gap-0.5">
+            {(['og', 'asc'] as GroupId[]).map((g) => (
+              <button
+                key={g}
+                onClick={() => handleGroupSwitch(g)}
+                className={`px-4 py-1 rounded-full text-xs font-semibold transition-all ${
+                  activeGroup === g
+                    ? 'bg-[#FF6B00] text-white'
+                    : 'text-[#888] hover:text-white'
+                }`}
+              >
+                {g.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Messages + scroll-naar-beneden knop */}
       <div className="flex-1 relative overflow-hidden">
         <div

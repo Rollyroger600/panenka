@@ -1,5 +1,6 @@
 import webpush from 'web-push'
 import { getAllPushSubscriptions } from '@/lib/kv/chat'
+import { GROUP_MEMBERS, type GroupId } from '@/lib/groups'
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
@@ -15,13 +16,14 @@ interface PushPayload {
   senderInitials: string
 }
 
-export async function sendPushToAll(payload: PushPayload): Promise<void> {
+export async function sendPushToGroup(group: GroupId, payload: PushPayload): Promise<void> {
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return
 
+  const groupMembers = GROUP_MEMBERS[group].map((i) => i.toLowerCase())
   const subs = await getAllPushSubscriptions()
   await Promise.allSettled(
     subs
-      .filter((s) => s.initials !== payload.senderInitials) // don't notify sender
+      .filter((s) => s.initials !== payload.senderInitials && groupMembers.includes(s.initials))
       .map((s) =>
         webpush.sendNotification(
           s.sub as webpush.PushSubscription,

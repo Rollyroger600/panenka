@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { chatUpdateReactions, chatGetAllMessages } from '@/lib/kv/chat'
+import type { GroupId } from '@/lib/groups'
+
+function parseGroup(value: unknown): GroupId | null {
+  if (value === 'og' || value === 'asc') return value
+  return null
+}
 
 // POST /api/chat/react
-// Body: { msgId, emoji }
+// Body: { group, msgId, emoji }
 // Toggles emoji reaction for the current participant
 export async function POST(req: NextRequest) {
   const jar = await cookies()
@@ -12,13 +18,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
   }
 
-  const { msgId, emoji } = await req.json()
-  if (!msgId || !emoji) {
+  const { group: groupRaw, msgId, emoji } = await req.json()
+  const group = parseGroup(groupRaw)
+  if (!group || !msgId || !emoji) {
     return NextResponse.json({ error: 'Ontbrekende parameters' }, { status: 400 })
   }
 
   // Find the message
-  const all = await chatGetAllMessages()
+  const all = await chatGetAllMessages(group)
   const msg = all.find((m) => m.id === msgId)
   if (!msg) {
     return NextResponse.json({ error: 'Bericht niet gevonden' }, { status: 404 })
@@ -39,6 +46,6 @@ export async function POST(req: NextRequest) {
     reactions[emoji] = [...current, initials]
   }
 
-  await chatUpdateReactions(msgId, reactions)
+  await chatUpdateReactions(group, msgId, reactions)
   return NextResponse.json({ reactions })
 }

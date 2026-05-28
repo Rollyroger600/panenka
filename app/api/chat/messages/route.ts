@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { chatGetMessages, chatGetRecent, chatAddMessage } from '@/lib/kv/chat'
-import { sendPushToAll } from '@/lib/push'
+import { sendPushToGroup } from '@/lib/push'
 import type { ChatMessage } from '@/lib/types/chat'
+import type { GroupId } from '@/lib/groups'
 
-// GET /api/chat/messages?since=<ts>&limit=<n>
+function parseGroup(value: string | null | undefined): GroupId | null {
+  if (value === 'og' || value === 'asc') return value
+  return null
+}
+
+// GET /api/chat/messages?since=<ts>&limit=<n>&group=<og|asc>
 export async function GET(req: NextRequest) {
   try {
+    const group = parseGroup(req.nextUrl.searchParams.get('group'))
+    if (!group) return NextResponse.json({ error: 'Ontbrekende group parameter', messages: [] }, { status: 400 })
+
     const since = parseInt(req.nextUrl.searchParams.get('since') ?? '0', 10)
     const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '50', 10), 100)
 
     const messages = since > 0
-      ? await chatGetMessages(since, limit)
-      : await chatGetRecent(limit)
+      ? await chatGetMessages(group, since, limit)
+      : await chatGetRecent(group, limit)
 
     return NextResponse.json({ messages })
   } catch (err) {
@@ -32,7 +41,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { text, type = 'text', imageUrl, gifUrl, replyTo, pollQuestion, pollOptions, pollMultiple } = body
+  const { group: groupRaw, text, type = 'text', imageUrl, gifUrl, replyTo, pollQuestion, pollOptions, pollMultiple } = body
+
+  const group = parseGroup(groupRaw)
+  if (!group) return NextResponse.json({ error: 'Ontbrekende group parameter' }, { status: 400 })
 
   if (!text && !imageUrl && !gifUrl && type !== 'poll') {
     return NextResponse.json({ error: 'Leeg bericht' }, { status: 400 })
@@ -57,9 +69,9 @@ export async function POST(req: NextRequest) {
     ...(pollMultiple && { pollMultiple: true }),
   }
 
-  await chatAddMessage(msg)
+  await chatAddMessage(group, msg)
 
-  sendPushToAll({
+  sendPushToGroup(group, {
     title: name,
     body: type === 'poll' ? `📊 ${pollQuestion}` : type === 'image' ? '📷 Afbeelding' : type === 'gif' ? '🎞️ GIF' : text.slice(0, 80),
     senderInitials: initials,
