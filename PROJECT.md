@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-28 — Chat push notificaties gerepareerd + bell-knop + iOS-instructie (Claude Code)
+
+Push notificaties werkten op geen enkel platform omdat `setupPush()` nooit werd aangeroepen. Opgelost door service worker-registratie te automatiseren en permission-aanvraag te koppelen aan een expliciete gebruikersinteractie (bell-knop).
+
+- `components/chat/ChatPage.tsx`: `setupPush()` gesplitst in `registerServiceWorker()` (module-scope, auto bij mount via `useEffect`) en `enableNotifications()` (component-functie, aangeroepen bij klik op bell-knop). Bell-knop toegevoegd in chat-header rechts — grijs als notificaties uit, oranje als aan. Op iOS buiten PWA-modus toont de knop een instructie-tooltip: open in Safari → Delen → Zet op beginscherm.
+- `lib/push.ts`: case-mismatch opgelost in sender-filter — Redis slaat initials lowercase op maar de cookie geeft uppercase terug. Verzender ontving hierdoor zijn eigen notificaties. Fix: `payload.senderInitials.toLowerCase()`.
+- `public/sw.js`: `install`/`activate` handlers met `skipWaiting()` en `clients.claim()` toegevoegd zodat een bijgewerkte service worker direct actief wordt na deployment.
+
+**Platformbeperking iOS:** push notificaties werken op iOS uitsluitend als de app is geïnstalleerd als PWA (Add to Home Screen in Safari, vereist iOS 16.4+). De bell-knop legt dit uit voor iOS-gebruikers buiten standalone-modus.
+
 ### 2026-05-28 — Chat gesplitst in OG- en ASC-groepschat met toggle (Claude Code)
 
 Bestaande gedeelde chat opgesplitst in twee groepsspecifieke chats. Wouter (WS) en Robert (RA) krijgen als dual-group members een pill-toggle `[OG] [ASC]` om te wisselen. Andere deelnemers zien alleen hun eigen groepschat. Actieve groepskeuze wordt onthouden in localStorage.

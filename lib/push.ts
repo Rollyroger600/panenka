@@ -23,7 +23,7 @@ export async function sendPushToGroup(group: GroupId, payload: PushPayload): Pro
   const subs = await getAllPushSubscriptions()
   await Promise.allSettled(
     subs
-      .filter((s) => s.initials !== payload.senderInitials && groupMembers.includes(s.initials))
+      .filter((s) => s.initials !== payload.senderInitials.toLowerCase() && groupMembers.includes(s.initials))
       .map((s) =>
         webpush.sendNotification(
           s.sub as webpush.PushSubscription,
