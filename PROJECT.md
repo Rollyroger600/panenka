@@ -845,6 +845,17 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-05-28 — Chat gesplitst in OG- en ASC-groepschat met toggle (Claude Code)
+
+Bestaande gedeelde chat opgesplitst in twee groepsspecifieke chats. Wouter (WS) en Robert (RA) krijgen als dual-group members een pill-toggle `[OG] [ASC]` om te wisselen. Andere deelnemers zien alleen hun eigen groepschat. Actieve groepskeuze wordt onthouden in localStorage.
+
+- `lib/kv/chat.ts`: `MESSAGES_KEY` vervangen door `messagesKey(group)` functie → Redis keys `chat:messages:og` en `chat:messages:asc`. Alle chat-functies krijgen `group: GroupId` als eerste parameter.
+- `lib/push.ts`: `sendPushToAll` → `sendPushToGroup(group, payload)` — filtert push notifications op leden van de betreffende groep via `GROUP_MEMBERS[group]`.
+- `app/api/chat/messages/route.ts`, `react/route.ts`, `poll/route.ts`: lezen `group` parameter uit request (GET: query string, POST: body) en geven deze door aan KV-functies.
+- `app/(app)/chat/page.tsx`: leest `group` cookie en `DUAL_GROUP_INITIALS`; geeft `defaultGroup` en `isDualGroup` als props mee aan `ChatPage`.
+- `components/chat/ChatPage.tsx`: `activeGroup` state geïnitialiseerd vanuit localStorage (`chat-active-group-${initials}`). Last-read key is nu groepsspecifiek (`chat-last-read-${initials}-${group}`). Alle fetch-calls bevatten `group`. Pill-toggle zichtbaar alleen voor dual-group users. Bij groepswisseling worden messages gereset en opnieuw geladen.
+- `scripts/migrate-chat-to-og.mjs`: éénmalig script dat `chat:messages` kopieert naar `chat:messages:og` via `ZUNIONSTORE` (14 bestaande berichten gemigreerd op 2026-05-28).
+
 ### 2026-05-27 — Chat: lang indrukken voor emoji-reactie (Claude Code)
 
 Dropdown bij klikken op berichtje vervangen door lang-indruk-interactie voor emoji-reacties.
