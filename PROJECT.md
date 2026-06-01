@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-01 — Oranje vragen: antwoordtype 'Exact aantal (0–22)' + admin type-override voor alle vragen (Claude Code)
+
+Nieuw antwoordtype `exact_aantal` toegevoegd voor vragen waarbij een getal tussen 0 en 22 het antwoord is (bijv. aantal doelpunten, schoten etc.). Tevens is de admin type-override dropdown nu zichtbaar voor **alle** vragen, niet alleen vragen met type `anders` — zodat de admin het type achteraf kan corrigeren.
+
+- `lib/types/oranjeVragen.ts`: `exact_antal` toegevoegd aan `AntwoordType` union en `ANTWOORD_TYPE_LABELS` (`'Exact aantal (0–22)'`).
+- `components/oranje/VraagIndienenCard.tsx`: `exact_aantal` opgenomen in `TYPES_KEUZE`.
+- `components/oranje/VragenBeantwoordenCard.tsx`: `AntwoordInvoer` uitgebreid met −/+ stepper + invoerveld voor `exact_aantal` (bereik 0–22).
+- `app/admin/AdminClient.tsx`: `AdminCorrectInvoer` uitgebreid met correct-antwoord invoer voor `exact_aantal`; admin override-dropdown nu zichtbaar voor alle vragen (niet alleen type `anders`); `exact_aantal` ook als optie in de override-dropdown.
+
 ### 2026-06-01 — Oranje vragen: grace periode tot 3 juni (Claude Code)
 
 Deadline voor het indienen van Oranje vragen was 31 mei, maar deelnemers die nog niet alle 3 vragen hadden ingediend krijgen tot en met woensdag 3 juni de tijd.

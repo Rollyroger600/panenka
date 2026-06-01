@@ -369,23 +369,19 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                               }`}>
                                 {ANTWOORD_TYPE_LABELS[vraag.adminType ?? vraag.type]}
                               </span>
-                              {vraag.type === 'anders' && (
-                                <>
-                                  {vraag.suggestie && (
-                                    <span className="text-[10px] text-[#555] italic">"{vraag.suggestie}"</span>
-                                  )}
-                                  <select
-                                    value={vraag.adminType ?? ''}
-                                    onChange={(e) => handleAdminType(id, key, e.target.value as Exclude<AntwoordType, 'anders'>)}
-                                    className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
-                                  >
-                                    <option value="">→ Kies type</option>
-                                    {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'minuut', 'open'] as const).map((t) => (
-                                      <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
-                                    ))}
-                                  </select>
-                                </>
+                              {vraag.suggestie && (
+                                <span className="text-[10px] text-[#555] italic">"{vraag.suggestie}"</span>
                               )}
+                              <select
+                                value={vraag.adminType ?? ''}
+                                onChange={(e) => handleAdminType(id, key, e.target.value as Exclude<AntwoordType, 'anders'>)}
+                                className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
+                              >
+                                <option value="">→ Override type</option>
+                                {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'exact_aantal', 'minuut', 'open'] as const).map((t) => (
+                                  <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
+                                ))}
+                              </select>
                             </div>
                           )}
 
@@ -868,6 +864,17 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
           className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-20 outline-none focus:border-[#FF6B00] text-center [appearance:textfield]"
         />
         <span className="text-xs text-[#555]">% (deelnemers scoren bij ±5%)</span>
+      </div>
+    )
+  }
+  if (type === 'exact_aantal') {
+    return (
+      <div className="flex items-center gap-2">
+        <input type="number" min={0} max={22} value={waarde ?? ''} placeholder="0–22"
+          onChange={(e) => { const v = parseInt(e.target.value, 10); onChange(isNaN(v) ? null : String(Math.min(22, Math.max(0, v)))) }}
+          className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-20 outline-none focus:border-[#FF6B00] text-center [appearance:textfield]"
+        />
+        <span className="text-xs text-[#555]">exact getal</span>
       </div>
     )
   }

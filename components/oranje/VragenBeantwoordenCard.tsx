@@ -228,6 +228,35 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
     )
   }
 
+  if (type === 'exact_aantal') {
+    const num = waarde !== null ? parseInt(waarde, 10) : null
+    function clamp(v: number) { return Math.min(22, Math.max(0, v)) }
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onChange(num !== null && num > 0 ? String(clamp(num - 1)) : null)}
+          className="px-3 py-1.5 bg-[#252525] text-[#888] rounded-lg text-sm font-bold hover:text-white transition-colors"
+        >−</button>
+        <input
+          type="number"
+          min={0}
+          max={22}
+          value={waarde ?? ''}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10)
+            onChange(isNaN(v) ? null : String(clamp(v)))
+          }}
+          placeholder="0–22"
+          className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-1.5 text-sm text-white text-center outline-none focus:border-[#FF6B00] [appearance:textfield]"
+        />
+        <button
+          onClick={() => onChange(String(clamp((num ?? -1) + 1)))}
+          className="px-3 py-1.5 bg-[#252525] text-[#888] rounded-lg text-sm font-bold hover:text-white transition-colors"
+        >+</button>
+      </div>
+    )
+  }
+
   if (type === 'open') {
     return (
       <input
