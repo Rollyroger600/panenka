@@ -845,6 +845,20 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-01 — Chat: notificatiebel toggle + reply-preview visueel samengevoegd met ballon (Claude Code)
+
+**Notificatiebel — toggle aan/uit**
+
+De bel-knop in de chat-header schakelde notificaties wel in maar kon ze niet meer uitschakelen. Opgelost door de abonnementsstatus bij te houden in `isSubscribed` (gebaseerd op `pushManager.getSubscription()`) in plaats van `Notification.permission`. Een tweede klik op de bel roept nu `disableNotifications()` aan: de push-subscription wordt via de browser uitgeschreven en verwijderd via `DELETE /api/push/subscribe`.
+
+- `components/chat/ChatPage.tsx`: `notifStatus` state vervangen door `isSubscribed`; `disableNotifications()` toegevoegd; `handleBellClick` togglet nu op basis van `isSubscribed`; knop-tooltip bijgewerkt naar "Notificaties aan — klik om uit te zetten".
+
+**Reply-preview — zelfde breedte als ballon + naadloos visueel blok**
+
+Reply-preview en berichtballon hadden elk een onafhankelijke breedte. Nu zitten ze samen in een inner wrapper (`flex flex-col max-w-full`) waardoor de breedste van de twee de breedte van beide bepaalt. Bovendien sluiten ze visueel naadloos op elkaar aan: geen afronding op de aangrenzende hoeken en geen bottom-padding op de preview.
+
+- `components/chat/ChatMessage.tsx`: inner wrapper toegevoegd om reply-preview en swipeable bubble; reply-preview `rounded-lg` → `rounded-t-lg`, `py-1` → `pt-1 pb-0`, `mb-1` en kantmarge verwijderd; ballon conditioneel `rounded-tl-none rounded-tr-none` wanneer `msg.replyTo` aanwezig is.
+
 ### 2026-06-01 — Oranje vragen: nieuwe antwoordtypes + dual-group (WS/RA) + admin vraag bewerken (Claude Code)
 
 **Nieuwe antwoordtypes:**

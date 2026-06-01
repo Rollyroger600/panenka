@@ -224,9 +224,11 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, o
       )}
 
       <div className={`flex flex-col max-w-[78%] ${isOwn ? 'items-end' : 'items-start'}`}>
+        {/* Inner wrapper: reply preview + bubble share the same width (widest wins) */}
+        <div className="flex flex-col max-w-full">
         {/* Reply preview */}
         {msg.replyTo && (
-          <div className={`mb-1 px-2 py-1 rounded-lg border-l-2 border-[#FF6B00] bg-[#1a1a1a] text-[11px] text-[#888] max-w-full ${isOwn ? 'mr-1' : 'ml-1'}`}>
+          <div className="px-2 pt-1 pb-0 rounded-t-lg border-l-2 border-[#FF6B00] bg-[#1a1a1a] text-[11px] text-[#888]">
             <span className="text-[#FF6B00] font-bold">{msg.replyTo.sender}</span>
             <span className="ml-1 truncate block">
               {msg.replyTo.type === 'image' ? '📷 Afbeelding' : msg.replyTo.type === 'gif' ? '🎞️ GIF' : msg.replyTo.text}
@@ -263,7 +265,7 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, o
               isOwn && msg.type !== 'poll'
                 ? 'bg-[#FF6B00] text-white rounded-tr-sm'
                 : 'bg-[#1E1E1E] text-[#F0F0F0] rounded-tl-sm border border-[#2a2a2a]'
-            }`}
+            } ${msg.replyTo ? 'rounded-tl-none rounded-tr-none' : ''}`}
           >
             <span className={`block text-[11px] font-bold mb-1 ${isOwn && msg.type !== 'poll' ? 'text-orange-200' : 'text-[#FF6B00]'}`}>
               {msg.sender}
@@ -303,6 +305,7 @@ export function ChatMessageBubble({ msg, isOwn, currentInitials, participants, o
             </span>
           </div>
         </div>
+        </div>{/* end inner wrapper */}
 
         {/* Reactions */}
         {hasReactions && (

@@ -44,7 +44,7 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [firstUnreadId, setFirstUnreadId] = useState<string | null>(null)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
-  const [notifStatus, setNotifStatus] = useState<NotificationPermission | 'unsupported'>('default')
+  const [isSubscribed, setIsSubscribed] = useState(false)
   const [showIosHint, setShowIosHint] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [headerToggleEl, setHeaderToggleEl] = useState<Element | null>(null)
@@ -208,8 +208,11 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
   // Registreer service worker bij mount en lees initiële notificatiestatus
   useEffect(() => {
     registerServiceWorker()
-    if ('Notification' in window) setNotifStatus(Notification.permission)
-    else setNotifStatus('unsupported')
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((reg) =>
+        reg.pushManager.getSubscription().then((sub) => setIsSubscribed(!!sub))
+      ).catch(() => {})
+    }
     setHeaderToggleEl(document.getElementById('header-chat-toggle'))
     setHeaderBellEl(document.getElementById('header-chat-extras'))
   }, [])
@@ -321,13 +324,11 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
 
   async function enableNotifications() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-      setNotifStatus('unsupported')
       return
     }
     try {
       // Permission request moet direct na user gesture komen — geen awaits daarvoor
       const permission = await Notification.requestPermission()
-      setNotifStatus(permission)
       if (permission !== 'granted') return
 
       const reg = await navigator.serviceWorker.ready
@@ -338,6 +339,7 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
       const existing = await reg.pushManager.getSubscription()
       if (existing) {
         await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(existing.toJSON()) })
+        setIsSubscribed(true)
         return
       }
       const sub = await reg.pushManager.subscribe({
@@ -345,7 +347,18 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       })
       await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub.toJSON()) })
+      setIsSubscribed(true)
     } catch { /* push niet beschikbaar */ }
+  }
+
+  async function disableNotifications() {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) await sub.unsubscribe()
+      await fetch('/api/push/subscribe', { method: 'DELETE' })
+      setIsSubscribed(false)
+    } catch { /* ignore */ }
   }
 
   async function handleBellClick() {
@@ -356,7 +369,11 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
       return
     }
     setShowIosHint(false)
-    await enableNotifications()
+    if (isSubscribed) {
+      await disableNotifications()
+    } else {
+      await enableNotifications()
+    }
   }
 
   function handleGroupSwitch(group: GroupId) {
@@ -495,11 +512,11 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
         <button
           onClick={handleBellClick}
           className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-            notifStatus === 'granted' ? 'text-[#FF6B00]' : 'text-[#444] hover:text-[#888]'
+            isSubscribed ? 'text-[#FF6B00]' : 'text-[#444] hover:text-[#888]'
           }`}
-          title={notifStatus === 'granted' ? 'Notificaties aan' : 'Notificaties inschakelen'}
+          title={isSubscribed ? 'Notificaties aan — klik om uit te zetten' : 'Notificaties inschakelen'}
         >
-          {notifStatus === 'granted' ? (
+          {isSubscribed ? (
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
               <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
             </svg>
