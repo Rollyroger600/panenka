@@ -1,11 +1,17 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDeadline } from '@/hooks/useDeadline'
-import { loadOranjeVragen, loadOranjeAntwoorden, saveOranjeAntwoorden } from '@/app/actions/oranjeVragen'
+import {
+  loadOranjeVragen, loadOranjeVragenForGroup,
+  loadOranjeAntwoorden, loadOranjeAntwoordenForGroup,
+  saveOranjeAntwoorden, saveOranjeAntwoordenForGroup,
+} from '@/app/actions/oranjeVragen'
 import { VraagIndienenCard } from '@/components/oranje/VraagIndienenCard'
 import { VragenBeantwoordenCard } from '@/components/oranje/VragenBeantwoordenCard'
 import { SkeletonList } from '@/components/ui/Skeleton'
 import { MATCHES } from '@/lib/data/matches'
+import { DUAL_GROUP_INITIALS } from '@/lib/groups'
+import type { GroupId } from '@/lib/groups'
 import type { OranjeVragenMap, OranjeAntwoordenMap } from '@/lib/types/oranjeVragen'
 
 const NED_MATCH_IDS = [10, 33, 58]
@@ -17,18 +23,23 @@ interface Props {
 
 export function OranjeClient({ mijnInitials }: Props) {
   const { isPast, isVraagPast, isVraagGracePast } = useDeadline()
+  const isDualGroup = DUAL_GROUP_INITIALS.includes(mijnInitials.toUpperCase())
+  const [activeGroup, setActiveGroup] = useState<GroupId>('og')
   const [isLoaded, setIsLoaded] = useState(false)
   const [vragen, setVragen] = useState<OranjeVragenMap>({})
   const [antwoorden, setAntwoorden] = useState<OranjeAntwoordenMap>({})
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
-    Promise.all([loadOranjeVragen(), loadOranjeAntwoorden()]).then(([v, a]) => {
+    setIsLoaded(false)
+    const vragenLoader = isDualGroup ? loadOranjeVragenForGroup(activeGroup) : loadOranjeVragen()
+    const antwoordenLoader = isDualGroup ? loadOranjeAntwoordenForGroup(activeGroup) : loadOranjeAntwoorden()
+    Promise.all([vragenLoader, antwoordenLoader]).then(([v, a]) => {
       setVragen(v)
       setAntwoorden(a)
       setIsLoaded(true)
     })
-  }, [])
+  }, [activeGroup, isDualGroup])
 
   const handleAntwoord = useCallback((matchId: number, authorInitials: string, waarde: string | null) => {
     setAntwoorden((prev) => {
@@ -37,10 +48,16 @@ export function OranjeClient({ mijnInitials }: Props) {
         [matchId]: { ...(prev[matchId] ?? {}), [authorInitials]: waarde },
       }
       clearTimeout(saveTimer.current)
-      saveTimer.current = setTimeout(() => saveOranjeAntwoorden(next), 500)
+      saveTimer.current = setTimeout(() => {
+        if (isDualGroup) {
+          saveOranjeAntwoordenForGroup(next, activeGroup)
+        } else {
+          saveOranjeAntwoorden(next)
+        }
+      }, 500)
       return next
     })
-  }, [])
+  }, [isDualGroup, activeGroup])
 
   const totalGepubliceerd = NED_MATCH_IDS.reduce((sum, id) => {
     return sum + Object.values(vragen[id] ?? {}).filter((v) => v.gepubliceerd).length
@@ -60,6 +77,25 @@ export function OranjeClient({ mijnInitials }: Props) {
   return (
     <div>
       <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Oranje</h1>
+
+      {/* Dual-group toggle (alleen voor WS en RA) */}
+      {isDualGroup && (
+        <div className="flex gap-1 justify-center mb-4">
+          {(['og', 'asc'] as const).map((g) => (
+            <button
+              key={g}
+              onClick={() => setActiveGroup(g)}
+              className={`px-5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${
+                activeGroup === g
+                  ? 'bg-[#FF6B00] text-white'
+                  : 'bg-[#1e1e1e] text-[#555] hover:text-[#888] border border-[#2a2a2a]'
+              }`}
+            >
+              {g.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      )}
 
       {!isVraagPast || inGracePeriod ? (
         <>

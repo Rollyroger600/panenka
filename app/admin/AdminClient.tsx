@@ -61,6 +61,8 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   const [saving, setSaving] = useState<number | null>(null)
   const [fantasyStats, setFantasyStats] = useState<FantasyStats>(initialFantasyStats)
   const [fantasySearch, setFantasySearch] = useState('')
+  const [editingVraag, setEditingVraag] = useState<{ matchId: number; key: string } | null>(null)
+  const [editTekst, setEditTekst] = useState('')
 
   const filteredMatches = useMemo(() => {
     const q = search.toLowerCase()
@@ -153,6 +155,15 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     }
     setOranjeBeoordeling(next)
     await saveOranjeBeoordeling(next, groupId)
+  }
+
+  async function handleEditTekst(matchId: number, initials: string, tekst: string) {
+    await updateOranjeVraag(matchId, initials, { tekst }, groupId)
+    setOranjeVragen((prev) => ({
+      ...prev,
+      [matchId]: { ...prev[matchId], [initials.toLowerCase()]: { ...prev[matchId]?.[initials.toLowerCase()], tekst } },
+    }))
+    setEditingVraag(null)
   }
 
   async function handleAdminType(matchId: number, initials: string, adminType: Exclude<AntwoordType, 'anders'>) {
@@ -341,12 +352,41 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                             <div className="flex-1 min-w-0">
                               <span className="text-[10px] font-bold text-[#555]">{p.name}</span>
                               {vraag ? (
-                                <p className="text-sm text-white leading-snug">{vraag.tekst}</p>
+                                editingVraag?.matchId === id && editingVraag?.key === key ? (
+                                  <div className="flex flex-col gap-1.5 mt-1">
+                                    <textarea
+                                      value={editTekst}
+                                      onChange={(e) => setEditTekst(e.target.value)}
+                                      rows={2}
+                                      className="w-full bg-[#1e1e1e] border border-[#FF6B00]/50 rounded-xl px-3 py-2 text-sm text-white outline-none resize-none"
+                                    />
+                                    <div className="flex gap-1.5">
+                                      <button
+                                        onClick={() => handleEditTekst(id, key, editTekst)}
+                                        disabled={!editTekst.trim()}
+                                        className="px-3 py-1 rounded-lg text-[10px] font-bold bg-[#FF6B00] text-white disabled:opacity-40"
+                                      >Opslaan</button>
+                                      <button
+                                        onClick={() => setEditingVraag(null)}
+                                        className="px-3 py-1 rounded-lg text-[10px] font-bold bg-[#252525] text-[#888]"
+                                      >Annuleer</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-start gap-1.5">
+                                    <p className="text-sm text-white leading-snug flex-1">{vraag.tekst}</p>
+                                    <button
+                                      onClick={() => { setEditingVraag({ matchId: id, key }); setEditTekst(vraag.tekst) }}
+                                      className="shrink-0 text-[#444] hover:text-[#888] transition-colors mt-0.5"
+                                      title="Bewerk vraag"
+                                    >✏️</button>
+                                  </div>
+                                )
                               ) : (
                                 <p className="text-xs text-[#333] italic">Nog geen vraag ingediend</p>
                               )}
                             </div>
-                            {vraag && (
+                            {vraag && !(editingVraag?.matchId === id && editingVraag?.key === key) && (
                               <button
                                 onClick={() => handlePubliceer(id, key, !vraag.gepubliceerd)}
                                 className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
@@ -378,7 +418,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                                 className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
                               >
                                 <option value="">→ Override type</option>
-                                {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'percentage', 'exact_aantal', 'minuut', 'open'] as const).map((t) => (
+                                {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'speler_beide', 'links_rechts', 'percentage', 'exact_aantal', 'aantal_marge', 'decimaal', 'minuut', 'open'] as const).map((t) => (
                                   <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
                                 ))}
                               </select>
@@ -852,8 +892,37 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
         className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] max-w-[200px]"
       >
         <option value="">— Correct antwoord</option>
+        <option value="geen">Geen</option>
         {spelers.map((n) => <option key={n} value={n}>{n}</option>)}
       </select>
+    )
+  }
+  if (type === 'speler_beide') {
+    return (
+      <select value={waarde ?? ''} onChange={(e) => onChange(e.target.value || null)}
+        className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] max-w-[220px]"
+      >
+        <option value="">— Correct antwoord</option>
+        <option value="geen">Geen</option>
+        <optgroup label="Nederland">
+          {nedPlayers.map((n) => <option key={n} value={n}>{n}</option>)}
+        </optgroup>
+        <optgroup label={opponent}>
+          {oppPlayers.map((n) => <option key={n} value={n}>{n}</option>)}
+        </optgroup>
+      </select>
+    )
+  }
+  if (type === 'links_rechts') {
+    return (
+      <div className="flex gap-1">
+        {(['links', 'rechts'] as const).map((opt) => (
+          <button key={opt} onClick={() => onChange(waarde === opt ? null : opt)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-colors ${waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
+          >{opt.charAt(0).toUpperCase() + opt.slice(1)}</button>
+        ))}
+        {waarde && <span className="text-[10px] text-[#555] self-center ml-1">Correct: <b className="text-white">{waarde}</b></span>}
+      </div>
     )
   }
   if (type === 'percentage') {
@@ -867,14 +936,25 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
       </div>
     )
   }
-  if (type === 'exact_aantal') {
+  if (type === 'exact_aantal' || type === 'aantal_marge') {
     return (
       <div className="flex items-center gap-2">
         <input type="number" min={0} max={22} value={waarde ?? ''} placeholder="0–22"
           onChange={(e) => { const v = parseInt(e.target.value, 10); onChange(isNaN(v) ? null : String(Math.min(22, Math.max(0, v)))) }}
           className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-20 outline-none focus:border-[#FF6B00] text-center [appearance:textfield]"
         />
-        <span className="text-xs text-[#555]">exact getal</span>
+        <span className="text-xs text-[#555]">{type === 'aantal_marge' ? 'getal (deelnemers scoren bij ±1)' : 'exact getal'}</span>
+      </div>
+    )
+  }
+  if (type === 'decimaal') {
+    return (
+      <div className="flex items-center gap-2">
+        <input type="number" min={0} max={20} step={0.01} value={waarde ?? ''} placeholder="0.00"
+          onChange={(e) => { const v = parseFloat(e.target.value); onChange(isNaN(v) ? null : String(Math.min(20, Math.max(0, v)).toFixed(2))) }}
+          className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-24 outline-none focus:border-[#FF6B00] text-center [appearance:textfield]"
+        />
+        <span className="text-xs text-[#555]">getal (deelnemers scoren bij ±0.33)</span>
       </div>
     )
   }

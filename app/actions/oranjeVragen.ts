@@ -2,6 +2,7 @@
 import { cookies } from 'next/headers'
 import { kvGet, kvSet, groupKey } from '@/lib/kv/kv'
 import type { GroupId } from '@/lib/groups'
+import { DUAL_GROUP_INITIALS } from '@/lib/groups'
 import type { OranjeVraag, OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap } from '@/lib/types/oranjeVragen'
 
 async function getGroupId(): Promise<GroupId> {
@@ -13,6 +14,10 @@ async function getGroupId(): Promise<GroupId> {
 
 export async function loadOranjeVragen(): Promise<OranjeVragenMap> {
   const groupId = await getGroupId()
+  return (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId))) ?? {}
+}
+
+export async function loadOranjeVragenForGroup(groupId: GroupId): Promise<OranjeVragenMap> {
   return (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId))) ?? {}
 }
 
@@ -28,6 +33,15 @@ export async function saveOranjeVraag(
   if (!all[matchId]) all[matchId] = {}
   all[matchId][initials.toLowerCase()] = vraag
   await kvSet(groupKey('oranje_vragen', groupId), all)
+
+  // dual-group deelnemers: ook opslaan in de andere groep
+  if (DUAL_GROUP_INITIALS.includes(initials.toUpperCase())) {
+    const otherGroup: GroupId = groupId === 'og' ? 'asc' : 'og'
+    const otherAll = (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', otherGroup))) ?? {}
+    if (!otherAll[matchId]) otherAll[matchId] = {}
+    otherAll[matchId][initials.toLowerCase()] = vraag
+    await kvSet(groupKey('oranje_vragen', otherGroup), otherAll)
+  }
 }
 
 // ── Antwoorden (per deelnemer, per groep) ─────────────────────────────────
@@ -40,11 +54,25 @@ export async function loadOranjeAntwoorden(): Promise<OranjeAntwoordenMap> {
   return (await kvGet<OranjeAntwoordenMap>(groupKey('oranje_antwoorden', groupId, initials))) ?? {}
 }
 
+export async function loadOranjeAntwoordenForGroup(groupId: GroupId): Promise<OranjeAntwoordenMap> {
+  const store = await cookies()
+  const initials = store.get('participant')?.value
+  if (!initials) return {}
+  return (await kvGet<OranjeAntwoordenMap>(groupKey('oranje_antwoorden', groupId, initials))) ?? {}
+}
+
 export async function saveOranjeAntwoorden(data: OranjeAntwoordenMap): Promise<void> {
   const store = await cookies()
   const initials = store.get('participant')?.value
   if (!initials) return
   const groupId = await getGroupId()
+  await kvSet(groupKey('oranje_antwoorden', groupId, initials), data)
+}
+
+export async function saveOranjeAntwoordenForGroup(data: OranjeAntwoordenMap, groupId: GroupId): Promise<void> {
+  const store = await cookies()
+  const initials = store.get('participant')?.value
+  if (!initials) return
   await kvSet(groupKey('oranje_antwoorden', groupId, initials), data)
 }
 

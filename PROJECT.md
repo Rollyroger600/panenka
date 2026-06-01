@@ -845,6 +845,23 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-01 — Oranje vragen: nieuwe antwoordtypes + dual-group (WS/RA) + admin vraag bewerken (Claude Code)
+
+**Nieuwe antwoordtypes:**
+- `aantal_marge` — Aantal 0–22 met marge ±1; zelfde stepper-UI als `exact_aantal`, badge "±1" zichtbaar voor de deelnemer.
+- `decimaal` — Getal 0.00–20.00 met marge ±0.33; −½/+½ stapknoppen + vrij invoerveld (step 0.01).
+- `links_rechts` — Twee knoppen Links / Rechts.
+- `speler_beide` — Eén dropdown met spelers van beide teams (optgroups NL + tegenstander).
+- "Geen" toegevoegd als eerste keuze bij `speler_nl`, `speler_opp` en `speler_beide` (zowel deelnemer als admin).
+
+**Dual-group (Wouter WS / Robert RA):**
+- `saveOranjeVraag` slaat bij indiening automatisch op in zowel OG als ASC.
+- `OranjeClient` toont een OG/ASC toggle voor dual-group users; bij wisseling herladen vragen én antwoorden voor de gekozen groep; antwoorden worden per groep apart opgeslagen.
+- Nieuwe server actions: `loadOranjeVragenForGroup`, `loadOranjeAntwoordenForGroup`, `saveOranjeAntwoordenForGroup`.
+
+**Admin vraag bewerken:**
+- ✏️-knop naast elke ingediende vraag; klik opent inline textarea + Opslaan/Annuleer. Publiceer-knop blijft zichtbaar voor andere vragen.
+
 ### 2026-06-01 — Oranje vragen: antwoordtype 'Exact aantal (0–22)' + admin type-override voor alle vragen (Claude Code)
 
 Nieuw antwoordtype `exact_aantal` toegevoegd voor vragen waarbij een getal tussen 0 en 22 het antwoord is (bijv. aantal doelpunten, schoten etc.). Tevens is de admin type-override dropdown nu zichtbaar voor **alle** vragen, niet alleen vragen met type `anders` — zodat de admin het type achteraf kan corrigeren.

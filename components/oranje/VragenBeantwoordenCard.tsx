@@ -164,6 +164,24 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
     )
   }
 
+  if (type === 'links_rechts') {
+    return (
+      <div className="flex gap-2">
+        {(['links', 'rechts'] as const).map((opt) => (
+          <button
+            key={opt}
+            onClick={() => onChange(waarde === opt ? null : opt)}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors ${
+              waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'
+            }`}
+          >
+            {opt.charAt(0).toUpperCase() + opt.slice(1)}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
   if (type === 'speler_nl' || type === 'speler_opp') {
     const spelers = type === 'speler_nl' ? nedPlayers : oppPlayers
     return (
@@ -173,9 +191,33 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#FF6B00]"
       >
         <option value="">— Kies een speler</option>
+        <option value="geen">Geen</option>
         {spelers.map((naam) => (
           <option key={naam} value={naam}>{naam}</option>
         ))}
+      </select>
+    )
+  }
+
+  if (type === 'speler_beide') {
+    return (
+      <select
+        value={waarde ?? ''}
+        onChange={(e) => onChange(e.target.value || null)}
+        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#FF6B00]"
+      >
+        <option value="">— Kies een speler</option>
+        <option value="geen">Geen</option>
+        <optgroup label="Nederland">
+          {nedPlayers.map((naam) => (
+            <option key={naam} value={naam}>{naam}</option>
+          ))}
+        </optgroup>
+        <optgroup label={opponent}>
+          {oppPlayers.map((naam) => (
+            <option key={naam} value={naam}>{naam}</option>
+          ))}
+        </optgroup>
       </select>
     )
   }
@@ -210,25 +252,7 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
     )
   }
 
-  if (type === 'minuut') {
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        {MINUUT_OPTIES.map((opt) => (
-          <button
-            key={opt}
-            onClick={() => onChange(waarde === opt ? null : opt)}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${
-              waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'
-            }`}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-    )
-  }
-
-  if (type === 'exact_aantal') {
+  if (type === 'exact_aantal' || type === 'aantal_marge') {
     const num = waarde !== null ? parseInt(waarde, 10) : null
     function clamp(v: number) { return Math.min(22, Math.max(0, v)) }
     return (
@@ -249,10 +273,63 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
           placeholder="0–22"
           className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-1.5 text-sm text-white text-center outline-none focus:border-[#FF6B00] [appearance:textfield]"
         />
+        {type === 'aantal_marge' && (
+          <span className="text-[10px] text-[#555] shrink-0">±1</span>
+        )}
         <button
           onClick={() => onChange(String(clamp((num ?? -1) + 1)))}
           className="px-3 py-1.5 bg-[#252525] text-[#888] rounded-lg text-sm font-bold hover:text-white transition-colors"
         >+</button>
+      </div>
+    )
+  }
+
+  if (type === 'decimaal') {
+    const num = waarde !== null ? parseFloat(waarde) : null
+    function clamp(v: number) { return Math.min(20, Math.max(0, v)) }
+    function fmt(v: number) { return v.toFixed(2) }
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onChange(num !== null ? fmt(clamp(num - 0.5)) : null)}
+          className="px-3 py-1.5 bg-[#252525] text-[#888] rounded-lg text-sm font-bold hover:text-white transition-colors"
+        >−½</button>
+        <input
+          type="number"
+          min={0}
+          max={20}
+          step={0.01}
+          value={waarde ?? ''}
+          onChange={(e) => {
+            const v = parseFloat(e.target.value)
+            onChange(isNaN(v) ? null : fmt(clamp(v)))
+          }}
+          placeholder="0.00"
+          className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-1.5 text-sm text-white text-center outline-none focus:border-[#FF6B00] [appearance:textfield]"
+        />
+        <span className="text-[10px] text-[#555] shrink-0">±0.33</span>
+        <button
+          onClick={() => onChange(fmt(clamp((num ?? 0) + 0.5)))}
+          className="px-3 py-1.5 bg-[#252525] text-[#888] rounded-lg text-sm font-bold hover:text-white transition-colors"
+        >+½</button>
+      </div>
+    )
+  }
+
+  if (type === 'minuut') {
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        {MINUUT_OPTIES.map((opt) => (
+          <button
+            key={opt}
+            onClick={() => onChange(waarde === opt ? null : opt)}
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${
+              waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
       </div>
     )
   }
