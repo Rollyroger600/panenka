@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-01 — Oranje vragen: grace periode tot 3 juni (Claude Code)
+
+Deadline voor het indienen van Oranje vragen was 31 mei, maar deelnemers die nog niet alle 3 vragen hadden ingediend krijgen tot en met woensdag 3 juni de tijd.
+
+- `hooks/useDeadline.ts`: `VRAAG_GRACE_DEADLINE` toegevoegd (3 juni 23:59 CEST = `2026-06-03T21:59:00Z`); `isVraagGracePast` geëxporteerd naast de bestaande `isVraagPast`.
+- `app/(app)/oranje/OranjeClient.tsx`: `inGracePeriod` berekend als `isVraagPast && !isVraagGracePast && aantalIngediend < 3`. Per wedstrijd wordt `graceVoorDezeWedstrijd` bepaald (`inGracePeriod && !mijnVraag`). Formulier blijft open voor wedstrijden zonder ingediende vraag; `isPast` prop wordt `false` doorgegeven zodat het formulier actief is. Badge toont "deadline 3 juni (verlengd)". Instructiebox zichtbaar tijdens grace periode met bijgewerkte datumvermelding.
+
 ### 2026-06-01 — Fantasy XV: sorteren op spelerszoekers + 6 spelers toegevoegd (Claude Code)
 
 **Fantasy XV — sorteren op spelerslijst**

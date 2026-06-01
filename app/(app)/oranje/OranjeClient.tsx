@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function OranjeClient({ mijnInitials }: Props) {
-  const { isPast, isVraagPast } = useDeadline()
+  const { isPast, isVraagPast, isVraagGracePast } = useDeadline()
   const [isLoaded, setIsLoaded] = useState(false)
   const [vragen, setVragen] = useState<OranjeVragenMap>({})
   const [antwoorden, setAntwoorden] = useState<OranjeAntwoordenMap>({})
@@ -52,17 +52,20 @@ export function OranjeClient({ mijnInitials }: Props) {
 
   const aantalIngediend = NED_MATCH_IDS.filter((id) => !!vragen[id]?.[mijnInitials.toLowerCase()]).length
 
+  // Grace period: vraagdeadline verstreken maar nog niet alle 3 vragen ingediend → tot 3 juni
+  const inGracePeriod = isVraagPast && !isVraagGracePast && aantalIngediend < 3
+
   if (!isLoaded) return <SkeletonList count={3} />
 
   return (
     <div>
       <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Oranje</h1>
 
-      {!isVraagPast ? (
+      {!isVraagPast || inGracePeriod ? (
         <>
           <p className="font-accent font-light text-white text-xs mb-2 text-center">Dien jouw vraag in per wedstrijd</p>
           <div className="rounded-xl border border-[#2a2a2a] px-4 py-2.5 mb-5 text-center text-xs text-white font-bold" style={{ background: 'rgba(22,22,22,0.82)' }}>
-            {aantalIngediend} / 3 vragen ingediend · deadline 31 mei
+            {aantalIngediend} / 3 vragen ingediend · deadline {inGracePeriod ? '3 juni (verlengd)' : '31 mei'}
           </div>
         </>
       ) : (
@@ -87,13 +90,16 @@ export function OranjeClient({ mijnInitials }: Props) {
         const matchVragen = vragen[match.id] ?? {}
         const mijnVraag = matchVragen[key] ?? null
 
+        // Grace period: toon formulier voor wedstrijden waarvoor nog geen vraag is ingediend
+        const graceVoorDezeWedstrijd = inGracePeriod && !mijnVraag
+
         return (
           <div key={match.id}>
-            {(!isVraagPast || mijnVraag) && (
+            {(!isVraagPast || mijnVraag || graceVoorDezeWedstrijd) && (
               <VraagIndienenCard
                 match={match}
                 bestaandeVraag={mijnVraag}
-                isPast={isVraagPast}
+                isPast={isVraagPast && !graceVoorDezeWedstrijd}
               />
             )}
             {isVraagPast && (
@@ -110,10 +116,10 @@ export function OranjeClient({ mijnInitials }: Props) {
         )
       })}
 
-      {!isVraagPast && (
+      {(!isVraagPast || inGracePeriod) && (
         <div className="mt-4 rounded-xl bg-[#111] border border-[#2a2a2a] p-4 text-xs text-[#888] space-y-1">
           <p className="font-bold text-[#aaa] mb-2">Hoe werkt het?</p>
-          <p>① Dien vóór 31 mei één vraag in per wedstrijd.</p>
+          <p>① Dien vóór {inGracePeriod ? '3 juni' : '31 mei'} één vraag in per wedstrijd.</p>
           <p>② Na de deadline publiceert de admin de vragen.</p>
           <p>③ Beantwoord alle vragen vóór 9 juni.</p>
           <p>④ Elk goed antwoord levert 0,5 token op voor de KO fase.</p>
