@@ -102,6 +102,8 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
   const [filterLeague, setFilterLeague] = useState<string | null>(null)
   const [filterClub, setFilterClub] = useState<string | null>(null)
   const [openPanel, setOpenPanel] = useState<PanelKey>(null)
+  const [sortBy, setSortBy] = useState<'overall' | 'name' | 'quote'>('overall')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
   const alreadyPicked = useMemo(
     () => new Set(ALL_SLOTS.map((k) => fantasySquad[k]?.id).filter(Boolean) as number[]),
@@ -124,9 +126,16 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
     const clubCounts = new Map<string, number>()
     for (const p of pool) clubCounts.set(p.club, (clubCounts.get(p.club) ?? 0) + 1)
     const clubsInPool = [...clubCounts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c)
-    const results = filterClub ? pool.filter((p) => p.club === filterClub) : pool
+    let results = filterClub ? pool.filter((p) => p.club === filterClub) : pool
+    results = [...results].sort((a, b) => {
+      let cmp = 0
+      if (sortBy === 'overall') cmp = a.overall - b.overall
+      else if (sortBy === 'name') cmp = a.name.localeCompare(b.name, 'nl')
+      else cmp = computePlayerQuote(a) - computePlayerQuote(b)
+      return sortDir === 'desc' ? -cmp : cmp
+    })
     return { results, clubsInPool }
-  }, [search, filterConf, filterU22, filterPos, filterCountry, filterLeague, filterClub])
+  }, [search, filterConf, filterU22, filterPos, filterCountry, filterLeague, filterClub, sortBy, sortDir])
 
   function select(player: Player) {
     if (onSelect) {
@@ -141,6 +150,16 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
       setActiveInfoSlot(null)
     }
     onClose()
+  }
+
+  function handleSort(col: 'overall' | 'name' | 'quote') {
+    if (sortBy === col) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    else { setSortBy(col); setSortDir(col === 'name' ? 'asc' : 'desc') }
+  }
+
+  function SortArrow({ col }: { col: 'overall' | 'name' | 'quote' }) {
+    if (sortBy !== col) return <span className="text-[#333]"> ⇅</span>
+    return <span className="text-[#FF6B00]">{sortDir === 'desc' ? ' ▼' : ' ▲'}</span>
   }
 
   function togglePanel(key: PanelKey) {
@@ -349,6 +368,21 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
           )}
         </div>
 
+        {/* Sort header */}
+        <div className="px-4 pb-1 shrink-0 flex items-center gap-3 border-b border-[#1a1a1a]">
+          <span className="w-6 shrink-0" />
+          <button onClick={() => handleSort('overall')} className="w-10 shrink-0 text-[10px] font-bold text-[#555] hover:text-[#888] uppercase text-left">
+            OVR<SortArrow col="overall" />
+          </button>
+          <button onClick={() => handleSort('name')} className="flex-1 min-w-0 text-[10px] font-bold text-[#555] hover:text-[#888] uppercase text-left">
+            NAAM<SortArrow col="name" />
+          </button>
+          <span className="w-8 shrink-0" />
+          <button onClick={() => handleSort('quote')} className="text-[10px] font-bold text-[#555] hover:text-[#888] uppercase text-right shrink-0">
+            QUOT<SortArrow col="quote" />
+          </button>
+        </div>
+
         {/* Player list */}
         <div className="overflow-y-auto flex-1 px-4 pb-4">
           {results.map((player) => {
@@ -366,7 +400,7 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
                 }`}
               >
                 <FlagImage country={player.country} size={24} className="shrink-0" />
-                <span className="text-sm font-bold text-white w-6 shrink-0">{player.overall}</span>
+                <span className="text-sm font-bold text-white w-10 shrink-0">{player.overall}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-white truncate">{player.name}</div>
                   <div className="text-[10px] text-[#555] truncate">

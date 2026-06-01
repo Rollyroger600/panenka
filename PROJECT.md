@@ -845,6 +845,27 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-01 — Fantasy XV: sorteren op spelerszoekers + 6 spelers toegevoegd (Claude Code)
+
+**Fantasy XV — sorteren op spelerslijst**
+
+In de `PlayerModal` is een sorteer-header toegevoegd boven de spelerslijst met drie klikbare kolommen: **OVR** (overall score), **NAAM** (alfabetisch) en **QUOT** (quotering). Eerste klik sorteert, tweede klik keert de richting om. Standaard gesorteerd op OVR hoog→laag. De OVR-kolom is verbreed van `w-6` naar `w-10` zodat het pijl-icoon op één regel past.
+
+- `components/fantasy/PlayerModal.tsx`: `sortBy`/`sortDir` state; `handleSort`/`SortArrow` helpers; sort-logica in `useMemo`; sort-header `<div>` boven de spelerslijst.
+
+**Fantasy XV — 6 spelers handmatig toegevoegd aan `lib/data/players.ts`**
+
+Zes spelers die buiten de automatische MinOverall-drempel vielen zijn handmatig toegevoegd vanuit het bronbestand (`260601_WK 2026_Master.xlsx`, tabblad `sofifa_260421_output_RH_WK_land`):
+
+| ID | Naam | Overall | Land |
+|---|---|---|---|
+| 198710 | J. Rodríguez (James) | 80 | Colombia |
+| 220295 | E. Valencia (Enner) | 75 | Ecuador |
+| 84061 | A. González (Armando) | 74 | Mexico |
+| 80304 | A. Fayzullaev (Abbosbek) | 67 | Oezbekistan |
+| 277568 | K. Alikulov (Khusniddin) | 66 | Oezbekistan |
+| 79458 | M. Urinboev (Mukhammadali) | 63 | Oezbekistan |
+
 ### 2026-05-28 — Chat toggle + bel naar header; club-filter Fantasy XV (Claude Code)
 
 **Chat — toggle en bel verplaatst naar AppHeader**
