@@ -5,7 +5,7 @@ import { kvGet, kvSet, participantKey, groupKey } from '@/lib/kv/kv'
 import { scoreParticipant, scoreFantasy } from '@/lib/scoring'
 import type { FantasyStats } from '@/lib/scoring'
 import { PARTICIPANTS } from '@/lib/participants'
-import { GROUP_MEMBERS } from '@/lib/groups'
+import { GROUP_MEMBERS, DUAL_GROUP_INITIALS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
@@ -67,7 +67,21 @@ export async function saveOranjeResults(data: Record<number, OranjeResult>): Pro
 // ── Oranje vragen (admin beheer) ─────────────────────────────────────────
 
 export async function loadOranjeVragenAdmin(groupId: GroupId = 'og'): Promise<OranjeVragenMap> {
-  return (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId))) ?? {}
+  const vragen = (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId))) ?? {}
+  if (groupId !== 'og') {
+    const ogVragen = (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', 'og'))) ?? {}
+    for (const [matchIdStr, matchVragen] of Object.entries(ogVragen)) {
+      const matchId = parseInt(matchIdStr)
+      for (const initials of DUAL_GROUP_INITIALS) {
+        const key = initials.toLowerCase()
+        if (matchVragen[key] && !vragen[matchId]?.[key]) {
+          if (!vragen[matchId]) vragen[matchId] = {}
+          vragen[matchId][key] = matchVragen[key]
+        }
+      }
+    }
+  }
+  return vragen
 }
 
 export async function updateOranjeVraag(

@@ -18,7 +18,21 @@ export async function loadOranjeVragen(): Promise<OranjeVragenMap> {
 }
 
 export async function loadOranjeVragenForGroup(groupId: GroupId): Promise<OranjeVragenMap> {
-  return (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId))) ?? {}
+  const vragen = (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId))) ?? {}
+  if (groupId !== 'og') {
+    const ogVragen = (await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', 'og'))) ?? {}
+    for (const [matchIdStr, matchVragen] of Object.entries(ogVragen)) {
+      const matchId = parseInt(matchIdStr)
+      for (const initials of DUAL_GROUP_INITIALS) {
+        const key = initials.toLowerCase()
+        if (matchVragen[key] && !vragen[matchId]?.[key]) {
+          if (!vragen[matchId]) vragen[matchId] = {}
+          vragen[matchId][key] = matchVragen[key]
+        }
+      }
+    }
+  }
+  return vragen
 }
 
 export async function saveOranjeVraag(
