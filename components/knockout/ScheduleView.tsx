@@ -1,12 +1,10 @@
 'use client'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useGameStore } from '@/store/gameStore'
-import type { Prediction } from '@/store/gameStore'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { R32_MATCHES, GROUP_INDEX } from '@/lib/data/bracketSchedule'
 import type { Qualifier } from '@/lib/data/bracketSchedule'
-import { POULES } from '@/lib/data/knockoutRounds'
-import { computeStandings } from '@/lib/standings'
+import { GROUP_TEAMS } from '@/lib/knockoutHelpers'
 import { getThirdPlaceAssignment } from '@/lib/data/thirdPlaceAssignment'
 import { COUNTRY_ABB } from '@/lib/data/countries'
 
@@ -144,25 +142,24 @@ function infer(a: string | null, b: string | null, set: Set<string>): string | n
   return null
 }
 
-// ─── Compute w3Map from group-stage standings ─────────────────────────────────
-function computeW3Map(predictions: Record<number, Prediction>): W3Map | null {
-  const standings = computeStandings(predictions)
-  for (const poule of POULES) {
-    const rows = standings[poule]
-    if (!rows || rows.length < 4) return null
-    for (const row of rows) { if (row.played !== 3) return null }
+// ─── Compute w3Map from manually stored w3 picks ─────────────────────────────
+function computeW3MapFromPicks(picks: Picks): W3Map | null {
+  const countries = Array.from({ length: 8 }, (_, i) => picks[`w3_${i}`]?.country ?? null)
+  if (countries.some((c) => c === null)) return null
+
+  const thirds: { country: string; group: string }[] = []
+  for (const country of countries as string[]) {
+    const group = Object.entries(GROUP_TEAMS).find(([, teams]) => teams.includes(country))?.[0]
+    if (!group) return null
+    thirds.push({ country, group })
   }
-  const thirds = POULES.map((poule) => {
-    const row = standings[poule][2]
-    return { poule, country: row.country, pts: row.pts, gd: row.gd, gf: row.gf }
-  })
-  thirds.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf)
-  const top8 = thirds.slice(0, 8)
-  const assignment = getThirdPlaceAssignment(top8.map((t) => t.poule))
+
+  const assignment = getThirdPlaceAssignment(thirds.map((t) => t.group))
   if (!assignment) return null
+
   const result: W3Map = {}
   for (const [matchStr, groupLetter] of Object.entries(assignment)) {
-    const third = thirds.find((t) => t.poule === groupLetter)
+    const third = thirds.find((t) => t.group === groupLetter)
     if (third) result[Number(matchStr)] = { country: third.country, group: groupLetter }
   }
   return result
@@ -224,13 +221,12 @@ function ColHeader({ label, active }: { label: string; active: boolean }) {
 export function ScheduleView({ activeTab }: { activeTab: string }) {
   const [open, setOpen] = useState(false)
   const knockoutPicks = useGameStore((s) => s.knockoutPicks)
-  const predictions   = useGameStore((s) => s.predictions)
 
   const scrollRef  = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const colRefs    = useRef<(HTMLDivElement | null)[]>([])
 
-  const w3Map = useMemo(() => computeW3Map(predictions), [predictions])
+  const w3Map = useMemo(() => computeW3MapFromPicks(knockoutPicks), [knockoutPicks])
 
   // ── Bracket data ──────────────────────────────────────────────────────────
   const bracket = useMemo(() => {

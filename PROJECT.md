@@ -845,6 +845,24 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-01 — Deelnemer Thomas (TWo) verwijderd + bugfix toernooischema w3 (Claude Code)
+
+**Deelnemer Thomas (TWo) verwijderd uit ASC**
+
+Thomas heeft besloten niet mee te doen. Verwijderd uit alle relevante bestanden.
+
+- `lib/participants.ts`: entry `Thomas / TWo` verwijderd.
+- `lib/groups.ts`: `TWo` verwijderd uit `GROUP_MEMBERS.asc`. ASC telt nu 15 deelnemers.
+- `app/api/export/route.ts`: `TWo` verwijderd uit `POULE_SHEET_ASC` en `FT_SHEET_ASC`.
+
+**Bugfix: toernooischema bracket-weergave toonde landen dubbel**
+
+De bracket-weergave (`ScheduleView`) berekende de w3-slots (beste nummers 3) opnieuw uit de groepsfase-voorspellingen, terwijl hij die gewoon uit de opgeslagen w3-picks had moeten halen — net zoals hij dat doet voor w1 en w2. Door het gebruik van twee onafhankelijke databronnen kon hetzelfde land tegelijk als w1/w2 (handmatig gekozen) én als w3 (herberekend) in de bracket verschijnen.
+
+Fix: `computeW3Map(predictions)` vervangen door `computeW3MapFromPicks(knockoutPicks)`. De nieuwe functie leest `w3_0` t/m `w3_7` uit de opgeslagen picks, zoekt per land de bijbehorende poulegroep op via `GROUP_TEAMS`, en past daarmee de FIFA-verdeelsleutel toe. De knop "Stel alles in op basis van suggesties" in `SuggestionsPanel` is niet gewijzigd — die berekent nog steeds correct de beste nummers 3 op basis van groepsfase-uitslagen en slaat ze op in de w3-slots.
+
+- `components/knockout/ScheduleView.tsx`: `computeW3Map` + imports (`Prediction`, `computeStandings`, `POULES`) vervangen door `computeW3MapFromPicks` + `GROUP_TEAMS`; `predictions` store-selector verwijderd; `w3Map` useMemo bijgewerkt.
+
 ### 2026-06-01 — Chat: notificatiebel toggle + reply-preview visueel samengevoegd met ballon (Claude Code)
 
 **Notificatiebel — toggle aan/uit**

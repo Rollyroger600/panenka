@@ -89,14 +89,14 @@ const FT_SHEET_OG: Record<string, string> = {
 // ASC sheet names — zelfde structuur, gebaseerd op ASC-initialen
 const POULE_SHEET_ASC: Record<string, string> = {
   JS: 'Poule_JS', CV: 'Poule_CV', BV: 'Poule_BV', AR: 'Poule_AR', MB: 'Poule_MB',
-  JH: 'Poule_JH', JK: 'Poule_JK', NS: 'Poule_NS', PN: 'Poule_PN', TWo: 'Poule_TWo',
+  JH: 'Poule_JH', JK: 'Poule_JK', NS: 'Poule_NS', PN: 'Poule_PN',
   CB: 'Poule_CB', DK: 'Poule_DK', WW: 'Poule_WW', VH: 'Poule_VH',
   WS: 'Poule_WS', RA: 'Poule_RA',
 }
 
 const FT_SHEET_ASC: Record<string, string> = {
   JS: 'FT_JS', CV: 'FT_CV', BV: 'FT_BV', AR: 'FT_AR', MB: 'FT_MB',
-  JH: 'FT_JH', JK: 'FT_JK', NS: 'FT_NS', PN: 'FT_PN', TWo: 'FT_TWo',
+  JH: 'FT_JH', JK: 'FT_JK', NS: 'FT_NS', PN: 'FT_PN',
   CB: 'FT_CB', DK: 'FT_DK', WW: 'FT_WW', VH: 'FT_VH',
   WS: 'FT_WS', RA: 'FT_RA',
 }

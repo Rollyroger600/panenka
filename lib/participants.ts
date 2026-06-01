@@ -32,7 +32,6 @@ export const PARTICIPANTS: Participant[] = [
   { name: 'Jorn',     initials: 'JK',  extra: 6,  token: 'wI6rCxBfTg' },
   { name: 'Niels',    initials: 'NS',  extra: 6,  token: 'qO5aVlJeHn' },
   { name: 'Peter',    initials: 'PN',  extra: 6,  token: 'yR8kMuGdSp' },
-  { name: 'Thomas',   initials: 'TWo', extra: 6,  token: 'iF3bXwNzQt' },
   { name: 'Coen',     initials: 'CB',  extra: 6,  token: 'cP7vLrAoKm' },
   { name: 'David',    initials: 'DK',  extra: 6,  token: 'uE4hQjZxBs' },
   { name: 'Wiger',    initials: 'WW',  extra: 6,  token: 'oJ1mTyVfIe' },
