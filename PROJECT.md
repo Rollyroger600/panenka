@@ -845,6 +845,12 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-02 — Chat: favoriete emoji's onthouden in picker (Claude Code)
+
+De emoji-picker onthoudt nu welke emoji's de gebruiker het meest gebruikt en toont deze bovenaan bij het openen.
+
+- `components/chat/EmojiGifPanel.tsx`: gebruiksfrequentie bijgehouden in `emojiFreq` state (`Record<string, number>`), geladen vanuit en opgeslagen in `localStorage` onder sleutel `chat-emoji-freq`. Bij elke emoji-selectie via `handleSelectEmoji()` telt de teller op. Op basis van de frequentie worden maximaal 24 emoji's gesorteerd als `favoriteEmojis`. Zolang er geen zoekterm is ingetypt verschijnt een "Favorieten" sectie als eerste groep bovenaan de emoji-lijst; bij een actieve zoekopdracht verdwijnt die sectie en zijn alleen de zoekresultaten zichtbaar.
+
 ### 2026-06-01 — Deelnemer Thomas (TWo) verwijderd + bugfix toernooischema w3 (Claude Code)
 
 **Deelnemer Thomas (TWo) verwijderd uit ASC**

@@ -96,6 +96,9 @@ const SEARCH_MAP: { terms: string[]; emojis: string[] }[] = [
   { terms: ['vlag', 'flag'], emojis: ['🏴󠁧󠁢󠁥󠁮󠁧󠁿','🏴󠁧󠁢󠁷󠁬󠁳󠁿'] },
 ]
 
+const FREQ_KEY = 'chat-emoji-freq'
+const MAX_FAVORITES = 24
+
 interface GifItem { id: string; title: string; preview: string; original: string }
 
 interface Props {
@@ -111,21 +114,39 @@ export function EmojiGifPanel({ onSelectEmoji, onSelectGif }: Props) {
   const [gifLoading, setGifLoading] = useState(false)
   const [gifFetched, setGifFetched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [emojiFreq, setEmojiFreq] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem(FREQ_KEY) ?? '{}') } catch { return {} }
+  })
+
+  const favoriteEmojis = Object.entries(emojiFreq)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, MAX_FAVORITES)
+    .map(([emoji]) => emoji)
 
   const filteredEmojiGroups = (() => {
     const q = emojiQuery.trim().toLowerCase()
-    if (!q) return EMOJI_GROUPS
+    if (!q) {
+      const groups = favoriteEmojis.length > 0
+        ? [{ label: 'Favorieten', emojis: favoriteEmojis }, ...EMOJI_GROUPS]
+        : EMOJI_GROUPS
+      return groups
+    }
     const hits = new Set<string>()
-    // Zoek via Nederlandse trefwoorden (gedeeltelijke match)
     for (const { terms, emojis } of SEARCH_MAP) {
       if (terms.some((t) => t.includes(q))) emojis.forEach((e) => hits.add(e))
     }
-    // Zoek ook op groeplabel als fallback
     EMOJI_GROUPS.filter((g) => g.label.toLowerCase().includes(q))
       .flatMap((g) => g.emojis)
       .forEach((e) => hits.add(e))
     return hits.size > 0 ? [{ label: 'Resultaten', emojis: [...hits] }] : []
   })()
+
+  function handleSelectEmoji(emoji: string) {
+    const updated = { ...emojiFreq, [emoji]: (emojiFreq[emoji] ?? 0) + 1 }
+    setEmojiFreq(updated)
+    try { localStorage.setItem(FREQ_KEY, JSON.stringify(updated)) } catch {}
+    onSelectEmoji(emoji)
+  }
 
   useEffect(() => {
     if (tab === 'gif' && !gifFetched) fetchGifs('')
@@ -192,7 +213,7 @@ export function EmojiGifPanel({ onSelectEmoji, onSelectGif }: Props) {
                     {group.emojis.map((e) => (
                       <button
                         key={e}
-                        onMouseDown={(ev) => { ev.preventDefault(); onSelectEmoji(e) }}
+                        onMouseDown={(ev) => { ev.preventDefault(); handleSelectEmoji(e) }}
                         className="text-2xl leading-none p-1 active:scale-95 transition-transform"
                       >
                         {e}
