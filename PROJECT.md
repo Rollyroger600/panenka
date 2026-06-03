@@ -845,6 +845,23 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-03 — 3 spelers toegevoegd + quoteringen bijgewerkt (Claude Code)
+
+**Fantasy XV — 3 spelers handmatig toegevoegd aan `lib/data/players.ts`**
+
+Drie spelers handmatig toegevoegd vanuit het bronbestand (`260603_WK 2026_Master.xlsx`, tabblad `sofifa_260421_output_RH_WK_land`):
+
+| ID | Naam | Overall | Land | Club | Positie(s) |
+|---|---|---|---|---|---|
+| 190871 | Neymar Jr. | 83 | Brazilië | Santos | CM, CAM, LW, ST |
+| 184200 | M. Arnautović | 77 | Oostenrijk | FK Crvena zvezda | ST |
+| 83494 | Rayan | 76 | Brazilië | AFC Bournemouth | RM, RW, ST |
+
+**Quoteringen bijgewerkt via `npm run update_quoteringen`**
+
+- `lib/data/odds.ts` + `lib/data/odds_trends.ts`: 72 wedstrijden bijgewerkt, 23 gewijzigd t.o.v. vorige run.
+- `lib/data/knockoutQuotes.ts` + `lib/data/knockoutQuotes_trends.ts`: 48 landen bijgewerkt, 11 gewijzigd t.o.v. vorige run.
+
 ### 2026-06-02 — Chat: favoriete emoji's onthouden in picker (Claude Code)
 
 De emoji-picker onthoudt nu welke emoji's de gebruiker het meest gebruikt en toont deze bovenaan bij het openen.
