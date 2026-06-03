@@ -845,6 +845,60 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-03 — 44 ontbrekende WK-spelers toegevoegd: Bosnië en Herzegovina + Saoedi-Arabië (Claude Code)
+
+**Eerste batch van handmatig opgezochte sofifa-data verwerkt.**
+
+`build_players.ps1` uitgebreid zodat het naast het hoofdbestand ook automatisch `scripts/wk_not_in_excel.xlsx` inleest. Alle datasheets worden verwerkt (de eerste summarytab "WK Missing Players" wordt overgeslagen). Duplicaten op basis van player_id worden automatisch gefilterd. Het bestand mag open staan in Excel tijdens de build (shadow-copy via `FileShare.ReadWrite`).
+
+**Gewijzigde bestanden**
+
+- `scripts/build_players.ps1` — extra sectie toegevoegd die `wk_not_in_excel.xlsx` inleest; alias `'Bosnië en Herzegovina'` toegevoegd aan nat-lookup; `Add-Type` verplaatst naar het begin zodat `ZipFile` altijd beschikbaar is.
+- `lib/data/players.ts` — **5.722 → 5.766 spelers** (+44):
+  - Tabblad `BIH`: 20 spelers Bosnië en Herzegovina (o.a. Džeko, Demirović, Kolašinac, Dedić)
+  - Tabblad `SAU`: 24 spelers Saoedi-Arabië (o.a. S. Al Dawsari overall 82, Abdulhamid, Al Juwair)
+
+**Nieuw bestand**
+
+- `scripts/fetch_sofifa_missing.ps1` — script voor geautomatiseerde sofifa.com lookup (naam → DOB-match → data-extractie). Momenteel geblokkeerd door Cloudflare-protectie op sofifa.com; staat klaar voor later gebruik.
+
+**Werkwijze voor volgende batches**
+
+Vul sofifa-data in de relevante tabblade(n) van `scripts/wk_not_in_excel.xlsx`, run daarna `scripts/build_players.ps1`. Geen andere stappen nodig.
+
+**Openstaande landen (deel van de 362 ontbrekende spelers)**
+
+Irak (~24), Jordanië (~24), Iran (~16), Egypte (~21), Haïti (~16), Curaçao (~20), Oezbekistan (~20), en kleinere groepen uit Algerije, Australië, Ecuador, Ghana, Japan, Kaapverdië, etc.
+
+---
+
+### 2026-06-03 — WK-selecties verwerkt + squad-validatie badges (Claude Code)
+
+**Officiële WK-selecties (48 landen × 26 spelers) verwerkt in de app.**
+
+**Nieuwe bestanden**
+
+- `lib/data/wkOfficialSquads.ts` — volledige officiële WK 2026-selecties (1.248 spelers), geëxtraheerd uit het FIFA-PDF. Per speler: `fifaName`, `position`, `dob`. Landnamen in het Nederlands.
+- `lib/wkSquadCheck.ts` — utility `getWKSquadStatus(player)` → `'confirmed' | 'not_in_squad' | 'unknown'`. Matching op DOB + land (O(1) Set-lookup).
+- `scripts/find_wk_gaps.ps1` — cross-referentie PDF vs `players.ts`. Resultaat: 886/1.248 gevonden, 362 ontbrekend. Output: `scripts/wk_gaps_result.md`.
+- `scripts/check_excel_gaps.ps1` — checkt ontbrekende spelers in het Excel-bronbestand (geen overall-filter). Resultaat: 51 gevonden (overall < 68), 299 afwezig in sofifa-data.
+- `scripts/export_missing_to_excel.ps1` — exporteert missing-lijst naar `wk_not_in_excel.xlsx`.
+- `scripts/wk_excel_override_ids.txt` — 51 sofifa-IDs die altijd meegenomen worden.
+- `scripts/wk_not_in_excel.xlsx` — 299 spelers voor handmatige sofifa.com lookup (volgende stap).
+
+**Gewijzigde bestanden**
+
+- `scripts/build_players.ps1` — `$WKOverrideIds` parameter toegevoegd; IDs uit `wk_excel_override_ids.txt` worden meegenomen ongeacht overall-drempel.
+- `lib/data/players.ts` — herbouwd: **5.684 → 5.722 spelers** (+38 nieuwe WK-spelers met overall < 68).
+- `components/fantasy/PlayerRow.tsx` — WK-selectie badge naast spelersnaam: ✓ groen (bevestigd), ⚠ oranje (niet in selectie).
+- `components/fantasy/PlayerModal.tsx` — zelfde badge in de spelerskeuze-lijst.
+
+**Openstaande stap (volgende sessie)**
+
+`scripts/wk_not_in_excel.xlsx` bevat 299 spelers die volledig afwezig zijn in de sofifa-dataset. Grootste groepen: Bosnië en Herzegovina (26), Saoedi-Arabië (26), Irak (~22), Jordanië (~24), Iran (~22), Oezbekistan (~20). Gegevens ophalen via sofifa.com en toevoegen aan `players.ts`.
+
+---
+
 ### 2026-06-03 — 3 spelers toegevoegd + quoteringen bijgewerkt (Claude Code)
 
 **Fantasy XV — 3 spelers handmatig toegevoegd aan `lib/data/players.ts`**
