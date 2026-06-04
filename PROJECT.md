@@ -845,6 +845,43 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-04 — KO-wedstrijden toto/uitslag voorbereid + quoteringen bijgewerkt (Claude Code)
+
+**KO-wedstrijden toto/uitslag volledig voorbereid (nog niet zichtbaar voor deelnemers).**
+
+De 32 KO-wedstrijden (matchId 73–104) krijgen een eigen toto/uitslag-systeem naast het bestaande KO-landen systeem. Alles is gebouwd en klaarstaand; de deelnemers-UI wordt geactiveerd zodra de poulefase is afgerond en de teams bekend zijn.
+
+**Scoremodel**
+- `lib/scoring.ts` — `ScoreBreakdown` uitgebreid met `koWedstrijden` en `oranjeTokens`. KO-wedstrijden scoren via dezelfde formule als de poulefase: `tokens × toto_quote` + `tokens × uitslag_quote` (stand na 90 minuten). Oranje telt **niet** meer mee in het totaal — het levert bonus tokens op.
+- `scoreOranjeTokens()` toegevoegd: `ceil(correct × 0.5)` tokens per deelnemer.
+- `app/leaderboard/types.ts` — `ParticipantScore` uitgebreid met `koWedstrijden` en `oranjeTokens`.
+- `app/leaderboard/page.tsx` — backward-compatible fallback voor opgeslagen scores zonder nieuwe velden.
+
+**Data**
+- `lib/data/koMatchOdds.ts` — nieuw leeg odds-bestand voor KO-wedstrijden, gevuld door scraper.
+- `components/matches/ScorePicker.tsx` — valt terug op `KO_MATCH_ODDS` voor matches 73–104.
+
+**Token budget**
+- `hooks/useTokenBudget.ts` — groepsfase (1–72) en KO-wedstrijden (73–104) gesplitst. Nieuw: `useKoMatchBudget(oranjeTokens)` — 50 basis tokens + Oranje bonus.
+
+**Admin**
+- `app/actions/admin.ts` — `loadKoMatchTeams` / `saveKoMatchTeams` (KV-key `ko_match_teams`). `computeAndSaveScores` berekent en slaat `koWedstrijden` en `oranjeTokens` op.
+- `app/actions/predictions.ts` — `loadKoMatchTeamsPublic` en `loadMyOranjeTokens` toegevoegd.
+- `app/admin/page.tsx` + `AdminClient.tsx` — nieuw tabblad "KO Wedstrijden": per ronde (rv32→finale) teams invoeren en uitslagen na 90 min registreren. Scorestabel toont `koWedstrijden` en Oranje-tokens.
+
+**Scraper**
+- `scripts/scrape-ko-match-odds.mjs` — Unibet/Kambi scraper voor KO-wedstrijden. Leest teams uit `scripts/ko-match-teams.json` (aan te maken per blok na de poulefase), mergt met bestaande entries, schrijft naar `lib/data/koMatchOdds.ts`.
+
+**Deelnemer-UI (klaar, nog verborgen)**
+- `components/matches/KoMatchCard.tsx` — match card voor KO-wedstrijden (toto + uitslag, budget-bewust).
+- `app/(app)/knockout/KnockoutClient.tsx` — voorbereid voor twee hoofd-tabs (Landen / Wedstrijden); Wedstrijden-tab nu verborgen tot na de poulefase.
+
+**Quoteringen bijgewerkt**
+- 72 groepswedstrijden bijgewerkt (39 met gewijzigde quote t.o.v. gisteren).
+- KO-outright quotes bijgewerkt (11 landen gewijzigd).
+
+---
+
 ### 2026-06-04 — Matchday admin per groep + assists in live slide (Claude Code)
 
 **Admin matchday tab gesplitst per OG/ASC groep.**

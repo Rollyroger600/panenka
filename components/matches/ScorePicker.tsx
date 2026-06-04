@@ -1,5 +1,6 @@
 'use client'
 import { MATCH_ODDS } from '@/lib/data/odds'
+import { KO_MATCH_ODDS } from '@/lib/data/koMatchOdds'
 import type { Toto } from '@/store/gameStore'
 
 interface Props {
@@ -25,8 +26,12 @@ function sortScores(scores: string[]): string[] {
   })
 }
 
+function getMatchOdds(matchId: number) {
+  return MATCH_ODDS[matchId] ?? KO_MATCH_ODDS[matchId]
+}
+
 function groupScores(matchId: number) {
-  const scores = Object.keys(MATCH_ODDS[matchId]?.scores ?? {})
+  const scores = Object.keys(getMatchOdds(matchId)?.scores ?? {})
   const home: string[] = []
   const draw: string[] = []
   const away: string[] = []
@@ -46,7 +51,7 @@ function ScoreColumn({ title, scores, matchId, selected, onSelect }: {
   selected: string | null
   onSelect: (s: string) => void
 }) {
-  const odds = MATCH_ODDS[matchId]
+  const odds = getMatchOdds(matchId)
   return (
     <div className="flex-1">
       <div className="font-heading text-xs text-[#555] font-bold uppercase tracking-wide mb-1 text-center">{title}</div>

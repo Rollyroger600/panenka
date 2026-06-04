@@ -4,6 +4,8 @@ export interface ParticipantScore {
   total: number
   poulefase: number
   knockout: number
+  koWedstrijden: number
   oranje: number
+  oranjeTokens: number
   fantasy: number
 }

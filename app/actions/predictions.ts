@@ -1,7 +1,9 @@
 'use server'
 import { cookies } from 'next/headers'
-import { kvGet, kvSet, participantKey } from '@/lib/kv/kv'
+import { kvGet, kvSet, participantKey, groupKey } from '@/lib/kv/kv'
 import type { Prediction } from '@/store/gameStore'
+import type { KoMatchTeams } from '@/app/actions/admin'
+import type { ParticipantScore } from '@/app/leaderboard/types'
 
 export async function loadPredictions(): Promise<Record<number, Prediction>> {
   try {
@@ -12,6 +14,25 @@ export async function loadPredictions(): Promise<Record<number, Prediction>> {
     return data ?? {}
   } catch {
     return {}
+  }
+}
+
+// KO-wedstrijd teams (publiek leesbaar, geen admin check)
+export async function loadKoMatchTeamsPublic(): Promise<KoMatchTeams> {
+  return (await kvGet<KoMatchTeams>('ko_match_teams')) ?? {}
+}
+
+// Oranje-tokens voor de ingelogde deelnemer (uit laatste score-run)
+export async function loadMyOranjeTokens(): Promise<number> {
+  try {
+    const store = await cookies()
+    const initials = store.get('participant')?.value
+    const groupId = store.get('group')?.value ?? 'og'
+    if (!initials) return 0
+    const scores = await kvGet<Record<string, ParticipantScore>>(groupKey('scores', groupId))
+    return scores?.[initials.toLowerCase()]?.oranjeTokens ?? 0
+  } catch {
+    return 0
   }
 }
 

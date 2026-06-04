@@ -126,6 +126,20 @@ export async function loadAlleOranjeAntwoorden(groupId: GroupId = 'og'): Promise
 
 // ── Fantasy statistieken ──────────────────────────────────────────────────
 
+// ── KO-wedstrijd teams (admin vult in zodra teams bekend zijn) ────────────
+
+export type KoMatchTeams = Record<number, { home: string; away: string }>
+
+export async function loadKoMatchTeams(): Promise<KoMatchTeams> {
+  return (await kvGet<KoMatchTeams>('ko_match_teams')) ?? {}
+}
+
+export async function saveKoMatchTeams(data: KoMatchTeams): Promise<void> {
+  await kvSet('ko_match_teams', data)
+}
+
+// ── Fantasy statistieken ──────────────────────────────────────────────────
+
 export async function loadFantasyStats(): Promise<FantasyStats> {
   return (await kvGet<FantasyStats>('fantasy_stats')) ?? {}
 }
@@ -175,14 +189,16 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
       )
 
       const fantasy = scoreFantasy(fantasyData?.squad ?? {}, fantasyStats)
-      const total = Math.round((breakdown.poulefase + breakdown.knockout + fantasy) * 100) / 100
+      const total = Math.round((breakdown.poulefase + breakdown.knockout + breakdown.koWedstrijden + fantasy) * 100) / 100
 
       scores[p.initials.toLowerCase()] = {
         name: p.name,
         initials: p.initials,
         poulefase: breakdown.poulefase,
         knockout: breakdown.knockout,
+        koWedstrijden: breakdown.koWedstrijden,
         oranje: breakdown.oranje,
+        oranjeTokens: breakdown.oranjeTokens,
         fantasy,
         total,
       }

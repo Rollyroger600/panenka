@@ -7,10 +7,12 @@ import { ScorePicker } from '@/components/matches/ScorePicker'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { abbrevCountry } from '@/lib/helpers'
 import {
-  saveResult, deleteResult, saveKoResults, saveOranjeResults, computeAndSaveScores,
+  saveResult, deleteResult, saveKoResults, saveKoMatchTeams,
+  saveOranjeResults, computeAndSaveScores,
   updateOranjeVraag, saveOranjeCorrect, saveOranjeBeoordeling,
   saveFantasyStats, setAdminGroup,
 } from '@/app/actions/admin'
+import type { KoMatchTeams } from '@/app/actions/admin'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
@@ -31,7 +33,7 @@ const NED_MATCHES = [
   { id: 58, label: 'TUN – NED (26 jun)' },
 ]
 
-type Tab = 'matches' | 'knockout' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday'
+type Tab = 'matches' | 'knockout' | 'ko_matches' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday'
 
 interface Props {
   groupId: GroupId
@@ -42,10 +44,11 @@ interface Props {
   initialOranjeCorrect: OranjeCorrectMap
   initialOranjeBeoordeling: OranjeBeoordeling
   initialAlleAntwoorden: Record<string, OranjeAntwoordenMap>
+  initialKoMatchTeams: KoMatchTeams
   initialFantasyStats: FantasyStats
 }
 
-export function AdminClient({ groupId, initialResults, initialKoResults, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect, initialOranjeBeoordeling, initialAlleAntwoorden, initialFantasyStats }: Props) {
+export function AdminClient({ groupId, initialResults, initialKoResults, initialKoMatchTeams, initialOranjeResults, initialOranjeVragen, initialOranjeCorrect, initialOranjeBeoordeling, initialAlleAntwoorden, initialFantasyStats }: Props) {
   const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
   const [tab, setTab] = useState<Tab>('matches')
   const [results, setResults] = useState(initialResults)
@@ -63,13 +66,18 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   const [fantasySearch, setFantasySearch] = useState('')
   const [editingVraag, setEditingVraag] = useState<{ matchId: number; key: string } | null>(null)
   const [editTekst, setEditTekst] = useState('')
+  const [koMatchTeams, setKoMatchTeams] = useState<KoMatchTeams>(initialKoMatchTeams)
+  const [savingKoTeam, setSavingKoTeam] = useState<number | null>(null)
+
+  const groupMatches = useMemo(() => MATCHES.filter((m) => m.id <= 72), [])
+  const koMatchList  = useMemo(() => MATCHES.filter((m) => m.id >= 73), [])
 
   const filteredMatches = useMemo(() => {
     const q = search.toLowerCase()
     return q
-      ? MATCHES.filter((m) => m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q) || `${m.id}` === q)
-      : MATCHES
-  }, [search])
+      ? groupMatches.filter((m) => m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q) || `${m.id}` === q)
+      : groupMatches
+  }, [search, groupMatches])
 
   async function handleSaveResult(matchId: number, toto: '1' | 'X' | '2', uitslag: string) {
     setSaving(matchId)
@@ -81,6 +89,21 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   async function handleDeleteResult(matchId: number) {
     await deleteResult(matchId)
     setResults((r) => { const n = { ...r }; delete n[matchId]; return n })
+  }
+
+  async function handleSaveKoTeam(matchId: number, home: string, away: string) {
+    setSavingKoTeam(matchId)
+    const updated = { ...koMatchTeams, [matchId]: { home: home.trim(), away: away.trim() } }
+    setKoMatchTeams(updated)
+    await saveKoMatchTeams(updated)
+    setSavingKoTeam(null)
+  }
+
+  async function handleDeleteKoTeam(matchId: number) {
+    const updated = { ...koMatchTeams }
+    delete updated[matchId]
+    setKoMatchTeams(updated)
+    await saveKoMatchTeams(updated)
   }
 
   async function toggleKoCountry(roundId: string, country: string, max: number) {
@@ -183,14 +206,18 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     await saveOranjeCorrect(next, groupId)
   }
 
+  const koMatchesWithTeams = Object.keys(koMatchTeams).length
+  const koMatchResults = Object.keys(results).filter((id) => parseInt(id) >= 73).length
+
   const TABS: { id: Tab; label: string }[] = [
-    { id: 'matches',  label: `Uitslagen (${Object.keys(results).length}/72)` },
-    { id: 'knockout', label: 'KO Resultaten' },
-    { id: 'vragen',   label: 'Oranje Vragen' },
-    { id: 'fantasy',  label: `Fantasy (${Object.keys(fantasyStats).length})` },
-    { id: 'scores',   label: 'Scores' },
-    { id: 'links',    label: 'Links' },
-    { id: 'matchday', label: '📅 Matchday' },
+    { id: 'matches',    label: `Uitslagen (${Object.keys(results).filter((id) => parseInt(id) <= 72).length}/72)` },
+    { id: 'knockout',   label: 'KO Landen' },
+    { id: 'ko_matches', label: `KO Wedstrijden (${koMatchesWithTeams}/32)` },
+    { id: 'vragen',     label: 'Oranje Vragen' },
+    { id: 'fantasy',    label: `Fantasy (${Object.keys(fantasyStats).length})` },
+    { id: 'scores',     label: 'Scores' },
+    { id: 'links',      label: 'Links' },
+    { id: 'matchday',   label: '📅 Matchday' },
   ]
 
   return (
@@ -318,6 +345,21 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
               )
             })}
           </div>
+        )}
+
+        {/* ── KO Wedstrijden (teams + uitslagen) ────────────────────────────────── */}
+        {tab === 'ko_matches' && (
+          <KoMatchesTab
+            koMatchList={koMatchList}
+            koMatchTeams={koMatchTeams}
+            results={results}
+            saving={savingKoTeam}
+            onSaveTeam={handleSaveKoTeam}
+            onDeleteTeam={handleDeleteKoTeam}
+            onSaveResult={(matchId, toto, uitslag) => handleSaveResult(matchId, toto, uitslag)}
+            onDeleteResult={(matchId) => handleDeleteResult(matchId)}
+            savingResult={saving}
+          />
         )}
 
         {/* ── Oranje vragen ──────────────────────────────────────────────────────── */}
@@ -497,24 +539,26 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
               <p className="text-[#555] text-sm">Klik op "Bereken scores" om de tussenstand te berekenen.</p>
             ) : (
               <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
-                <div className="grid grid-cols-[2rem_1fr_3.5rem_3.5rem_3rem_4rem] gap-1 px-3 py-2 text-[10px] text-[#444] uppercase" style={{ background: 'rgba(10,10,10,0.75)' }}>
+                <div className="grid grid-cols-[2rem_1fr_3rem_3rem_3rem_2.5rem_4rem] gap-1 px-3 py-2 text-[10px] text-[#444] uppercase" style={{ background: 'rgba(10,10,10,0.75)' }}>
                   <span>#</span><span>Naam</span>
                   <span className="text-right">Poule</span>
                   <span className="text-right">KO</span>
-                  <span className="text-right">Oranje</span>
+                  <span className="text-right">KO W</span>
+                  <span className="text-right">🟠</span>
                   <span className="text-right font-bold">Totaal</span>
                 </div>
                 {Object.values(scores)
                   .sort((a, b) => b.total - a.total)
                   .map((s, i) => (
                     <div key={s.initials}
-                      className="grid grid-cols-[2rem_1fr_3.5rem_3.5rem_3rem_4rem] gap-1 px-3 py-2.5 border-t border-[#1a1a1a] items-center"
+                      className="grid grid-cols-[2rem_1fr_3rem_3rem_3rem_2.5rem_4rem] gap-1 px-3 py-2.5 border-t border-[#1a1a1a] items-center"
                     >
                       <span className="text-sm text-[#555]">{i + 1}</span>
                       <span className="text-sm font-bold text-white">{s.name}</span>
                       <span className="text-xs text-[#888] text-right">{s.poulefase}</span>
                       <span className="text-xs text-[#888] text-right">{s.knockout}</span>
-                      <span className="text-xs text-[#888] text-right">{s.oranje}</span>
+                      <span className="text-xs text-[#888] text-right">{s.koWedstrijden ?? 0}</span>
+                      <span className="text-xs text-[#555] text-right" title={`${s.oranjeTokens ?? 0} bonus tokens`}>{s.oranjeTokens ?? 0}t</span>
                       <span className="text-sm font-bold text-[#FF6B00] text-right">{s.total}</span>
                     </div>
                   ))}
@@ -700,6 +744,121 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
       >
         {loading ? 'Opslaan...' : saved ? '✓ Opgeslagen' : 'Opslaan & activeren'}
       </button>
+    </div>
+  )
+}
+
+// ── KoMatchesTab ───────────────────────────────────────────────────────────────
+
+const KO_ROUND_LABELS: Record<string, string> = {
+  rv32: 'Ronde van 32',
+  rv16: 'Ronde van 16',
+  kf:   'Kwartfinales',
+  hf:   'Halve finales',
+  brons: '3e plaats',
+  finale: 'Finale',
+}
+
+function KoMatchesTab({
+  koMatchList, koMatchTeams, results, saving, onSaveTeam, onDeleteTeam, onSaveResult, onDeleteResult, savingResult,
+}: {
+  koMatchList: import('@/lib/data/matches').Match[]
+  koMatchTeams: KoMatchTeams
+  results: Record<number, import('@/lib/scoring').MatchResult>
+  saving: number | null
+  onSaveTeam: (matchId: number, home: string, away: string) => Promise<void>
+  onDeleteTeam: (matchId: number) => Promise<void>
+  onSaveResult: (matchId: number, toto: '1' | 'X' | '2', uitslag: string) => Promise<void>
+  onDeleteResult: (matchId: number) => Promise<void>
+  savingResult: number | null
+}) {
+  const [editHome, setEditHome] = useState<Record<number, string>>({})
+  const [editAway, setEditAway] = useState<Record<number, string>>({})
+
+  const rounds = ['rv32', 'rv16', 'kf', 'hf', 'brons', 'finale'] as const
+  const byRound = Object.fromEntries(
+    rounds.map((r) => [r, koMatchList.filter((m) => m.koRound === r)])
+  )
+
+  return (
+    <div className="flex flex-col gap-6">
+      {rounds.map((round) => {
+        const matches = byRound[round] ?? []
+        if (matches.length === 0) return null
+        const assigned = matches.filter((m) => koMatchTeams[m.id]).length
+        return (
+          <div key={round} className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+            <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
+              <span className="font-heading text-sm font-bold text-white">{KO_ROUND_LABELS[round]}</span>
+              <span className="text-xs text-[#FF6B00] font-bold">{assigned} / {matches.length} teams</span>
+            </div>
+            <div className="divide-y divide-[#1a1a1a]">
+              {matches.map((m) => {
+                const teams = koMatchTeams[m.id]
+                const home = editHome[m.id] ?? teams?.home ?? ''
+                const away = editAway[m.id] ?? teams?.away ?? ''
+                const hasTeams = !!teams
+                const result = results[m.id] ?? null
+
+                return (
+                  <div key={m.id} className="px-4 py-3 flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-[#444] w-6 text-right">{m.id}</span>
+                      <span className="text-[10px] text-[#555]">{m.date}</span>
+                      <div className="flex-1 flex items-center gap-1.5">
+                        <input
+                          value={home}
+                          onChange={(e) => setEditHome((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                          placeholder="Thuis"
+                          className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-2 py-1 text-xs text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
+                        />
+                        <span className="text-[10px] text-[#444]">vs</span>
+                        <input
+                          value={away}
+                          onChange={(e) => setEditAway((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                          placeholder="Uit"
+                          className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-2 py-1 text-xs text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
+                        />
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!home.trim() || !away.trim()) return
+                          await onSaveTeam(m.id, home, away)
+                          setEditHome((prev) => { const n = { ...prev }; delete n[m.id]; return n })
+                          setEditAway((prev) => { const n = { ...prev }; delete n[m.id]; return n })
+                        }}
+                        disabled={saving === m.id || !home.trim() || !away.trim()}
+                        className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[#FF6B00] text-white disabled:opacity-40 whitespace-nowrap"
+                      >
+                        {saving === m.id ? '…' : 'Sla op'}
+                      </button>
+                      {hasTeams && (
+                        <button
+                          onClick={() => onDeleteTeam(m.id)}
+                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[#252525] text-[#888] hover:text-red-400"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    {hasTeams && (
+                      <div className="ml-8">
+                        <MatchResultRow
+                          match={{ ...m, home: teams.home, away: teams.away }}
+                          result={result}
+                          saving={savingResult === m.id}
+                          onSave={(toto, uitslag) => onSaveResult(m.id, toto, uitslag)}
+                          onDelete={() => onDeleteResult(m.id)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

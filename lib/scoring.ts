@@ -1,4 +1,5 @@
 import { MATCH_ODDS } from './data/odds'
+import { KO_MATCH_ODDS } from './data/koMatchOdds'
 import { KO_QUOTES } from './data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from './data/knockoutRounds'
 import { computePlayerQuote } from './helpers'
@@ -23,7 +24,9 @@ export interface OranjeResult {
 export interface ScoreBreakdown {
   poulefase: number
   knockout: number
+  koWedstrijden: number
   oranje: number
+  oranjeTokens: number
   total: number
 }
 
@@ -81,6 +84,19 @@ function scoreOranjeNieuw(
   return Math.round(punten * 100) / 100
 }
 
+// Oranje-antwoorden leveren tokens op (geen punten): ceil(correct × 0.5)
+function scoreOranjeTokens(
+  antwoorden: OranjeAntwoordenMap,
+  correct: OranjeCorrectMap,
+  participantKey?: string,
+  beoordeling?: OranjeBeoordeling,
+): number {
+  const correctCount = scoreOranjeNieuw(antwoorden, correct, participantKey, beoordeling) / ORANJE_PTS_NIEUW
+  return Math.ceil(correctCount * 0.5)
+}
+
+export { scoreOranjeTokens }
+
 export function scoreParticipant(
   predictions: Record<number, Prediction>,
   knockoutPicks: KnockoutPicks,
@@ -93,22 +109,32 @@ export function scoreParticipant(
   participantKey?: string,
   beoordeling?: OranjeBeoordeling,
 ): ScoreBreakdown {
-  // ── Poulefase ─────────────────────────────────────────────────────────────
+  // ── Poulefase (wedstrijden 1–72) ─────────────────────────────────────────
   let poulefase = 0
+  let koWedstrijden = 0
   for (const [idStr, pred] of Object.entries(predictions)) {
     const matchId = parseInt(idStr)
     const actual = results[matchId]
     if (!actual || !pred.tokens) continue
-    const odds = MATCH_ODDS[matchId]
+
+    const isKoMatch = matchId >= 73
+    const odds = isKoMatch ? KO_MATCH_ODDS[matchId] : MATCH_ODDS[matchId]
     if (!odds) continue
 
+    let matchScore = 0
     if (pred.toto && pred.toto === actual.toto) {
       const totoOdd = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
-      poulefase += pred.tokens * totoOdd
+      matchScore += pred.tokens * totoOdd
     }
     if (pred.uitslag && pred.uitslag === actual.uitslag) {
       const scoreOdd = odds.scores[pred.uitslag] ?? 0
-      poulefase += pred.tokens * scoreOdd
+      matchScore += pred.tokens * scoreOdd
+    }
+
+    if (isKoMatch) {
+      koWedstrijden += matchScore
+    } else {
+      poulefase += matchScore
     }
   }
 
@@ -144,10 +170,13 @@ export function scoreParticipant(
   }
 
   // ── Oranje ────────────────────────────────────────────────────────────────
-  // Nieuw systeem (deelnemersvragen) heeft voorrang; legacy als fallback
+  // Oranje levert tokens op (los van totaalscore), niet punten.
+  // Nieuw systeem (deelnemersvragen) heeft voorrang; legacy als fallback.
   let oranje = 0
+  let oranjeTokens = 0
   if (oranjeAntwoorden && (oranjeCorrect || beoordeling)) {
     oranje = scoreOranjeNieuw(oranjeAntwoorden, oranjeCorrect ?? {}, participantKey, beoordeling)
+    oranjeTokens = scoreOranjeTokens(oranjeAntwoorden, oranjeCorrect ?? {}, participantKey, beoordeling)
   } else {
     for (const matchId of NED_MATCH_IDS) {
       const pred = oranjeAnswers[matchId]
@@ -159,11 +188,14 @@ export function scoreParticipant(
     }
   }
 
-  const total = Math.round((poulefase + knockout + oranje) * 100) / 100
+  // Oranje telt NIET mee in het totaal — het levert bonus tokens op voor KO-wedstrijden
+  const total = Math.round((poulefase + knockout + koWedstrijden) * 100) / 100
   return {
-    poulefase: Math.round(poulefase * 100) / 100,
-    knockout:  Math.round(knockout * 100) / 100,
+    poulefase:    Math.round(poulefase * 100) / 100,
+    knockout:     Math.round(knockout * 100) / 100,
+    koWedstrijden: Math.round(koWedstrijden * 100) / 100,
     oranje,
+    oranjeTokens,
     total,
   }
 }

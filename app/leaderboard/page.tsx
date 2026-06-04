@@ -8,28 +8,27 @@ import { RankList } from '@/components/leaderboard/RankList'
 import type { ParticipantScore } from './types'
 import { LeaderboardRefresh } from './LeaderboardRefresh'
 
+const SCORE_DEFAULTS: ParticipantScore = {
+  name: '', initials: '', total: 0, poulefase: 0, knockout: 0,
+  koWedstrijden: 0, oranje: 0, oranjeTokens: 0, fantasy: 0,
+}
+
 async function getScores(groupId: GroupId): Promise<ParticipantScore[]> {
   const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
   try {
     // Probeer groepsspecifieke scores; val terug op globale 'scores' key (backward compat)
     const stored =
-      await kvGet<Record<string, ParticipantScore>>(groupKey('scores', groupId)) ??
-      (groupId === 'og' ? await kvGet<Record<string, ParticipantScore>>('scores') : null)
+      await kvGet<Record<string, Partial<ParticipantScore>>>(groupKey('scores', groupId)) ??
+      (groupId === 'og' ? await kvGet<Record<string, Partial<ParticipantScore>>>('scores') : null)
 
     if (stored && Object.keys(stored).length > 0) {
-      return groupParticipants.map((p) =>
-        stored[p.initials.toLowerCase()] ?? {
-          name: p.name, initials: p.initials,
-          total: 0, poulefase: 0, knockout: 0, oranje: 0, fantasy: 0,
-        },
-      ).sort((a, b) => b.total - a.total)
+      return groupParticipants.map((p) => {
+        const s = stored[p.initials.toLowerCase()]
+        return { ...SCORE_DEFAULTS, name: p.name, initials: p.initials, ...(s ?? {}) }
+      }).sort((a, b) => b.total - a.total)
     }
   } catch {}
-  // No scores yet — return all group participants with 0
-  return groupParticipants.map((p) => ({
-    name: p.name, initials: p.initials,
-    total: 0, poulefase: 0, knockout: 0, oranje: 0, fantasy: 0,
-  }))
+  return groupParticipants.map((p) => ({ ...SCORE_DEFAULTS, name: p.name, initials: p.initials }))
 }
 
 export default async function LeaderboardPage() {
