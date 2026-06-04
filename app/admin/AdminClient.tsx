@@ -20,7 +20,7 @@ import type { ParticipantScore } from '@/app/leaderboard/types'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 import { PARTICIPANTS } from '@/lib/participants'
 import type { OranjeVragenMap, OranjeCorrectMap, OranjeBeoordeling, OranjeAntwoordenMap, AntwoordType } from '@/lib/types/oranjeVragen'
-import { ANTWOORD_TYPE_LABELS, MINUUT_OPTIES } from '@/lib/types/oranjeVragen'
+import { ANTWOORD_TYPE_LABELS, MINUUT_OPTIES, parseCorrectWaarden } from '@/lib/types/oranjeVragen'
 import { WK_PLAYERS } from '@/lib/data/players'
 
 const MUTED = '#7e7667'
@@ -418,7 +418,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                                 className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
                               >
                                 <option value="">→ Override type</option>
-                                {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'speler_beide', 'links_rechts', 'percentage', 'exact_aantal', 'aantal_marge', 'decimaal', 'minuut', 'open'] as const).map((t) => (
+                                {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'speler_beide', 'links_rechts', 'percentage', 'exact_aantal', 'exact_aantal_hoog', 'aantal_marge', 'decimaal', 'minuut', 'open'] as const).map((t) => (
                                   <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
                                 ))}
                               </select>
@@ -862,15 +862,29 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
   oppPlayers: string[]
   onChange: (v: string | null) => void
 }) {
+  const values = parseCorrectWaarden(waarde)
+  function toggle(v: string) {
+    const next = values.includes(v) ? values.filter((x) => x !== v) : [...values, v]
+    onChange(next.length ? next.join('|') : null)
+  }
+  function addSpeler(v: string) {
+    if (!v || values.includes(v)) return
+    const next = [...values, v]
+    onChange(next.join('|'))
+  }
+  function removeSpeler(v: string) {
+    const next = values.filter((x) => x !== v)
+    onChange(next.length ? next.join('|') : null)
+  }
+
   if (type === 'ja_nee') {
     return (
       <div className="flex gap-1">
         {(['ja', 'nee'] as const).map((opt) => (
-          <button key={opt} onClick={() => onChange(waarde === opt ? null : opt)}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
+          <button key={opt} onClick={() => toggle(opt)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${values.includes(opt) ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
           >{opt === 'ja' ? 'Ja' : 'Nee'}</button>
         ))}
-        {waarde && <span className="text-[10px] text-[#555] self-center ml-1">Correct: <b className="text-white">{waarde}</b></span>}
       </div>
     )
   }
@@ -878,50 +892,54 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
     return (
       <div className="flex gap-1">
         {(['NL', 'OPP'] as const).map((opt) => (
-          <button key={opt} onClick={() => onChange(waarde === opt ? null : opt)}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
+          <button key={opt} onClick={() => toggle(opt)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${values.includes(opt) ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
           >{opt === 'NL' ? 'Nederland' : opponent}</button>
         ))}
       </div>
     )
   }
-  if (type === 'speler_nl' || type === 'speler_opp') {
-    const spelers = type === 'speler_nl' ? nedPlayers : oppPlayers
+  if (type === 'speler_nl' || type === 'speler_opp' || type === 'speler_beide') {
+    const spelers = type === 'speler_nl' ? nedPlayers : type === 'speler_opp' ? oppPlayers : [...nedPlayers, ...oppPlayers]
+    const remaining = ['geen', ...spelers].filter((n) => !values.includes(n))
     return (
-      <select value={waarde ?? ''} onChange={(e) => onChange(e.target.value || null)}
-        className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] max-w-[200px]"
-      >
-        <option value="">— Correct antwoord</option>
-        <option value="geen">Geen</option>
-        {spelers.map((n) => <option key={n} value={n}>{n}</option>)}
-      </select>
-    )
-  }
-  if (type === 'speler_beide') {
-    return (
-      <select value={waarde ?? ''} onChange={(e) => onChange(e.target.value || null)}
-        className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] max-w-[220px]"
-      >
-        <option value="">— Correct antwoord</option>
-        <option value="geen">Geen</option>
-        <optgroup label="Nederland">
-          {nedPlayers.map((n) => <option key={n} value={n}>{n}</option>)}
-        </optgroup>
-        <optgroup label={opponent}>
-          {oppPlayers.map((n) => <option key={n} value={n}>{n}</option>)}
-        </optgroup>
-      </select>
+      <div className="flex flex-col gap-1.5">
+        {values.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {values.map((v) => (
+              <span key={v} className="flex items-center gap-1 bg-[#FF6B00]/20 text-[#FF6B00] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {v}
+                <button onClick={() => removeSpeler(v)} className="hover:text-white leading-none">×</button>
+              </span>
+            ))}
+          </div>
+        )}
+        {remaining.length > 0 && (
+          <select value="" onChange={(e) => addSpeler(e.target.value)}
+            className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] max-w-[220px]"
+          >
+            <option value="">+ Voeg antwoord toe</option>
+            {type === 'speler_beide' ? (
+              <>
+                <optgroup label="Nederland">{nedPlayers.filter((n) => !values.includes(n)).map((n) => <option key={n} value={n}>{n}</option>)}</optgroup>
+                <optgroup label={opponent}>{oppPlayers.filter((n) => !values.includes(n)).map((n) => <option key={n} value={n}>{n}</option>)}</optgroup>
+              </>
+            ) : (
+              remaining.map((n) => <option key={n} value={n}>{n}</option>)
+            )}
+          </select>
+        )}
+      </div>
     )
   }
   if (type === 'links_rechts') {
     return (
       <div className="flex gap-1">
         {(['links', 'rechts'] as const).map((opt) => (
-          <button key={opt} onClick={() => onChange(waarde === opt ? null : opt)}
-            className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-colors ${waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
+          <button key={opt} onClick={() => toggle(opt)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-colors ${values.includes(opt) ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
           >{opt.charAt(0).toUpperCase() + opt.slice(1)}</button>
         ))}
-        {waarde && <span className="text-[10px] text-[#555] self-center ml-1">Correct: <b className="text-white">{waarde}</b></span>}
       </div>
     )
   }
@@ -936,11 +954,13 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
       </div>
     )
   }
-  if (type === 'exact_aantal' || type === 'aantal_marge') {
+  if (type === 'exact_aantal' || type === 'exact_aantal_hoog' || type === 'aantal_marge') {
+    const MIN = type === 'exact_aantal_hoog' ? 22 : 0
+    const MAX = type === 'exact_aantal_hoog' ? 32 : 22
     return (
       <div className="flex items-center gap-2">
-        <input type="number" min={0} max={22} value={waarde ?? ''} placeholder="0–22"
-          onChange={(e) => { const v = parseInt(e.target.value, 10); onChange(isNaN(v) ? null : String(Math.min(22, Math.max(0, v)))) }}
+        <input type="number" min={MIN} max={MAX} value={waarde ?? ''} placeholder={`${MIN}–${MAX}`}
+          onChange={(e) => { const v = parseInt(e.target.value, 10); onChange(isNaN(v) ? null : String(Math.min(MAX, Math.max(MIN, v)))) }}
           className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-20 outline-none focus:border-[#FF6B00] text-center [appearance:textfield]"
         />
         <span className="text-xs text-[#555]">{type === 'aantal_marge' ? 'getal (deelnemers scoren bij ±1)' : 'exact getal'}</span>
@@ -961,9 +981,9 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
   if (type === 'minuut') {
     return (
       <div className="flex flex-wrap gap-1">
-        {MINUUT_OPTIES.map((opt) => (
-          <button key={opt} onClick={() => onChange(waarde === opt ? null : opt)}
-            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${waarde === opt ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
+        {([...MINUUT_OPTIES, 'geen'] as const).map((opt) => (
+          <button key={opt} onClick={() => toggle(opt)}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${values.includes(opt) ? 'bg-[#FF6B00] text-white' : 'bg-[#252525] text-[#555] hover:text-[#888]'}`}
           >{opt}</button>
         ))}
       </div>

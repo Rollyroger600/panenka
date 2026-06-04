@@ -252,32 +252,35 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
     )
   }
 
-  if (type === 'exact_aantal' || type === 'aantal_marge') {
+  if (type === 'exact_aantal' || type === 'exact_aantal_hoog' || type === 'aantal_marge') {
+    const isHoog = type === 'exact_aantal_hoog'
+    const MIN = isHoog ? 22 : 0
+    const MAX = isHoog ? 32 : 22
     const num = waarde !== null ? parseInt(waarde, 10) : null
-    function clamp(v: number) { return Math.min(22, Math.max(0, v)) }
+    function clamp(v: number) { return Math.min(MAX, Math.max(MIN, v)) }
     return (
       <div className="flex items-center gap-2">
         <button
-          onClick={() => onChange(num !== null && num > 0 ? String(clamp(num - 1)) : null)}
+          onClick={() => onChange(num !== null && num > MIN ? String(clamp(num - 1)) : null)}
           className="px-3 py-1.5 bg-[#252525] text-[#888] rounded-lg text-sm font-bold hover:text-white transition-colors"
         >−</button>
         <input
           type="number"
-          min={0}
-          max={22}
+          min={MIN}
+          max={MAX}
           value={waarde ?? ''}
           onChange={(e) => {
             const v = parseInt(e.target.value, 10)
             onChange(isNaN(v) ? null : String(clamp(v)))
           }}
-          placeholder="0–22"
+          placeholder={`${MIN}–${MAX}`}
           className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-1.5 text-sm text-white text-center outline-none focus:border-[#FF6B00] [appearance:textfield]"
         />
         {type === 'aantal_marge' && (
           <span className="text-[10px] text-[#555] shrink-0">±1</span>
         )}
         <button
-          onClick={() => onChange(String(clamp((num ?? -1) + 1)))}
+          onClick={() => onChange(String(clamp((num ?? MIN - 1) + 1)))}
           className="px-3 py-1.5 bg-[#252525] text-[#888] rounded-lg text-sm font-bold hover:text-white transition-colors"
         >+</button>
       </div>
@@ -319,7 +322,7 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
   if (type === 'minuut') {
     return (
       <div className="flex flex-wrap gap-1.5">
-        {MINUUT_OPTIES.map((opt) => (
+        {([...MINUUT_OPTIES, 'geen'] as const).map((opt) => (
           <button
             key={opt}
             onClick={() => onChange(waarde === opt ? null : opt)}

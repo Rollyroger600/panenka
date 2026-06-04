@@ -7,6 +7,7 @@ export type AntwoordType =
   | 'links_rechts'
   | 'percentage'
   | 'exact_aantal'
+  | 'exact_aantal_hoog'
   | 'aantal_marge'
   | 'decimaal'
   | 'minuut'
@@ -44,12 +45,18 @@ export const ANTWOORD_TYPE_LABELS: Record<AntwoordType, string> = {
   speler_beide: 'Speler NL of tegenstander',
   links_rechts: 'Links / Rechts',
   percentage:  'Percentage (%)',
-  exact_aantal: 'Exact aantal (0–22)',
-  aantal_marge: 'Aantal met marge ±1 (0–22)',
+  exact_aantal:      'Exact aantal (0–22)',
+  exact_aantal_hoog: 'Exact aantal (22–32)',
+  aantal_marge:      'Aantal met marge ±1 (0–22)',
   decimaal:    'Getal 2 decimalen (0.00–20.00, ±0.33)',
   minuut:      'Tijdvak (10 min.)',
   open:        'Open antwoord',
   anders:      'Alternatieve suggestie, te beoordelen door admin',
+}
+
+export function parseCorrectWaarden(s: string | null): string[] {
+  if (!s) return []
+  return s.split('|').filter(Boolean)
 }
 
 export function getAntwoordTypeLabel(type: AntwoordType, opponent: string): string {

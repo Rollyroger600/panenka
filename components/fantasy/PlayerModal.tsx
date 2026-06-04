@@ -18,6 +18,14 @@ function TrendIndicator({ trend }: { trend: OddsTrend }) {
   )
 }
 import type { Player } from '@/lib/data/players'
+import { getWKSquadStatus } from '@/lib/wkSquadCheck'
+
+function WKBadge({ player }: { player: Player }) {
+  const status = getWKSquadStatus(player)
+  if (status === 'confirmed') return <span className="text-emerald-400 text-[11px] font-bold shrink-0" title="In definitieve WK-selectie">✓</span>
+  if (status === 'not_in_squad') return <span className="text-[#FF6B00] text-[11px] font-bold shrink-0" title="NIET in definitieve WK-selectie">⚠</span>
+  return null
+}
 
 const WK_START = new Date('2026-06-11')
 
@@ -402,7 +410,10 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
                 <FlagImage country={player.country} size={24} className="shrink-0" />
                 <span className="text-sm font-bold text-white w-10 shrink-0">{player.overall}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-white truncate">{player.name}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-white truncate">{player.name}</span>
+                    <WKBadge player={player} />
+                  </div>
                   <div className="text-[10px] text-[#555] truncate">
                     {player.country} · {player.club} · {age}jr
                   </div>

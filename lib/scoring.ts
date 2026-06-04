@@ -5,6 +5,7 @@ import { computePlayerQuote } from './helpers'
 import type { Player } from './data/players'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
 import type { OranjeCorrectMap, OranjeAntwoordenMap, OranjeBeoordeling } from '@/lib/types/oranjeVragen'
+import { parseCorrectWaarden } from '@/lib/types/oranjeVragen'
 
 export type FantasyStats = Record<string, { goals: number; assists: number }>
 
@@ -62,16 +63,16 @@ function scoreOranjeNieuw(
     for (const questionKey of allQuestionKeys) {
       const gegeven = matchAnt[questionKey]
       if (!gegeven) continue
-      const correctWaarde = matchCorrect[questionKey]
-      if (correctWaarde) {
-        // percentage: ±5% marge
-        if (/^\d+$/.test(correctWaarde) && /^\d+$/.test(gegeven)) {
-          if (Math.abs(parseInt(gegeven, 10) - parseInt(correctWaarde, 10)) <= 5) {
-            punten += ORANJE_PTS_NIEUW
+      const correctWaarden = parseCorrectWaarden(matchCorrect[questionKey] ?? null)
+      if (correctWaarden.length > 0) {
+        const isCorrect = correctWaarden.some((cw) => {
+          // percentage / exact_aantal: ±5% marge op elk correct antwoord
+          if (/^\d+$/.test(cw) && /^\d+$/.test(gegeven)) {
+            return Math.abs(parseInt(gegeven, 10) - parseInt(cw, 10)) <= 5
           }
-        } else if (gegeven === correctWaarde) {
-          punten += ORANJE_PTS_NIEUW
-        }
+          return gegeven === cw
+        })
+        if (isCorrect) punten += ORANJE_PTS_NIEUW
       } else if (participantKey && matchBeoordeling[questionKey]?.[participantKey] === true) {
         punten += ORANJE_PTS_NIEUW
       }

@@ -16,8 +16,16 @@ function TrendIndicator({ trend }: { trend: OddsTrend }) {
   )
 }
 import { validateFantasyXV } from '@/lib/validation'
+import { getWKSquadStatus } from '@/lib/wkSquadCheck'
 import { useMemo } from 'react'
 import type { Player } from '@/lib/data/players'
+
+function WKBadge({ player }: { player: Player }) {
+  const status = getWKSquadStatus(player)
+  if (status === 'confirmed') return <span className="text-emerald-400 text-[11px] font-bold shrink-0" title="In definitieve WK-selectie">✓</span>
+  if (status === 'not_in_squad') return <span className="text-[#FF6B00] text-[11px] font-bold shrink-0" title="NIET in definitieve WK-selectie">⚠</span>
+  return null
+}
 
 interface Props {
   slotKey: string
@@ -60,7 +68,10 @@ export function PlayerRow({ slotKey, slotIndex, player }: Props) {
           <span className="text-sm font-bold text-[#888] w-6 shrink-0 text-right">#{slotIndex}</span>
           <FlagImage country={player.country} size={28} className="shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-white truncate">{player.name}</div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold text-white truncate">{player.name}</span>
+              <WKBadge player={player} />
+            </div>
             <div className="text-xs text-[#888] truncate">{player.country} · {player.club}</div>
           </div>
           <span className="text-sm font-bold text-white shrink-0">{player.overall}</span>

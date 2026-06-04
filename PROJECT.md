@@ -2872,3 +2872,49 @@ Onderaan elke poll met minstens één stem staat een oranje "Wie stemde?"-link. 
 #### @mention contrast in eigen berichten (`components/chat/ChatMessage.tsx`)
 
 In het oranje berichtenvlak (`bg-[#FF6B00]`) was `text-[#FF8C33]` voor @mentions nauwelijks leesbaar. Oplossing: in eigen berichten krijgen mentions nu `font-bold text-white bg-white/25 rounded px-1` (wit tekst met subtiel wit pill-achtergrond); in berichten van anderen blijft de oranje kleur behouden.
+
+### 2026-06-04 — 13 handmatig toegevoegde spelers hersteld na players-rebuild (Claude Code)
+
+Bij de spelersupdate van 2026-06-03 (`players.ts` herbouwd via build-script) zijn 13 eerder handmatig toegevoegde spelers verloren gegaan. Ze zijn teruggehaald uit de git-history en opnieuw toegevoegd aan het einde van `lib/data/players.ts`:
+
+| Speler | Land | ID |
+|--------|------|----|
+| Neymar Jr. | Brazilië | 190871 |
+| Rayan | Brazilië | 83494 |
+| Marko Arnautović | Oostenrijk | 184200 |
+| James Rodríguez | Colombia | 198710 |
+| Enner Valencia | Ecuador | 220295 |
+| Armando González | Mexico | 84061 |
+| Gilberto Mora | Mexico | 79399 |
+| Abbosbek Fayzullaev | Oezbekistan | 80304 |
+| Khusniddin Alikulov | Oezbekistan | 277568 |
+| Mukhammadali Urinboev | Oezbekistan | 79458 |
+| Rayane Bounida | Marokko | 76944 |
+| Alireza Jahanbakhsh | Iran | 215871 |
+| Jürgen Locadia | Curaçao | 204366 |
+
+**Preventie:** handmatig toegevoegde spelers worden voortaan aan het einde van `players.ts` buiten het build-script geplaatst, zodat een rebuild ze niet overschrijft.
+
+### 2026-06-04 — Oranje vragen: nieuw antwoordtype + meerdere correcte antwoorden + 'geen' bij tijdvak (Claude Code)
+
+#### Nieuw antwoordtype `exact_aantal_hoog` — Exact aantal (22–32)
+
+Zelfde stepper-UI als `exact_aantal` (0–22), maar met bereik 22–32. Toegevoegd aan:
+- `lib/types/oranjeVragen.ts`: type union + label
+- `components/oranje/VraagIndienenCard.tsx`: `TYPES_KEUZE`
+- `components/oranje/VragenBeantwoordenCard.tsx`: stepper met `MIN=22`, `MAX=32`
+- `app/admin/AdminClient.tsx`: correct-antwoord invoer + override-dropdown
+
+#### Meerdere correcte antwoorden per vraag
+
+Admin kan nu meerdere correcte antwoorden instellen per Oranje-vraag. Opslag: `|`-gescheiden string in de bestaande `OranjeCorrectMap` (bijv. `"Gakpo|Depay"`). Backward compatible — bestaande enkelvoudige waarden werken ongewijzigd.
+
+- `lib/types/oranjeVragen.ts`: helper `parseCorrectWaarden(s)` toegevoegd
+- `lib/scoring.ts`: scoring controleert nu of het antwoord overeenkomt met *een van* de correcte waarden
+- `app/admin/AdminClient.tsx` — `AdminCorrectInvoer` per type:
+  - **Speler-types** (`speler_nl`, `speler_opp`, `speler_beide`): oranje tags met ×-knop + dropdown om extra spelers toe te voegen
+  - **Knop-types** (`ja_nee`, `nl_opp`, `links_rechts`, `minuut`): meerdere knoppen tegelijk actief
+
+#### 'Geen' optie bij tijdvak antwoordtype
+
+`geen` toegevoegd als extra optie bij het `minuut`-antwoordtype, zowel in de deelnemer-UI (`VragenBeantwoordenCard.tsx`) als in de admin correct-invoer (`AdminClient.tsx`).
