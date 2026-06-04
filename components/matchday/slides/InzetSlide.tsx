@@ -64,7 +64,7 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
           <div className="flex leading-none">
             <div style={{ flex: 1 }} className="font-heading text-[20px] text-white opacity-50 text-center">×</div>
             <div style={{ flex: 3 }} />
-            <div style={{ flex: 1 }} />
+            <div style={{ flex: 1 }} className="font-heading text-[20px] text-white opacity-50 flex items-center justify-center">×</div>
           </div>
 
           {/* Per-wedstrijd rijen met 'x' tussendoor in de TOTO-kolom */}

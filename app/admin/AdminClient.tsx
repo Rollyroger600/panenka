@@ -532,13 +532,11 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
 function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
   const [matchdayId, setMatchdayId] = useState(1)
   const [quotes, setQuotes] = useState<Array<{ matchId: number; totoOdds: string; uitslagOdds: string }>>([])
-  const [potStandOg, setPotStandOg] = useState('')
-  const [potStandAsc, setPotStandAsc] = useState('')
+  const [potStand, setPotStand] = useState('')
   const [rotations, setRotations] = useState<{ og: string[]; asc: string[] } | null>(null)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  // Load existing config + rotation when matchday changes
   useEffect(() => {
     setLoading(true)
     setSaved(false)
@@ -550,9 +548,11 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
       setRotations(rotData)
       if (mdData.config) {
         const cfg = mdData.config
+        const groupQuotes: Array<{ matchId: number; totoOdds?: number; uitslagOdds?: number }> =
+          cfg[groupId]?.quotes ?? cfg.quotes ?? []
         setQuotes(
           matchIds.map((id) => {
-            const existing = cfg.quotes.find((q: { matchId: number }) => q.matchId === id)
+            const existing = groupQuotes.find((q) => q.matchId === id)
             return {
               matchId: id,
               totoOdds: existing ? String(existing.totoOdds) : '',
@@ -560,26 +560,24 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
             }
           })
         )
-        setPotStandOg(String(cfg.og.potStand))
-        setPotStandAsc(String(cfg.asc.potStand))
+        setPotStand(String(cfg[groupId]?.potStand ?? ''))
       } else {
         setQuotes(matchIds.map((id) => ({ matchId: id, totoOdds: '', uitslagOdds: '' })))
-        setPotStandOg('')
-        setPotStandAsc('')
+        setPotStand('')
       }
     }).finally(() => setLoading(false))
-  }, [matchdayId])
+  }, [matchdayId, groupId])
 
   async function handleSave() {
     setLoading(true)
     const payload = {
+      group: groupId,
       quotes: quotes.map((q) => ({
         matchId: q.matchId,
         totoOdds: parseFloat(q.totoOdds) || 0,
         uitslagOdds: parseFloat(q.uitslagOdds) || 0,
       })),
-      og: { potStand: parseFloat(potStandOg) || 0 },
-      asc: { potStand: parseFloat(potStandAsc) || 0 },
+      potStand: parseFloat(potStand) || 0,
     }
     await fetch(`/api/matchday/${matchdayId}`, {
       method: 'POST',
@@ -592,11 +590,8 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
 
   const matchIds = getMatchesForMatchday(matchdayId)
 
-  const totoOgName = rotations
-    ? (PARTICIPANTS.find((p) => p.initials === rotations.og[matchdayId - 1])?.name ?? '–')
-    : '...'
-  const totoAscName = rotations
-    ? (PARTICIPANTS.find((p) => p.initials === rotations.asc[matchdayId - 1])?.name ?? '–')
+  const totoName = rotations
+    ? (PARTICIPANTS.find((p) => p.initials === rotations[groupId][matchdayId - 1])?.name ?? '–')
     : '...'
 
   return (
@@ -619,17 +614,8 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
 
       {/* Toto van de dag */}
       <div className="rounded-xl border border-[#2a2a2a] p-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
-        <p className="text-xs text-[#555] uppercase font-heading tracking-wide mb-2">Toto van de dag</p>
-        <div className="flex gap-6">
-          <div>
-            <span className="text-[#FF6B00] text-xs font-bold uppercase mr-1">OG:</span>
-            <span className="text-white text-sm font-bold">{totoOgName}</span>
-          </div>
-          <div>
-            <span className="text-[#FF6B00] text-xs font-bold uppercase mr-1">ASC:</span>
-            <span className="text-white text-sm font-bold">{totoAscName}</span>
-          </div>
-        </div>
+        <p className="text-xs text-[#555] uppercase font-heading tracking-wide mb-1">Toto van de dag</p>
+        <span className="text-white text-sm font-bold">{totoName}</span>
         <p className="text-[10px] text-[#444] mt-1.5">
           Rotatie wordt automatisch gegenereerd. Zet de bets op Unibet op basis van de voorspellingen van deze deelnemer.
         </p>
@@ -688,23 +674,16 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
       {/* Pot stand */}
       <div className="rounded-xl border border-[#2a2a2a] p-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
         <p className="font-heading text-sm font-bold text-white mb-2">Stand van de pot</p>
-        <div className="flex gap-4">
-          {(['og', 'asc'] as const).map((g) => (
-            <div key={g} className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-[#555] uppercase font-bold">{g.toUpperCase()}</label>
-              <div className="flex items-center gap-1">
-                <span className="text-[#888] text-sm">€</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={g === 'og' ? potStandOg : potStandAsc}
-                  onChange={(e) => g === 'og' ? setPotStandOg(e.target.value) : setPotStandAsc(e.target.value)}
-                  placeholder="0.00"
-                  className="bg-[#252525] border border-[#2a2a2a] text-white text-sm rounded-lg px-2 py-1.5 w-28 outline-none focus:border-[#FF6B00] [appearance:textfield]"
-                />
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center gap-1">
+          <span className="text-[#888] text-sm">€</span>
+          <input
+            type="number"
+            step="0.01"
+            value={potStand}
+            onChange={(e) => setPotStand(e.target.value)}
+            placeholder="0.00"
+            className="bg-[#252525] border border-[#2a2a2a] text-white text-sm rounded-lg px-2 py-1.5 w-28 outline-none focus:border-[#FF6B00] [appearance:textfield]"
+          />
         </div>
       </div>
 

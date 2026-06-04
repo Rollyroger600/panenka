@@ -202,7 +202,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
   function buildInzetMatchData() {
     if (!data) return []
     const totoInitials = data.totoVanDeDagInitials
-    return data.config.quotes.map((q) => {
+    return (data.config.quotes ?? []).map((q) => {
       const matchSlide = data.matchSlides.flat().find((ms) => ms.matchId === q.matchId)
       const participant = matchSlide?.participantRows.find((r) => r.initials === totoInitials)
       return {

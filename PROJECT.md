@@ -845,6 +845,37 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-04 — Matchday admin per groep + assists in live slide (Claude Code)
+
+**Admin matchday tab gesplitst per OG/ASC groep.**
+
+De matchday input-tab volgde al de OG/ASC-toggle, maar toonde altijd beide groepen tegelijk. Nu worden quotes en pot stand apart per groep opgeslagen en getoond: wie in OG-modus zit vult alleen OG-data in, ASC idem. Backward compatible: bestaande configs met gedeelde `quotes` werken als fallback.
+
+**Gewijzigde bestanden**
+
+- `lib/matchday.ts` — `MatchdayConfig` uitgebreid: `og.quotes` + `asc.quotes` per groep; helper `getGroupQuotes()` toegevoegd; legacy `quotes?` blijft als fallback.
+- `app/api/matchday/[id]/route.ts` — POST accepteert `{ group, quotes, potStand }` en merget alleen de actieve groep in de bestaande config.
+- `app/api/matchday/[id]/full/route.ts` — resolved groep-specifieke quotes vóór teruggave aan de client.
+- `app/api/matchday/live/route.ts` — gebruikt `getGroupQuotes()` voor groep-specifieke inzet-quotes.
+- `app/admin/AdminClient.tsx` — `MatchdayAdminTab`: één pot stand input (actieve groep), quotes per groep, toto van de dag alleen actieve groep.
+- `components/matchday/MatchdayDrawer.tsx` — defensief `?? []` bij `config.quotes`.
+
+**InzetSlide: '×' toegevoegd in uitslag-kolom**
+
+Onder de `€ 1,00` rij staat nu ook een `×` in de uitslag-kolom (alleen de bovenste, niet tussen wedstrijden).
+
+- `components/matchday/slides/InzetSlide.tsx`
+
+**LiveSlide: assists zichtbaar in goals-samenvatting en timeline**
+
+Assists worden gekoppeld aan het bijbehorende doelpunt op minuut + team. Onder elke doelpuntenmaker verschijnt `↳ [naam]` in kleinere grijze tekst.
+
+- `lib/types/matchday.ts` — `LiveGoalEvent` uitgebreid met `assister?: string`.
+- `app/api/matchday/live/route.ts` — twee-pass extractie: assisters per minuut/team verzamelen, dan koppelen aan goals.
+- `components/matchday/slides/LiveSlide.tsx` — goals-samenvatting en timeline tonen assist-regel wanneer aanwezig.
+
+---
+
 ### 2026-06-03 — 44 ontbrekende WK-spelers toegevoegd: Bosnië en Herzegovina + Saoedi-Arabië (Claude Code)
 
 **Eerste batch van handmatig opgezochte sofifa-data verwerkt.**

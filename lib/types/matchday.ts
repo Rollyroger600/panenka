@@ -35,6 +35,7 @@ export interface LiveGoalEvent {
   minute: number
   team: 'home' | 'away'
   type: 'REGULAR' | 'PENALTY' | 'OWN'
+  assister?: string
 }
 
 export interface LiveBookingEvent {

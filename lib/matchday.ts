@@ -41,10 +41,14 @@ export function resolveUitslagOdds(q: MatchdayQuote | undefined, uitslag: string
 
 export interface MatchdayConfig {
   matchdayId: number
-  quotes: MatchdayQuote[]
-  og: { potStand: number }
-  asc: { potStand: number }
+  quotes?: MatchdayQuote[]  // legacy: gedeeld (backward compat)
+  og: { potStand: number; quotes?: MatchdayQuote[] }
+  asc: { potStand: number; quotes?: MatchdayQuote[] }
   savedAt: string
+}
+
+export function getGroupQuotes(config: MatchdayConfig, group: GroupId): MatchdayQuote[] {
+  return config[group].quotes ?? config.quotes ?? []
 }
 
 export interface MatchdayScoreRow {

@@ -3,7 +3,7 @@ import { kvGet, kvSetEx, participantKey } from '@/lib/kv/kv'
 import { MATCHES } from '@/lib/data/matches'
 import { PARTICIPANTS } from '@/lib/participants'
 import { GROUP_MEMBERS } from '@/lib/groups'
-import { loadMatchdayConfig, resolveTotoOdds, resolveUitslagOdds } from '@/lib/matchday'
+import { loadMatchdayConfig, resolveTotoOdds, resolveUitslagOdds, getGroupQuotes } from '@/lib/matchday'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { ESPN_MATCH_IDS } from '@/lib/data/espnMatchIds'
 import { computePlayerQuote } from '@/lib/helpers'
@@ -163,6 +163,22 @@ function extractGoals(rosters: EspnRoster[]): {
   const goals: LiveGoalEvent[] = []
   const goalsByScorer: Record<string, number> = {}
   const assistsByScorer: Record<string, number> = {}
+  // minute+team → assister name, for linking to goals
+  const assistByMinuteTeam: Record<string, string> = {}
+
+  for (const roster of rosters) {
+    const team = roster.homeAway
+    for (const player of roster.roster ?? []) {
+      const name = player.athlete?.displayName ?? ''
+      for (const play of player.plays ?? []) {
+        if (play.didAssist) {
+          assistsByScorer[name] = (assistsByScorer[name] ?? 0) + 1
+          const min = parseEspnMinute(play.clock?.displayValue ?? '0')
+          assistByMinuteTeam[`${min}-${team}`] = name
+        }
+      }
+    }
+  }
 
   for (const roster of rosters) {
     const team = roster.homeAway
@@ -170,16 +186,16 @@ function extractGoals(rosters: EspnRoster[]): {
       const name = player.athlete?.displayName ?? ''
       for (const play of player.plays ?? []) {
         if (play.didScore) {
+          const minute = parseEspnMinute(play.clock?.displayValue ?? '0')
+          const assister = assistByMinuteTeam[`${minute}-${team}`]
           goals.push({
             scorer: name,
-            minute: parseEspnMinute(play.clock?.displayValue ?? '0'),
+            minute,
             team,
             type: play.ownGoal ? 'OWN' : play.penaltyKick ? 'PENALTY' : 'REGULAR',
+            ...(assister ? { assister } : {}),
           })
           goalsByScorer[name] = (goalsByScorer[name] ?? 0) + 1
-        }
-        if (play.didAssist) {
-          assistsByScorer[name] = (assistsByScorer[name] ?? 0) + 1
         }
       }
     }
@@ -431,7 +447,7 @@ export async function GET(req: NextRequest) {
     const uitslagNow = `${scoreHome}-${scoreAway}`
     const match      = MATCHES.find((m) => m.id === matchId)
 
-    const quoteEntry = config?.quotes.find((q) => q.matchId === matchId)
+    const quoteEntry = config ? getGroupQuotes(config, group).find((q) => q.matchId === matchId) : undefined
 
     const participantRows: LiveParticipantRow[] = groupParticipants.map((p) => {
       const pred   = predsByInitials[p.initials]?.[matchId]

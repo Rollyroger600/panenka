@@ -75,18 +75,32 @@ function TimelineTab({ lm }: { lm: LiveMatchData }) {
         if (ev.kind === 'goal') {
           const g = ev.data as LiveGoalEvent
           return (
-            <div key={i} className="grid items-center" style={{ gridTemplateColumns: '1fr 20px 1fr' }}>
+            <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 20px 1fr' }}>
               {isHome ? (
-                <span className="font-heading text-[13px] text-right text-white pr-2">
-                  {g.minute}' {g.scorer}{goalTypeLabel(g.type)}
-                </span>
+                <div className="flex flex-col items-end pr-2">
+                  <span className="font-heading text-[13px] text-white">
+                    {g.minute}' {g.scorer}{goalTypeLabel(g.type)}
+                  </span>
+                  {g.assister && (
+                    <span className="font-heading text-[11px] pr-2" style={{ color: '#888' }}>
+                      ↳ {g.assister}
+                    </span>
+                  )}
+                </div>
               ) : <span />}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/icon-ball.svg" width={14} height={14} alt="" style={{ display: 'block', margin: '0 auto', opacity: 0.55 }} />
+              <img src="/icons/icon-ball.svg" width={14} height={14} alt="" style={{ display: 'block', margin: '0 auto', marginTop: 3, opacity: 0.55 }} />
               {!isHome ? (
-                <span className="font-heading text-[13px] text-left text-white pl-2">
-                  {g.scorer}{goalTypeLabel(g.type)} {g.minute}'
-                </span>
+                <div className="flex flex-col items-start pl-2">
+                  <span className="font-heading text-[13px] text-white">
+                    {g.scorer}{goalTypeLabel(g.type)} {g.minute}'
+                  </span>
+                  {g.assister && (
+                    <span className="font-heading text-[11px] pl-2" style={{ color: '#888' }}>
+                      ↳ {g.assister}
+                    </span>
+                  )}
+                </div>
               ) : <span />}
             </div>
           )
@@ -394,18 +408,32 @@ function LiveMatchPanel({ lm, match, exporting }: { lm: LiveMatchData; match: Ma
       {lm.goals.length > 0 && (
         <div className="flex flex-col gap-y-1.5 mt-3">
           {lm.goals.map((g, i) => (
-            <div key={i} className="grid items-center" style={{ gridTemplateColumns: '1fr 20px 1fr' }}>
+            <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 20px 1fr' }}>
               {g.team === 'home' ? (
-                <span className="font-heading text-[14px] text-right text-white pr-2">
-                  {g.minute}' {g.scorer}{goalTypeLabel(g.type)}
-                </span>
+                <div className="flex flex-col items-end pr-2">
+                  <span className="font-heading text-[14px] text-white">
+                    {g.minute}' {g.scorer}{goalTypeLabel(g.type)}
+                  </span>
+                  {g.assister && (
+                    <span className="font-heading text-[11px] pr-2" style={{ color: '#888' }}>
+                      ↳ {g.assister}
+                    </span>
+                  )}
+                </div>
               ) : <span />}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/icon-ball.svg" width={16} height={16} alt="" style={{ display: 'block', margin: '0 auto', opacity: 0.55 }} />
+              <img src="/icons/icon-ball.svg" width={16} height={16} alt="" style={{ display: 'block', margin: '0 auto', marginTop: 3, opacity: 0.55 }} />
               {g.team === 'away' ? (
-                <span className="font-heading text-[14px] text-left text-white pl-2">
-                  {g.scorer}{goalTypeLabel(g.type)} {g.minute}'
-                </span>
+                <div className="flex flex-col items-start pl-2">
+                  <span className="font-heading text-[14px] text-white">
+                    {g.scorer}{goalTypeLabel(g.type)} {g.minute}'
+                  </span>
+                  {g.assister && (
+                    <span className="font-heading text-[11px] pl-2" style={{ color: '#888' }}>
+                      ↳ {g.assister}
+                    </span>
+                  )}
+                </div>
               ) : <span />}
             </div>
           ))}

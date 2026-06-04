@@ -11,6 +11,7 @@ import {
   getTotoVanDeDag,
   computeMatchdayScores,
   getFantasyPlayersForMatch,
+  getGroupQuotes,
 } from '@/lib/matchday'
 import { getMatchesForMatchday, MATCHDAY_COUNT } from '@/lib/data/matchdayMap'
 import type { Prediction, KnockoutPicks, FantasySquad } from '@/store/gameStore'
@@ -139,9 +140,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   }
 
+  const resolvedConfig = { ...config, quotes: getGroupQuotes(config, group) }
+
   const data: FullMatchdayData = {
     matchdayId,
-    config,
+    config: resolvedConfig,
     totoVanDeDagInitials: totoParticipant?.initials ?? null,
     totoVanDeDagName: totoParticipant?.name ?? null,
     matchSlides,
