@@ -845,6 +845,27 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-04 — Geboortedatum fixes WK-selectiecheck (Claude Code)
+
+8 spelers hadden een verkeerde geboortedatum in `lib/data/players.ts`, waardoor ze als "niet in WK-selectie" werden gemarkeerd terwijl ze er wel in zitten. De matchinglogica in `lib/wkSquadCheck.ts` werkt op `dob|country`, dus een kleine typfout in de datum is genoeg om de check te laten falen.
+
+**Gecorrigeerde spelers:**
+
+| ID | Speler | Land | Was | Nu |
+|----|--------|------|-----|----|
+| 259480 | I. Saibari | Marokko | 2001-07-18 | 2001-01-28 |
+| 228092 | S. Berge | Noorwegen | 1998-02-18 | 1998-02-14 |
+| 273651 | J. Quansah | Engeland | 2003-01-28 | 2003-01-29 |
+| 277975 | P. Guiagon | Ivoorkust | 2001-02-20 | 2001-02-22 |
+| 73456 | Š. Chaloupek | Tsjechië | 2003-03-01 | 2003-03-08 |
+| 213884 | R. Christie | Schotland | 1995-02-12 | 1995-02-22 |
+| 222429 | A. Cubas | Paraguay | 1996-05-22 | 1996-05-11 |
+| 73348 | Y. Titraoui | Algerije | 2003-07-26 | 2003-08-26 |
+
+Gevonden via systematische vergelijking van alle spelers in een WK-selectieland tegen de FIFA-data in `wkOfficialSquads.ts`: match op exacte achternaam + zelfde jaar + datumverschil ≤ 60 dagen.
+
+---
+
 ### 2026-06-04 — KO-wedstrijden toto/uitslag voorbereid + quoteringen bijgewerkt (Claude Code)
 
 **KO-wedstrijden toto/uitslag volledig voorbereid (nog niet zichtbaar voor deelnemers).**
