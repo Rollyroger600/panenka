@@ -845,6 +845,70 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-05 — WK-spelersdata compleet: 1248/1248 vinkjes (Claude Code)
+
+**Alle 1.248 officiële WK-spelers hebben nu een vinkje in de Fantasy XV-selector.**
+
+**Wat er gedaan is**
+
+- **315 nieuwe spelers toegevoegd** aan `lib/data/players.ts` (250 + 49 + 16 fixes + correcties): totaal van 5.779 naar 6.094 spelers.
+- **16 spelers gecorrigeerd**: land of geboortedatum klopte niet (bijv. Bonny stond als "Frankrijk" i.p.v. "Ivoorkust", Qatar-spelers hadden transposities in de dob). Allemaal gefixed zodat de WK-check aansluit.
+- **19 spelers toegevoegd vanuit bronbestand** die ontbraken maar er wel in zaten.
+- **2 spelers handmatig toegevoegd**: Hussein Ali (252736, Irak) en Amer Jamous (15694223, Jordanië) — beide gevonden in master Excel.
+- **wkSquadCheck.ts herschreven** met `sofifaId`-logica: bij gelijke `dob|country` (twee verschillende spelers, zelfde verjaardag + land) wordt de juiste speler via sofifaId geïdentificeerd. 15 entries in `wkOfficialSquads.ts` voorzien van `sofifaId`.
+- **9 datafouten opgelost**: dubbele player_ids verwijderd, verkeerde landen gecorrigeerd (o.a. Benarous van Jordanië naar Engeland), dob-correcties.
+- **Al Owais (210923)** stond twee keer in de database — verkeerd duplicaat verwijderd.
+- **Irak gefix via sofifaId**: HUSSEIN ALI en ALI ALHAMADI deelden dob 2002-03-01; beide voorzien van sofifaId zodat ze elk apart worden herkend → Irak 26/26.
+
+**Eindstand**
+
+| | Aantal |
+|---|---|
+| Totaal spelers in app | 6.094 |
+| WK-spelers met vinkje | 1.248 / 1.248 |
+| Landen volledig (26/26) | 48 / 48 |
+
+**Nieuwe scripts (in `scripts/`)**
+
+`import_players_250.py`, `import_players_49.py`, `fix_and_add_35.py`, `fix_duplicates.py`, `fix_9_duplicates.py`, `fix_benarous.py`, `fix_dob_corrections.py`, `add_irak_jordan_players.py`, `check_wk_coverage.py`, `find_missing_wk_players.py`, `write_leagues.py`
+
+---
+
+### 2026-06-05 — Geautomatiseerde sofifa-scraper voor ontbrekende WK-spelers (Claude Code)
+
+**299 ontbrekende WK-spelers verwerkt via sofifa.com squad-pagina's en officiële FIFA PDF.**
+
+**Aanpak**
+
+Tweedelig proces: (1) sofifa.com scrapen voor player-IDs en basisdata, (2) DOB + club verrijken vanuit de officiële FIFA PDF.
+
+**Nieuwe bestanden**
+
+- `scripts/fetch_sofifa_squads.py` — Python-script dat squad/team-pagina's van sofifa.com scrapet voor 36 WK-landen. Naam-matching in drie lagen:
+  - *Exacte match* op genormaliseerde woorden (zonder diacritics, volgorde-onafhankelijk)
+  - *Fuzzy match* via `difflib.SequenceMatcher` — handelt afgekorte voornamen (`A. Amanov`), Arabische Al-prefixen (`ALDAWSARI` → `Al Dawsari`), gesplitste namen (`Wi Je Cho`) en kleine transliteratieverschillen af
+  - *DOB-match* als fallback voor spelers die al in `players.ts` zitten maar niet op naam matchen
+  - Deduplicatie: elke sofifa-ID wordt maar één keer toegewezen (greedy op hoogste confidence)
+- `scripts/enrich_from_pdf.py` — parseert de officiële FIFA PDF (`docs/reference/SquadLists-English.pdf`, 1.248 spelers) en koppelt DOB (YYYY-MM-DD) en club aan alle spelers via exacte fifa_name matching.
+
+**Resultaten scraper**
+
+| Tabblad | Aantal |
+|---|---|
+| Gevonden (zekere matches) | 197 |
+| Beste gok (fuzzy, ter review) | 63 |
+| Niet gevonden | 39 |
+
+Tussenresultaat opgeslagen in `scripts/sofifa_found_players.xlsx` met tabbladen *Gevonden*, *Beste gok*, *Niet gevonden* en *Totaal* (handmatig samengesteld). Alle 299 spelers in de *Totaal*-tab zijn voorzien van DOB en club vanuit de PDF (299/299 gematcht).
+
+**Openstaand (volgende sessie)**
+
+- `name`/`fullName` controleren (soms identiek, fullName ontbreekt soms)
+- `league` en `leagueId` invullen voor handmatig toegevoegde spelers
+- Import-script schrijven om goedgekeurde rijen toe te voegen aan `lib/data/players.ts`
+
+---
+
 ### 2026-06-04 — Geboortedatum fixes WK-selectiecheck (Claude Code)
 
 8 spelers hadden een verkeerde geboortedatum in `lib/data/players.ts`, waardoor ze als "niet in WK-selectie" werden gemarkeerd terwijl ze er wel in zitten. De matchinglogica in `lib/wkSquadCheck.ts` werkt op `dob|country`, dus een kleine typfout in de datum is genoeg om de check te laten falen.
