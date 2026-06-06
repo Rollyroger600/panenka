@@ -311,7 +311,7 @@ export const WK_OFFICIAL_SQUADS: Record<string, WKSquadPlayer[]> = {
     { fifaName: 'RAUM David', position: 'DF', dob: '1998-04-22' },
     { fifaName: 'NMECHA Felix', position: 'MF', dob: '2000-10-10' },
     { fifaName: 'THIAW Malick', position: 'DF', dob: '2001-08-08' },
-    { fifaName: 'KARL Lennart', position: 'MF', dob: '2008-02-22' },
+    { fifaName: 'OUEDRAOGO Assan', position: 'MF', dob: '2006-05-09' },
     { fifaName: 'UNDAV Deniz', position: 'FW', dob: '1996-07-19' },
   ],
   'Ecuador': [

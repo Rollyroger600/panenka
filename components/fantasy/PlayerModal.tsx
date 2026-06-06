@@ -136,6 +136,9 @@ export function PlayerModal({ slotKey, talentOnly, onClose, onSelect }: Props) {
     const clubsInPool = [...clubCounts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c)
     let results = filterClub ? pool.filter((p) => p.club === filterClub) : pool
     results = [...results].sort((a, b) => {
+      const aWK = getWKSquadStatus(a) === 'confirmed' ? 0 : 1
+      const bWK = getWKSquadStatus(b) === 'confirmed' ? 0 : 1
+      if (aWK !== bWK) return aWK - bWK
       let cmp = 0
       if (sortBy === 'overall') cmp = a.overall - b.overall
       else if (sortBy === 'name') cmp = a.name.localeCompare(b.name, 'nl')

@@ -3071,3 +3071,21 @@ Admin kan nu meerdere correcte antwoorden instellen per Oranje-vraag. Opslag: `|
 #### 'Geen' optie bij tijdvak antwoordtype
 
 `geen` toegevoegd als extra optie bij het `minuut`-antwoordtype, zowel in de deelnemer-UI (`VragenBeantwoordenCard.tsx`) als in de admin correct-invoer (`AdminClient.tsx`).
+
+### 2026-06-06 — WK selectiewijziging Duitsland + Fantasy XV sortering + Oranje spelerslijst (Claude Code)
+
+#### WK selectiewijziging Duitsland (`lib/data/wkOfficialSquads.ts`)
+
+Lennart Karl (SofIFA ID 78063) is geblesseerd uitgevallen en vervangen door Assan Ouédraogo (SofIFA ID 276602). In `wkOfficialSquads.ts` vervangen: `KARL Lennart` (dob 2008-02-22) → `OUEDRAOGO Assan` (dob 2006-05-09). Assan Ouédraogo stond al in `players.ts` als Duitser, waardoor de `dob|country`-matching direct werkt en het vinkje correct wordt toegekend.
+
+#### Fantasy XV: WK-vinkje spelers bovenaan (`components/fantasy/PlayerModal.tsx`)
+
+In de spelersselectie-modal wordt nu altijd primair gesorteerd op WK-status: spelers met een ✓ (confirmed WK-selectie) verschijnen bovenaan, spelers zonder vinkje eronder. Binnen elke groep geldt de gekozen sortering (standaard: overall desc). Wijziging in de `useMemo`-sorteerfunctie (regel 138).
+
+#### Oranje vragen: spelerslijst beperkt tot WK-selectie (`components/oranje/VragenBeantwoordenCard.tsx`)
+
+Bij antwoordtypes `speler_nl`, `speler_opp` en `speler_beide` werden voorheen alle spelers van het betreffende land getoond. Nu worden `nedPlayers` en `oppPlayers` gefilterd op `getWKSquadStatus === 'confirmed'`, zodat alleen de 26 officieel geselecteerde WK-spelers per land beschikbaar zijn.
+
+#### Export WK spelers-ID's (`scripts/export_wk_ids.py`, `scripts/wk_player_ids_2026.xlsx`)
+
+Nieuw Python-script dat alle 1248 WK-spelers matcht via dezelfde `dob|country`-logica als `wkSquadCheck.ts` en de player-ID's exporteert naar Excel (één kolom `id`, gesorteerd op land + geboortedatum). Output: `scripts/wk_player_ids_2026.xlsx`.

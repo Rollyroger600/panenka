@@ -7,6 +7,7 @@ import { WK_PLAYERS } from '@/lib/data/players'
 import type { Match } from '@/lib/data/matches'
 import type { OranjeVraag, OranjeAntwoordenMap } from '@/lib/types/oranjeVragen'
 import { MINUUT_OPTIES } from '@/lib/types/oranjeVragen'
+import { getWKSquadStatus } from '@/lib/wkSquadCheck'
 
 interface Props {
   match: Match
@@ -21,11 +22,11 @@ export function VragenBeantwoordenCard({ match, vragen, antwoorden, mijnInitials
   const opponent = match.home === 'Nederland' ? match.away : match.home
 
   const nedPlayers = useMemo(
-    () => WK_PLAYERS.filter((p) => p.country === 'Nederland').sort((a, b) => b.overall - a.overall),
+    () => WK_PLAYERS.filter((p) => p.country === 'Nederland' && getWKSquadStatus(p) === 'confirmed').sort((a, b) => b.overall - a.overall),
     [],
   )
   const oppPlayers = useMemo(
-    () => WK_PLAYERS.filter((p) => p.country === opponent).sort((a, b) => b.overall - a.overall),
+    () => WK_PLAYERS.filter((p) => p.country === opponent && getWKSquadStatus(p) === 'confirmed').sort((a, b) => b.overall - a.overall),
     [opponent],
   )
 
