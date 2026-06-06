@@ -251,8 +251,9 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
     const fd = new FormData()
     fd.append('file', file)
     const uploadRes = await fetch('/api/chat/upload', { method: 'POST', body: fd })
-    const { url } = await uploadRes.json()
-    if (!url) return
+    const uploadData = await uploadRes.json()
+    if (!uploadRes.ok || !uploadData.url) throw new Error(uploadData.error ?? 'Upload mislukt')
+    const url = uploadData.url
     const body = {
       group: activeGroup,
       text: '',

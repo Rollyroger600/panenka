@@ -168,7 +168,11 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
+    input.style.display = 'none'
+    // iOS Safari requires the input to be in the DOM for the change event to fire
+    document.body.appendChild(input)
     input.onchange = async () => {
+      document.body.removeChild(input)
       const file = input.files?.[0]
       if (!file) return
       setUploading(true)

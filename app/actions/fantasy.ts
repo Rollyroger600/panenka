@@ -22,10 +22,8 @@ export async function loadFantasy(): Promise<{ squad: FantasySquad; teamName: st
 }
 
 export async function saveFantasy(squad: FantasySquad, teamName: string, scratchpad: Scratchpad): Promise<void> {
-  try {
-    const store = await cookies()
-    const initials = store.get('participant')?.value
-    if (!initials) return
-    await kvSet(participantKey('fantasy', initials), { squad, teamName, scratchpad })
-  } catch {}
+  const store = await cookies()
+  const initials = store.get('participant')?.value
+  if (!initials) return
+  await kvSet(participantKey('fantasy', initials), { squad, teamName, scratchpad })
 }

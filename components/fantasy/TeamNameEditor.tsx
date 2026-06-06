@@ -1,9 +1,10 @@
 'use client'
 import { useState, useRef } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { saveFantasy } from '@/app/actions/fantasy'
 
 export function TeamNameEditor() {
-  const { teamName, setTeamName } = useGameStore()
+  const { teamName, setTeamName, fantasySquad, scratchpad } = useGameStore()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -15,7 +16,13 @@ export function TeamNameEditor() {
   }
 
   function commit() {
-    if (draft.trim()) setTeamName(draft.trim())
+    if (draft.trim()) {
+      const name = draft.trim()
+      setTeamName(name)
+      // Fire-and-forget: ensures the save is in-flight even if the user navigates away
+      // within the 500ms debounce window in useFantasyXV
+      saveFantasy(fantasySquad, name, scratchpad).catch(() => {})
+    }
     setEditing(false)
   }
 

@@ -3089,3 +3089,33 @@ Bij antwoordtypes `speler_nl`, `speler_opp` en `speler_beide` werden voorheen al
 #### Export WK spelers-ID's (`scripts/export_wk_ids.py`, `scripts/wk_player_ids_2026.xlsx`)
 
 Nieuw Python-script dat alle 1248 WK-spelers matcht via dezelfde `dob|country`-logica als `wkSquadCheck.ts` en de player-ID's exporteert naar Excel (één kolom `id`, gesorteerd op land + geboortedatum). Output: `scripts/wk_player_ids_2026.xlsx`.
+
+---
+
+### 2026-06-06 — Fantasy XV teamnaam opslaan + chat afbeeldingen fix + admin TG-vraag (Claude Code)
+
+#### Fantasy XV: teamnaam opslaan betrouwbaarder (`components/fantasy/TeamNameEditor.tsx`, `app/actions/fantasy.ts`)
+
+**Probleem:** Sommige deelnemers meldden dat hun teamnaam niet werd opgeslagen. Oorzaak: de save verliep via een 500ms debounce in `useFantasyXV`. Als de gebruiker de naam instelde en binnen die 500ms wegnavigeerde, cancelde de `useEffect`-cleanup de `setTimeout` en ging de naam verloren. Dit trof specifiek de teamnaam omdat gebruikers die vaak als laatste invullen vóór het verlaten van de pagina.
+
+**Fix:**
+- `TeamNameEditor.tsx`: bij `commit()` wordt nu direct `saveFantasy(fantasySquad, name, scratchpad)` aangeroepen als fire-and-forget. De server action-request is zo al onderweg vóórdat de component eventueel onmount, ongeacht de debounce.
+- `app/actions/fantasy.ts`: de lege `catch {}` in `saveFantasy` verwijderd zodat KV-schrijffouten propageren naar de hook en de gebruiker de juiste foutindicator (`error`) ziet in plaats van een vals positief `saved`.
+
+#### Admin: TG-vraag NED-SWE handmatig toegevoegd (KV)
+
+Timo's (TG) vraag voor match 33 (NED–SWE, 20 jun) was niet correct opgeslagen. Via een eenmalig Node.js-script direct in Upstash KV toegevoegd onder `oranje_vragen:og`:
+
+- **Vraag:** "Welke speler is 'Player of the match' volgens de FIFA?"
+- **Type:** `speler_beide` (speler NL of tegenstander, 2×26 opties)
+- **Status:** `gepubliceerd: false` — te publiceren via admin UI
+
+#### Chat: afbeelding uploaden repareerd op iOS (`components/chat/ChatInput.tsx`, `components/chat/ChatPage.tsx`)
+
+**Probleem:** Gebruikers konden op het camera-icoontje drukken en een afbeelding selecteren, maar er gebeurde daarna niets.
+
+**Oorzaak:** In `openFilePicker()` werd een `<input type="file">` aangemaakt en direct geklikt, maar nooit aan de DOM toegevoegd. iOS Safari vereist dat een file-input in de DOM aanwezig is op het moment van `.click()` — anders wordt het `change`-event na bestandskeuze niet gefired.
+
+**Fix:**
+- `ChatInput.tsx`: `document.body.appendChild(input)` vóór `.click()`, gevolgd door `document.body.removeChild(input)` in de `onchange`-handler.
+- `ChatPage.tsx`: `handleSendImage` gooit nu een `Error` als de upload-API een fout teruggeeft (i.p.v. stil `return`), zodat `uploading`-state correct reset en de fout zichtbaar wordt.
