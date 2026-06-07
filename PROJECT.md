@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-07 — KO bugfix: alle landenpickers omgezet naar verticale grid (Claude Code)
+
+**Bugfix: landenpickers R16 t/m Winnaar waren onbruikbaar op sommige apparaten**
+
+Dezelfde horizontale scroll-bug als bij W3 zat ook in de pickers voor R16, kwartfinale, halve finale, finale en winnaar (`RoundSection.tsx`). Omgezet naar dezelfde verticale grid-oplossing.
+
+- `components/knockout/RoundSection.tsx`: `CountryPicker` — `overflow-x-auto flex` → `overflow-y-auto max-h-64 grid grid-cols-4`; button-grootte van `w-[72px] h-[72px] flex-shrink-0` → `aspect-square`.
+
+---
+
 ### 2026-06-07 — KO bugfix: W3 landenpicker toont nu alle 48 landen (Claude Code)
 
 **Bugfix: beste nummers 3-picker was onbruikbaar op mobiel**
