@@ -423,8 +423,8 @@ function W3CountryPicker({
       <div className="px-3 py-2 bg-[#111] flex items-center">
         <span className="text-[10px] text-[#999] uppercase tracking-widest">Kies land</span>
       </div>
-      <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-        <div className="flex gap-2 p-3">
+      <div className="overflow-y-auto max-h-64">
+        <div className="grid grid-cols-4 gap-2 p-3">
           {ALL_COUNTRIES.map((country) => {
             const isSelected = currentValue === country
             const isTaken = !isSelected && taken.has(country)
@@ -433,7 +433,7 @@ function W3CountryPicker({
               <button
                 key={country}
                 onClick={() => onSelect(isSelected ? null : country)}
-                className={`relative flex-shrink-0 w-[72px] h-[72px] rounded-xl flex flex-col items-center justify-center border transition-colors ${
+                className={`relative aspect-square rounded-xl flex flex-col items-center justify-center border transition-colors ${
                   isSelected
                     ? 'border-[#FF6B00] bg-[#FF6B00]/10'
                     : isTaken

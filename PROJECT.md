@@ -845,6 +845,18 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-07 — KO bugfix: W3 landenpicker toont nu alle 48 landen (Claude Code)
+
+**Bugfix: beste nummers 3-picker was onbruikbaar op mobiel**
+
+Deelnemers zagen bij het kiezen van "Beste nummers 3" slechts 4 landen in plaats van alle 48. Oorzaak: de picker gebruikte een horizontale flex-scroll (`overflow-x-auto`), waardoor op een mobiel scherm (~375px) precies 4 landen naast elkaar pasten. iOS onderschept touch-events voor de pagina-scroll, waardoor de horizontale scroll in de picker niet werkte.
+
+Opgelost door de picker om te bouwen naar een verticaal scrollbare 4-koloms grid (`grid grid-cols-4` + `overflow-y-auto max-h-64`), consistent met de W1/W2-pickers.
+
+- `components/knockout/Ronde32Section.tsx`: `W3CountryPicker` — `overflow-x-auto flex` → `overflow-y-auto max-h-64 grid grid-cols-4`; button-grootte van `w-[72px] h-[72px] flex-shrink-0` → `aspect-square`.
+
+---
+
 ### 2026-06-07 — Chat: Enter = nieuwe regel + foto upload fix iOS/Android + quoteringen bijgewerkt (Claude Code)
 
 **Chat input: Enter gedrag gewijzigd**
