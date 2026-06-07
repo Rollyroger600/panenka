@@ -114,7 +114,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
       setMentionQuery(null)
       return
     }
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault()
       handleSend()
     }
@@ -168,10 +168,14 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
-    input.style.display = 'none'
-    // iOS Safari requires the input to be in the DOM for the change event to fire
+    // display:none silences the change event on iOS/Android — use off-screen positioning instead
+    input.style.position = 'fixed'
+    input.style.top = '-200px'
+    input.style.left = '-200px'
+    input.style.opacity = '0'
+    input.style.pointerEvents = 'none'
     document.body.appendChild(input)
-    input.onchange = async () => {
+    input.addEventListener('change', async () => {
       document.body.removeChild(input)
       const file = input.files?.[0]
       if (!file) return
@@ -182,7 +186,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
       } finally {
         setUploading(false)
       }
-    }
+    })
     input.click()
   }
 
@@ -308,7 +312,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
           rows={1}
           disabled={disabled}
           inputMode="text"
-          enterKeyHint="send"
+          enterKeyHint="enter"
           className="flex-1 bg-[#1E1E1E] border border-[#2a2a2a] rounded-2xl px-4 py-2 text-white placeholder:text-[#555] outline-none focus:border-[#FF6B00]/50 resize-none overflow-hidden disabled:opacity-40"
           style={{ minHeight: '2.5rem', maxHeight: '7.5rem', fontSize: '16px' }}
         />

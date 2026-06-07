@@ -845,6 +845,27 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-07 — Chat: Enter = nieuwe regel + foto upload fix iOS/Android + quoteringen bijgewerkt (Claude Code)
+
+**Chat input: Enter gedrag gewijzigd**
+
+Enter maakte voorheen direct een bericht aan. Nu springt Enter naar een nieuwe regel en verstuurt Shift+Enter (of de verzendknop) het bericht. De `enterKeyHint` is ook aangepast van `"send"` naar `"enter"` zodat mobiele toetsenborden de juiste hint tonen.
+
+- `components/chat/ChatInput.tsx`: `handleKeyDown` — conditie omgedraaid van `!e.shiftKey` naar `e.shiftKey`; `enterKeyHint` aangepast.
+
+**Chat: foto versturen gerepareerd op iOS en Android**
+
+Op zowel iOS als Android kon je een foto selecteren maar werd er niets verstuurd. Oorzaak: `display: none` op het verborgen `<input type="file">` onderdrukt het `change` event op mobiele browsers nadat de gebruiker een foto kiest. Opgelost door het element off-screen te positioneren in plaats van te verbergen.
+
+- `components/chat/ChatInput.tsx`: `openFilePicker()` — `display: none` vervangen door `position: fixed; top: -200px; left: -200px; opacity: 0; pointerEvents: none`; `onchange` vervangen door `addEventListener('change', ...)`.
+
+**Quoteringen bijgewerkt via `npm run update_quoteringen`**
+
+- `lib/data/odds.ts` + `lib/data/odds_trends.ts`: 72 groepswedstrijden bijgewerkt, 44 gewijzigd t.o.v. vorige run.
+- `lib/data/knockoutQuotes.ts` + `lib/data/knockoutQuotes_trends.ts`: 48 landen bijgewerkt, 18 gewijzigd t.o.v. vorige run.
+
+---
+
 ### 2026-06-05 — WK-spelersdata compleet: 1248/1248 vinkjes (Claude Code)
 
 **Alle 1.248 officiële WK-spelers hebben nu een vinkje in de Fantasy XV-selector.**
