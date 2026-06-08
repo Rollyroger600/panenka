@@ -10,6 +10,13 @@ const redis = new Redis({
 function messagesKey(group: GroupId): string {
   return `chat:messages:${group}`
 }
+function pinnedKey(group: GroupId): string {
+  return `chat:pinned:${group}`
+}
+function readKey(group: GroupId): string {
+  return `chat:read:${group}`
+}
+
 const MAX_MESSAGES = 2000
 
 // Upstash SDK v1.37+ kan JSON-strings auto-deserializeren naar objecten; beide gevallen afhandelen
@@ -45,10 +52,11 @@ export async function chatAddMessage(group: GroupId, msg: ChatMessage): Promise<
   }
 }
 
-export async function chatUpdateReactions(
+// Generieke helper: zoek bericht op id en vervang het
+async function chatReplaceMessage(
   group: GroupId,
   msgId: string,
-  reactions: Record<string, string[]>,
+  updater: (msg: ChatMessage) => ChatMessage,
 ): Promise<boolean> {
   const key = messagesKey(group)
   const raw = await redis.zrange(key, 0, -1) as unknown[]
@@ -60,12 +68,55 @@ export async function chatUpdateReactions(
     const score = await redis.zscore(key, member)
     if (score === null) continue
 
-    const updated: ChatMessage = { ...msg, reactions }
+    const updated = updater(msg)
     await redis.zremrangebyscore(key, score, score)
     await redis.zadd(key, { score, member: JSON.stringify(updated) })
     return true
   }
   return false
+}
+
+export async function chatUpdateReactions(
+  group: GroupId,
+  msgId: string,
+  reactions: Record<string, string[]>,
+): Promise<boolean> {
+  return chatReplaceMessage(group, msgId, (msg) => ({ ...msg, reactions }))
+}
+
+export async function chatUpdateMessage(
+  group: GroupId,
+  msgId: string,
+  text: string,
+): Promise<boolean> {
+  return chatReplaceMessage(group, msgId, (msg) => ({ ...msg, text, editedAt: Date.now() }))
+}
+
+export async function chatDeleteMessage(
+  group: GroupId,
+  msgId: string,
+): Promise<boolean> {
+  return chatReplaceMessage(group, msgId, (msg) => ({
+    ...msg,
+    deleted: true,
+    text: '',
+    imageUrl: undefined,
+    gifUrl: undefined,
+  }))
+}
+
+export async function chatSetPinned(group: GroupId, msgId: string | null): Promise<void> {
+  if (msgId === null) {
+    await redis.del(pinnedKey(group))
+  } else {
+    await redis.set(pinnedKey(group), msgId)
+  }
+}
+
+export async function chatGetPinned(group: GroupId): Promise<string | null> {
+  const raw = await redis.get<string>(pinnedKey(group))
+  if (!raw) return null
+  return typeof raw === 'string' ? raw : String(raw)
 }
 
 export async function chatGetAllMessages(group: GroupId): Promise<ChatMessage[]> {
@@ -92,7 +143,6 @@ export async function chatUpdatePoll(
     const alreadyAt = msg.pollOptions.findIndex((o) => o.votes.includes(voterInitials))
     const isMultiple = msg.pollMultiple ?? false
 
-    // Bij enkelvoudige poll: alle bestaande stemmen verwijderen. Bij meervoudige: alleen van gekozen optie.
     const newOptions: PollOption[] = msg.pollOptions.map((o, i) => ({
       ...o,
       votes: (isMultiple ? i === optionIndex : true)
@@ -100,7 +150,6 @@ export async function chatUpdatePoll(
         : o.votes,
     }))
 
-    // Toggle: zelfde optie opnieuw = stem intrekken; anders toevoegen
     if (alreadyAt !== optionIndex) {
       newOptions[optionIndex] = {
         ...newOptions[optionIndex],
@@ -114,6 +163,19 @@ export async function chatUpdatePoll(
     return newOptions
   }
   return null
+}
+
+// Read receipts: initials → last-read timestamp
+export async function chatSetRead(group: GroupId, initials: string, ts: number): Promise<void> {
+  await redis.hset(readKey(group), { [initials.toLowerCase()]: ts })
+}
+
+export async function chatGetReadMap(group: GroupId): Promise<Record<string, number>> {
+  const raw = await redis.hgetall(readKey(group))
+  if (!raw) return {}
+  return Object.fromEntries(
+    Object.entries(raw).map(([k, v]) => [k, Number(v)])
+  )
 }
 
 // Push subscriptions

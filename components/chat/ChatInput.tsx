@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { EmojiGifPanel } from './EmojiGifPanel'
 import { PollCreatorPanel } from './PollCreatorPanel'
 import { IconSmile } from '@/components/icons/NavIcons'
@@ -15,6 +15,8 @@ interface Participant {
 interface Props {
   replyTo: ChatMessage | null
   onCancelReply: () => void
+  editingMsg: ChatMessage | null
+  onCancelEdit: () => void
   onSendText: (text: string) => Promise<void>
   onSendImage: (file: File) => Promise<void>
   onSendGif: (url: string) => Promise<void>
@@ -47,7 +49,7 @@ function IconPoll({ className }: { className?: string }) {
   )
 }
 
-export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onSendGif, onSendPoll, disabled, participants = [] }: Props) {
+export function ChatInput({ replyTo, onCancelReply, editingMsg, onCancelEdit, onSendText, onSendImage, onSendGif, onSendPoll, disabled, participants = [] }: Props) {
   const [text, setText] = useState('')
   const [panel, setPanel] = useState<Panel>('none')
   const [uploading, setUploading] = useState(false)
@@ -55,6 +57,22 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
   const [mentionStart, setMentionStart] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Pre-populeer tekstvak bij edit-mode
+  useEffect(() => {
+    if (editingMsg) {
+      setText(editingMsg.text)
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus()
+          textareaRef.current.style.height = 'auto'
+          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px'
+        }
+      }, 50)
+    } else {
+      // Reset als edit geannuleerd wordt
+    }
+  }, [editingMsg?.id])
 
   function openEmojiPanel() {
     setPanel('emoji-gif')
@@ -219,6 +237,16 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
         <div className="flex items-center gap-2 px-3 py-2 bg-red-900/40 border-t border-red-500/30">
           <span className="text-xs text-red-400 flex-1">⚠️ {uploadError}</span>
           <button onClick={() => setUploadError(null)} className="text-red-400/60 hover:text-red-400 text-sm leading-none">✕</button>
+        </div>
+      )}
+      {/* Edit-mode banner */}
+      {editingMsg && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#161616] border-t border-[#2a2a2a] border-b border-[#FF6B00]/30">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] text-[#FF6B00] font-bold">✏️ Bericht bewerken</p>
+            <p className="text-[11px] text-[#888] truncate">{editingMsg.text.slice(0, 60)}</p>
+          </div>
+          <button onClick={() => { onCancelEdit(); setText('') }} className="text-[#555] hover:text-[#888] flex-shrink-0 text-lg leading-none">✕</button>
         </div>
       )}
       {/* Reply preview */}

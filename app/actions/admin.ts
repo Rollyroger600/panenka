@@ -11,6 +11,9 @@ import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
 import type { ParticipantScore } from '@/app/leaderboard/types'
 import type { OranjeVragenMap, OranjeVraag, OranjeCorrectMap, OranjeAntwoordenMap, OranjeBeoordeling, AntwoordType } from '@/lib/types/oranjeVragen'
+import { chatAddMessage } from '@/lib/kv/chat'
+import { MATCHES } from '@/lib/data/matches'
+import type { ChatMessage } from '@/lib/types/chat'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'panenka2026'
 
@@ -38,8 +41,28 @@ export async function loadResults(): Promise<Record<number, MatchResult>> {
 
 export async function saveResult(matchId: number, toto: '1' | 'X' | '2', uitslag: string): Promise<void> {
   const results = await loadResults()
+  const isNew = !results[matchId]
   results[matchId] = { toto, uitslag }
   await kvSet('results', results)
+
+  // Post automatisch een chat-bericht bij een nieuwe eindstand
+  if (isNew) {
+    const match = MATCHES.find((m) => m.id === matchId)
+    const label = match ? `${match.home} – ${match.away}` : `Wedstrijd ${matchId}`
+    const text = `⚽ **${label}**: ${uitslag}`
+    const ts = Date.now()
+    const botMsg: ChatMessage = {
+      id: `bot-${matchId}-${ts.toString(36)}`,
+      sender: 'WK 2026',
+      senderInitials: 'BOT',
+      text,
+      ts,
+      type: 'system',
+      reactions: {},
+    }
+    const groups: GroupId[] = ['og', 'asc']
+    await Promise.all(groups.map((g) => chatAddMessage(g, botMsg).catch(() => {})))
+  }
 }
 
 export async function deleteResult(matchId: number): Promise<void> {

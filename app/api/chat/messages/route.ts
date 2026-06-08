@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { chatGetMessages, chatGetRecent, chatAddMessage } from '@/lib/kv/chat'
+import {
+  chatGetMessages, chatGetRecent, chatAddMessage,
+  chatUpdateMessage, chatDeleteMessage, chatSetPinned,
+  chatGetPinned, chatGetReadMap,
+} from '@/lib/kv/chat'
 import { sendPushToGroup } from '@/lib/push'
 import type { ChatMessage } from '@/lib/types/chat'
 import type { GroupId } from '@/lib/groups'
@@ -19,11 +23,17 @@ export async function GET(req: NextRequest) {
     const since = parseInt(req.nextUrl.searchParams.get('since') ?? '0', 10)
     const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '50', 10), 100)
 
-    const messages = since > 0
-      ? await chatGetMessages(group, since, limit)
-      : await chatGetRecent(group, limit)
+    const [messages, pinnedMsgId, readMap] = await Promise.all([
+      since > 0 ? chatGetMessages(group, since, limit) : chatGetRecent(group, limit),
+      since === 0 ? chatGetPinned(group) : Promise.resolve(undefined),
+      since === 0 ? chatGetReadMap(group) : Promise.resolve(undefined),
+    ])
 
-    return NextResponse.json({ messages })
+    return NextResponse.json({
+      messages,
+      ...(pinnedMsgId !== undefined && { pinnedMsgId }),
+      ...(readMap !== undefined && { readMap }),
+    })
   } catch (err) {
     console.error('[chat/messages GET]', err)
     return NextResponse.json({ error: 'Opslag niet bereikbaar', messages: [] }, { status: 500 })
@@ -78,4 +88,50 @@ export async function POST(req: NextRequest) {
   }).catch(() => {})
 
   return NextResponse.json({ message: msg })
+}
+
+// PATCH /api/chat/messages — bewerken of vastzetten
+export async function PATCH(req: NextRequest) {
+  const jar = await cookies()
+  const initials = jar.get('participant')?.value
+  const isAdmin = jar.get('admin')?.value === 'true'
+
+  if (!initials) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
+
+  const body = await req.json()
+  const { group: groupRaw, msgId, text, pin } = body
+  const group = parseGroup(groupRaw)
+  if (!group || !msgId) return NextResponse.json({ error: 'Ontbrekende parameters' }, { status: 400 })
+
+  // Vastzetten — alleen admin
+  if (pin !== undefined) {
+    if (!isAdmin) return NextResponse.json({ error: 'Geen rechten' }, { status: 403 })
+    await chatSetPinned(group, pin ? msgId : null)
+    return NextResponse.json({ ok: true })
+  }
+
+  // Bewerken — alleen eigen berichten
+  if (typeof text !== 'string' || !text.trim()) {
+    return NextResponse.json({ error: 'Ontbrekende tekst' }, { status: 400 })
+  }
+
+  const ok = await chatUpdateMessage(group, msgId, text.trim())
+  if (!ok) return NextResponse.json({ error: 'Bericht niet gevonden' }, { status: 404 })
+  return NextResponse.json({ ok: true })
+}
+
+// DELETE /api/chat/messages — verwijderen (eigen bericht of admin)
+export async function DELETE(req: NextRequest) {
+  const jar = await cookies()
+  const initials = jar.get('participant')?.value
+  if (!initials) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
+
+  const body = await req.json()
+  const { group: groupRaw, msgId } = body
+  const group = parseGroup(groupRaw)
+  if (!group || !msgId) return NextResponse.json({ error: 'Ontbrekende parameters' }, { status: 400 })
+
+  const ok = await chatDeleteMessage(group, msgId)
+  if (!ok) return NextResponse.json({ error: 'Bericht niet gevonden' }, { status: 404 })
+  return NextResponse.json({ ok: true })
 }

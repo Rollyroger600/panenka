@@ -7,6 +7,7 @@ export default async function ChatRoute() {
   const initials = store.get('participant')?.value ?? ''
   const isDualGroup = DUAL_GROUP_INITIALS.includes(initials)
   const defaultGroup = (store.get('group')?.value ?? 'og') as GroupId
+  const isAdmin = store.get('admin')?.value === 'true'
   return (
     <div
       className="fixed inset-x-0 flex flex-col"
@@ -18,7 +19,7 @@ export default async function ChatRoute() {
         fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
       }}
     >
-      <ChatPage initials={initials} defaultGroup={defaultGroup} isDualGroup={isDualGroup} />
+      <ChatPage initials={initials} defaultGroup={defaultGroup} isDualGroup={isDualGroup} isAdmin={isAdmin} />
     </div>
   )
 }

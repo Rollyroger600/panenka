@@ -12,6 +12,7 @@ interface Props {
   initials: string
   defaultGroup: GroupId
   isDualGroup: boolean
+  isAdmin: boolean
 }
 
 function isSameDay(a: number, b: number) {
@@ -34,13 +35,16 @@ function urlBase64ToUint8Array(base64String: string) {
 const LAST_READ_KEY = (ini: string, group: GroupId) => `chat-last-read-${ini}-${group}`
 const ACTIVE_GROUP_KEY = (ini: string) => `chat-active-group-${ini}`
 
-export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
+export function ChatPage({ initials, defaultGroup, isDualGroup, isAdmin }: Props) {
   const [activeGroup, setActiveGroup] = useState<GroupId>(() => {
     try { return (localStorage.getItem(ACTIVE_GROUP_KEY(initials)) as GroupId) ?? defaultGroup }
     catch { return defaultGroup }
   })
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null)
+  const [editingMsg, setEditingMsg] = useState<ChatMessage | null>(null)
+  const [pinnedMsgId, setPinnedMsgId] = useState<string | null>(null)
+  const [readMap, setReadMap] = useState<Record<string, number>>({})
   const [error, setError] = useState<string | null>(null)
   const [firstUnreadId, setFirstUnreadId] = useState<string | null>(null)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
@@ -66,6 +70,11 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
     lastReadTsRef.current = latestTs
     try { localStorage.setItem(LAST_READ_KEY(initials, activeGroup), String(latestTs)) } catch { /* ignore */ }
     setUnreadCount(0)
+    fetch('/api/chat/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: activeGroup, ts: latestTs }),
+    }).catch(() => {})
   }
 
   function scrollToBottomAndMarkRead() {
@@ -153,6 +162,8 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
         return d
       })
       .then((d) => {
+        if (d.pinnedMsgId !== undefined) setPinnedMsgId(d.pinnedMsgId ?? null)
+        if (d.readMap) setReadMap(d.readMap)
         const msgs: ChatMessage[] = d.messages ?? []
         setMessages((prev) => {
           if (prev.length === 0) {
@@ -187,19 +198,29 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
 
   // Polling — herstart ook bij groepswisseling
   useEffect(() => {
+    let readPollCounter = 0
     const id = setInterval(async () => {
       try {
         const res = await fetch(`/api/chat/messages?since=${lastTsRef.current}&limit=50&group=${activeGroup}`)
         const d = await res.json()
         const newMsgs: ChatMessage[] = d.messages ?? []
-        if (newMsgs.length === 0) return
-        lastTsRef.current = newMsgs[newMsgs.length - 1].ts
-        setMessages((prev) => {
-          const existing = new Set(prev.map((m) => m.id))
-          const added = newMsgs.filter((m) => !existing.has(m.id))
-          return added.length ? [...prev, ...added] : prev
-        })
-        scrollToBottom()
+        if (newMsgs.length > 0) {
+          lastTsRef.current = newMsgs[newMsgs.length - 1].ts
+          setMessages((prev) => {
+            const existing = new Set(prev.map((m) => m.id))
+            const added = newMsgs.filter((m) => !existing.has(m.id))
+            return added.length ? [...prev, ...added] : prev
+          })
+          scrollToBottom()
+        }
+        // Lees read receipts elke ~30 sec (elke 6 polls)
+        readPollCounter++
+        if (readPollCounter >= 6) {
+          readPollCounter = 0
+          const rr = await fetch(`/api/chat/read?group=${activeGroup}`)
+          const rd = await rr.json()
+          if (rd.readMap) setReadMap(rd.readMap)
+        }
       } catch { /* ignore */ }
     }, POLL_INTERVAL)
     return () => clearInterval(id)
@@ -231,6 +252,10 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
   }, [])
 
   async function handleSendText(text: string) {
+    if (editingMsg) {
+      await handleSaveEdit(text)
+      return
+    }
     const body = {
       group: activeGroup,
       text,
@@ -323,6 +348,40 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
     }
   }
 
+  async function handleSaveEdit(text: string) {
+    if (!editingMsg) return
+    const res = await fetch('/api/chat/messages', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: activeGroup, msgId: editingMsg.id, text }),
+    })
+    if (!res.ok) throw new Error('Bewerken mislukt')
+    setMessages((prev) => prev.map((m) =>
+      m.id === editingMsg.id ? { ...m, text, editedAt: Date.now() } : m
+    ))
+    setEditingMsg(null)
+  }
+
+  async function handleDelete(msgId: string) {
+    const res = await fetch('/api/chat/messages', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: activeGroup, msgId }),
+    })
+    if (!res.ok) return
+    setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, deleted: true, text: '' } : m))
+  }
+
+  async function handlePin(msgId: string, pin: boolean) {
+    await fetch('/api/chat/messages', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: activeGroup, msgId, pin }),
+    })
+    setPinnedMsgId(pin ? msgId : null)
+    setMessages((prev) => prev.map((m) => ({ ...m, pinned: pin ? m.id === msgId : false })))
+  }
+
   async function enableNotifications() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
       return
@@ -406,6 +465,12 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([e]) => e)
   }, [messages, initials])
 
+  // readBy per bericht: namen van anderen die het gelezen hebben
+  const pinnedMsg = useMemo(
+    () => (pinnedMsgId ? messages.find((m) => m.id === pinnedMsgId) ?? null : null),
+    [pinnedMsgId, messages],
+  )
+
   // Render with date dividers + "nieuwe berichten" divider
   const rendered: React.ReactNode[] = []
   let lastDay = 0
@@ -427,16 +492,27 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
         </div>,
       )
     }
+    const isOwn = msg.senderInitials === initials
+    const readBy = isOwn
+      ? Object.entries(readMap)
+          .filter(([ini, ts]) => ini !== initials.toLowerCase() && ts >= msg.ts)
+          .map(([ini]) => participantsMap[ini] ?? participantsMap[ini.toUpperCase()] ?? ini)
+      : []
     rendered.push(
       <ChatMessageBubble
         key={msg.id}
         msg={msg}
-        isOwn={msg.senderInitials === initials}
+        isOwn={isOwn}
+        isAdmin={isAdmin}
         currentInitials={initials}
         participants={participantsMap}
+        readBy={readBy}
         onReact={handleReact}
         onReply={setReplyTo}
         onVotePoll={handleVotePoll}
+        onEdit={setEditingMsg}
+        onDelete={handleDelete}
+        onPin={handlePin}
         topEmojis={topEmojis}
       />,
     )
@@ -445,6 +521,20 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
   return (
     <>
     <div className="flex flex-col h-full">
+      {/* Vastgezet bericht banner */}
+      {pinnedMsg && !pinnedMsg.deleted && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#1a1a1a] border-b border-[#2a2a2a]">
+          <span className="text-[#FF6B00] text-sm flex-shrink-0">📌</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] text-[#FF6B00] font-bold">Vastgezet</p>
+            <p className="text-[12px] text-[#aaa] truncate">{pinnedMsg.text || (pinnedMsg.type === 'image' ? '📷 Afbeelding' : pinnedMsg.type === 'gif' ? '🎞️ GIF' : '...')}</p>
+          </div>
+          {isAdmin && (
+            <button onClick={() => handlePin(pinnedMsg.id, false)} className="text-[#555] hover:text-[#888] flex-shrink-0 text-sm">✕</button>
+          )}
+        </div>
+      )}
+
       {/* Messages + scroll-naar-beneden knop */}
       <div className="flex-1 relative overflow-hidden">
         <div
@@ -485,6 +575,8 @@ export function ChatPage({ initials, defaultGroup, isDualGroup }: Props) {
       <ChatInput
         replyTo={replyTo}
         onCancelReply={() => setReplyTo(null)}
+        editingMsg={editingMsg}
+        onCancelEdit={() => setEditingMsg(null)}
         onSendText={handleSendText}
         onSendImage={handleSendImage}
         onSendGif={handleSendGif}

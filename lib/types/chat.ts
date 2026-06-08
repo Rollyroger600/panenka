@@ -1,4 +1,4 @@
-export type ChatMessageType = 'text' | 'image' | 'gif' | 'poll'
+export type ChatMessageType = 'text' | 'image' | 'gif' | 'poll' | 'system'
 
 export interface PollOption {
   text: string
@@ -26,4 +26,7 @@ export interface ChatMessage {
   pollQuestion?: string
   pollOptions?: PollOption[]
   pollMultiple?: boolean
+  deleted?: boolean
+  editedAt?: number
+  pinned?: boolean
 }
