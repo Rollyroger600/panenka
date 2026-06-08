@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-08 — Chat icoon vervangen (Claude Code)
+
+Navigatie-icoon voor de chat-tab vervangen door custom SVG (drie cirkels in een spreekballon).
+
+- `components/icons/NavIcons.tsx`: `IconChat` — nieuw SVG-pad op basis van `icon-chat.svg`, `viewBox` aangepast naar `0 0 91.23 91.32`, `fill="currentColor"` zodat actief/inactief kleuren behouden blijven.
+
+---
+
 ### 2026-06-08 — Export tokens fix + chat upload error handling + Vercel Blob geconfigureerd (Claude Code)
 
 **Bugfix: tokens ontbraken in export bij standaardwaarde (1)**
