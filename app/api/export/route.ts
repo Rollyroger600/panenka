@@ -200,7 +200,7 @@ export async function GET(req: Request) {
         const row = rowForMatch(matchId)
         const odds = MATCH_ODDS[matchId]
 
-        if (pred.tokens != null) cv(pouleSheet, `B${row}`, pred.tokens)
+        cv(pouleSheet, `B${row}`, pred.tokens ?? 1)
 
         if (pred.toto) {
           cv(pouleSheet, `Q${row}`, totoLabel(pred.toto, matchId))

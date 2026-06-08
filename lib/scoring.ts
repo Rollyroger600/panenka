@@ -115,7 +115,9 @@ export function scoreParticipant(
   for (const [idStr, pred] of Object.entries(predictions)) {
     const matchId = parseInt(idStr)
     const actual = results[matchId]
-    if (!actual || !pred.tokens) continue
+    if (!actual) continue
+    const effectiveTokens = pred.tokens ?? 1
+    if (effectiveTokens === 0) continue
 
     const isKoMatch = matchId >= 73
     const odds = isKoMatch ? KO_MATCH_ODDS[matchId] : MATCH_ODDS[matchId]
@@ -124,11 +126,11 @@ export function scoreParticipant(
     let matchScore = 0
     if (pred.toto && pred.toto === actual.toto) {
       const totoOdd = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
-      matchScore += pred.tokens * totoOdd
+      matchScore += effectiveTokens * totoOdd
     }
     if (pred.uitslag && pred.uitslag === actual.uitslag) {
       const scoreOdd = odds.scores[pred.uitslag] ?? 0
-      matchScore += pred.tokens * scoreOdd
+      matchScore += effectiveTokens * scoreOdd
     }
 
     if (isKoMatch) {

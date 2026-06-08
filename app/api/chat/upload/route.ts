@@ -30,6 +30,12 @@ export async function POST(req: NextRequest) {
   const ext = file.name.split('.').pop() ?? 'jpg'
   const filename = `chat/${initials.toLowerCase()}-${Date.now()}.${ext}`
 
-  const blob = await put(filename, file, { access: 'public' })
-  return NextResponse.json({ url: blob.url })
+  try {
+    const blob = await put(filename, file, { access: 'public' })
+    return NextResponse.json({ url: blob.url })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('Blob upload fout:', msg)
+    return NextResponse.json({ error: `Blob fout: ${msg}` }, { status: 500 })
+  }
 }

@@ -51,6 +51,7 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
   const [text, setText] = useState('')
   const [panel, setPanel] = useState<Panel>('none')
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
   const [mentionStart, setMentionStart] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -183,6 +184,10 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
       setPanel('none')
       try {
         await onSendImage(file)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Upload mislukt'
+        setUploadError(msg)
+        setTimeout(() => setUploadError(null), 5000)
       } finally {
         setUploading(false)
       }
@@ -209,6 +214,13 @@ export function ChatInput({ replyTo, onCancelReply, onSendText, onSendImage, onS
 
   return (
     <div className="border-t border-[#2a2a2a] bg-[#0D0D0D]">
+      {/* Upload foutmelding */}
+      {uploadError && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-900/40 border-t border-red-500/30">
+          <span className="text-xs text-red-400 flex-1">⚠️ {uploadError}</span>
+          <button onClick={() => setUploadError(null)} className="text-red-400/60 hover:text-red-400 text-sm leading-none">✕</button>
+        </div>
+      )}
       {/* Reply preview */}
       {replyTo && (
         <div className="flex items-center gap-2 px-3 py-2 bg-[#161616] border-t border-[#2a2a2a] border-b border-[#FF6B00]/30">

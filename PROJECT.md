@@ -845,6 +845,28 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-08 — Export tokens fix + chat upload error handling + Vercel Blob geconfigureerd (Claude Code)
+
+**Bugfix: tokens ontbraken in export bij standaardwaarde (1)**
+
+Deelnemers die de tokenschuifregelaar niet aanpassen laten `tokens: null` in de store staan. De UI toont dit als `1` via `pred.tokens ?? 1`, maar de export schreef niks naar kolom B en de scoring sloeg deze voorspellingen volledig over.
+
+- `app/api/export/route.ts`: `if (pred.tokens != null) cv(...)` → `cv(pouleSheet, \`B${row}\`, pred.tokens ?? 1)` — schrijft altijd de effectieve tokenwaarde.
+- `lib/scoring.ts`: `!pred.tokens` → `effectiveTokens = pred.tokens ?? 1` — voorspellingen met null-tokens worden nu correct gescoord met 1 token.
+
+**Chat: zichtbare foutmelding bij mislukte foto-upload**
+
+Fouten in `onSendImage` werden stilzwijgend geslikt — de gebruiker zag niets als de upload mislukte.
+
+- `components/chat/ChatInput.tsx`: `try/finally` uitgebreid met `catch` → rode foutbanner boven de inputbalk, verdwijnt na 5 seconden.
+- `app/api/chat/upload/route.ts`: `put()` gewrapped in try/catch → geeft nu een leesbare foutmelding terug als de Blob-upload faalt.
+
+**Vercel Blob store aangemaakt en gekoppeld**
+
+De root cause van het niet kunnen versturen van afbeeldingen: `BLOB_READ_WRITE_TOKEN` ontbrak in de Vercel-projectconfiguratie. Blob store `panenka-blob` aangemaakt (regio FRA1, Public) en `BLOB_READ_WRITE_TOKEN` + `BLOB_STORE_ID` toegevoegd als environment variables.
+
+---
+
 ### 2026-06-07 — KO bugfix: alle landenpickers omgezet naar verticale grid (Claude Code)
 
 **Bugfix: landenpickers R16 t/m Winnaar waren onbruikbaar op sommige apparaten**
