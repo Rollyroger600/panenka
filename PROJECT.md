@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-08 — Fix: Fantasy squad hydratatie bij laden (stale KV data) (Claude Code)
+
+**Probleem:** De KV store slaat volledige Player-objecten op (inclusief `leagueId`, `league`, `club`). Na een spelerstransfer die in `players.ts` werd bijgewerkt, bevatte het opgeslagen squad verouderde data — waardoor validatie foutief een competitie-overtreding meldde.
+
+**Oplossing in `app/actions/fantasy.ts`:**
+- Bij `loadFantasy()` worden alle Player-objecten nu gehydrateerd vanuit `WK_PLAYERS` op basis van `player.id`
+- `PLAYER_BY_ID` lookup-map aangemaakt als module-level constante
+- `hydrateSquad()` helper: per slot opzoeken in current `WK_PLAYERS`; onbekende spelers (niet meer in lijst) vallen terug op opgeslagen data
+- Resultaat: validatie en weergave gebruiken altijd actuele club/league/leagueId, ook als squad vóór een transfer werd opgeslagen
+
 ### 2026-06-08 — Chat uitbreidingen: verwijderen/bewerken, wedstrijdberichten, leesbevestiging, kopiëren, vastzetten (Claude Code)
 
 **Verwijderen + bewerken van eigen berichten**
