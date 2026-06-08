@@ -845,6 +845,36 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-08 — Chat uitbreidingen: verwijderen/bewerken, wedstrijdberichten, leesbevestiging, kopiëren, vastzetten (Claude Code)
+
+**Verwijderen + bewerken van eigen berichten**
+- Long-press menu toont acties per berichttype: 📋 Kopiëren, ✏️ Bewerken (tekst), 📌 Vastzetten (admin), 🗑️ Verwijderen (eigen of admin)
+- Verwijderd bericht toont "Bericht verwijderd" (context van replies intact)
+- Bewerken: banner + pre-gevuld tekstvak, na opslaan staat "(bewerkt)" achter de timestamp
+- `lib/types/chat.ts`: `deleted?`, `editedAt?`, `pinned?` toegevoegd; type `'system'` toegevoegd
+- `lib/kv/chat.ts`: `chatUpdateMessage`, `chatDeleteMessage`, `chatSetPinned`, `chatGetPinned`, `chatSetRead`, `chatGetReadMap` toegevoegd; generieke `chatReplaceMessage` helper
+- `app/api/chat/messages/route.ts`: PATCH (bewerken + vastzetten) en DELETE endpoints toegevoegd; GET geeft ook `pinnedMsgId` en `readMap` terug
+- `app/api/chat/read/route.ts`: nieuw — GET + POST voor read receipts
+
+**Automatische wedstrijdberichten**
+- Bij opslaan van een nieuw wedstrijdresultaat in de admin → automatisch een systeem-bericht in beide groepen (`og` + `asc`)
+- Weergegeven als gecentreerde pill: `⚽ **Nederland – Argentinië**: 2–1`
+- `app/actions/admin.ts`: `saveResult` post bot-bericht bij nieuwe eindstanden
+
+**Leesbevestiging**
+- Eigen berichten tonen "Gezien door Naam1, Naam2" als anderen het gelezen hebben
+- Read receipts opgeslagen in Redis per deelnemer/groep; gepolld elke ~30 sec
+
+**Vastzetten (admin)**
+- Admin kan bericht vastzetten via long-press menu → banner bovenaan de chat
+- Admin kan losmaken via ✕ in de banner
+
+**ChatInput edit-mode**
+- `editingMsg` prop + banner "Bericht bewerken"; annuleren via ✕ of versturen slaat op
+- `components/chat/ChatInput.tsx`, `components/chat/ChatPage.tsx`, `components/chat/ChatMessage.tsx`: alle props en handlers bijgewerkt
+
+---
+
 ### 2026-06-08 — Chat icoon vervangen (Claude Code)
 
 Navigatie-icoon voor de chat-tab vervangen door custom SVG (drie cirkels in een spreekballon).
