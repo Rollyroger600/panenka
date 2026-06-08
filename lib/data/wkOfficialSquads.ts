@@ -736,7 +736,7 @@ export const WK_OFFICIAL_SQUADS: Record<string, WKSquadPlayer[]> = {
   ],
   'Nederland': [
     { fifaName: 'VERBRUGGEN Bart', position: 'GK', dob: '2002-08-18' },
-    { fifaName: 'TIMBER Jurrien', position: 'DF', dob: '2001-06-17' },
+    { fifaName: 'GEERTRUIDA Lutsharel', position: 'DF', dob: '2000-07-18' },
     { fifaName: 'DE ROON Marten', position: 'MF', dob: '1991-03-29' },
     { fifaName: 'VAN DIJK Virgil', position: 'DF', dob: '1991-07-08' },
     { fifaName: 'AKE Nathan', position: 'DF', dob: '1995-02-18' },

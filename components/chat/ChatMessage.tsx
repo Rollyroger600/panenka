@@ -113,6 +113,34 @@ interface Props {
   topEmojis: string[]
 }
 
+function renderMessageText(text: string, isOwn: boolean) {
+  const parts = text.split(/(https?:\/\/[^\s<>'"]+|@\w+)/g)
+  return parts.map((part, i) => {
+    if (/^@\w+$/.test(part)) {
+      return (
+        <span key={i} className={isOwn ? 'font-bold text-white bg-white/25 rounded px-1' : 'font-semibold text-[#FF8C33]'}>
+          {part}
+        </span>
+      )
+    }
+    if (/^https?:\/\//.test(part)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`underline break-all ${isOwn ? 'text-white/90' : 'text-[#FF8C33]'}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      )
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
 function timeStr(ts: number) {
   return new Date(ts).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
 }
@@ -374,13 +402,7 @@ export function ChatMessageBubble({ msg, isOwn, isAdmin, currentInitials, partic
               )}
 
               {msg.text && (
-                <span>
-                  {msg.text.split(/(@\w+)/g).map((part, i) =>
-                    /^@\w+$/.test(part)
-                      ? <span key={i} className={isOwn ? 'font-bold text-white bg-white/25 rounded px-1' : 'font-semibold text-[#FF8C33]'}>{part}</span>
-                      : <span key={i}>{part}</span>,
-                  )}
-                </span>
+                <span>{renderMessageText(msg.text, isOwn)}</span>
               )}
 
               <div className={`flex items-center gap-1.5 mt-0.5 ${isOwn ? 'justify-end' : 'justify-start'}`}>

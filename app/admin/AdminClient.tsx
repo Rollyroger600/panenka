@@ -24,6 +24,8 @@ import { PARTICIPANTS } from '@/lib/participants'
 import type { OranjeVragenMap, OranjeCorrectMap, OranjeBeoordeling, OranjeAntwoordenMap, AntwoordType } from '@/lib/types/oranjeVragen'
 import { ANTWOORD_TYPE_LABELS, MINUUT_OPTIES, parseCorrectWaarden } from '@/lib/types/oranjeVragen'
 import { WK_PLAYERS } from '@/lib/data/players'
+import { ESPN_MATCH_IDS } from '@/lib/data/espnMatchIds'
+import type { EspnImportPreview } from '@/app/api/admin/espn-import/route'
 
 const MUTED = '#7e7667'
 
@@ -135,6 +137,16 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     delete updated[playerName]
     setFantasyStats(updated)
     await saveFantasyStats(updated)
+  }
+
+  async function handleEspnImport(delta: Record<string, { goals: number; assists: number }>) {
+    const merged = { ...fantasyStats }
+    for (const [name, stats] of Object.entries(delta)) {
+      const existing = merged[name] ?? { goals: 0, assists: 0 }
+      merged[name] = { goals: existing.goals + stats.goals, assists: existing.assists + stats.assists }
+    }
+    setFantasyStats(merged)
+    await saveFantasyStats(merged)
   }
 
   async function handleCompute() {
@@ -299,6 +311,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                   saving={saving === m.id}
                   onSave={(toto, uitslag) => handleSaveResult(m.id, toto, uitslag)}
                   onDelete={() => handleDeleteResult(m.id)}
+                  onEspnImport={handleEspnImport}
                 />
               ))}
             </div>
@@ -359,6 +372,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
             onSaveResult={(matchId, toto, uitslag) => handleSaveResult(matchId, toto, uitslag)}
             onDeleteResult={(matchId) => handleDeleteResult(matchId)}
             savingResult={saving}
+            onEspnImport={handleEspnImport}
           />
         )}
 
@@ -760,7 +774,7 @@ const KO_ROUND_LABELS: Record<string, string> = {
 }
 
 function KoMatchesTab({
-  koMatchList, koMatchTeams, results, saving, onSaveTeam, onDeleteTeam, onSaveResult, onDeleteResult, savingResult,
+  koMatchList, koMatchTeams, results, saving, onSaveTeam, onDeleteTeam, onSaveResult, onDeleteResult, savingResult, onEspnImport,
 }: {
   koMatchList: import('@/lib/data/matches').Match[]
   koMatchTeams: KoMatchTeams
@@ -771,6 +785,7 @@ function KoMatchesTab({
   onSaveResult: (matchId: number, toto: '1' | 'X' | '2', uitslag: string) => Promise<void>
   onDeleteResult: (matchId: number) => Promise<void>
   savingResult: number | null
+  onEspnImport?: (delta: Record<string, { goals: number; assists: number }>) => Promise<void>
 }) {
   const [editHome, setEditHome] = useState<Record<number, string>>({})
   const [editAway, setEditAway] = useState<Record<number, string>>({})
@@ -849,6 +864,7 @@ function KoMatchesTab({
                           saving={savingResult === m.id}
                           onSave={(toto, uitslag) => onSaveResult(m.id, toto, uitslag)}
                           onDelete={() => onDeleteResult(m.id)}
+                          onEspnImport={onEspnImport}
                         />
                       </div>
                     )}
@@ -865,19 +881,52 @@ function KoMatchesTab({
 
 // ── MatchResultRow ─────────────────────────────────────────────────────────────
 
-function MatchResultRow({ match, result, saving, onSave, onDelete }: {
+function MatchResultRow({ match, result, saving, onSave, onDelete, onEspnImport }: {
   match: typeof MATCHES[0]
   result: MatchResult | null
   saving: boolean
   onSave: (toto: '1' | 'X' | '2', uitslag: string) => void
   onDelete: () => void
+  onEspnImport?: (delta: Record<string, { goals: number; assists: number }>) => Promise<void>
 }) {
   const [toto, setToto] = useState<'1' | 'X' | '2'>(result?.toto ?? '1')
   const [uitslag, setUitslag] = useState(result?.uitslag ?? '')
   const [showPicker, setShowPicker] = useState(false)
   const [customUitslag, setCustomUitslag] = useState('')
+  const [espnState, setEspnState] = useState<'idle' | 'loading' | 'preview' | 'error'>('idle')
+  const [espnData, setEspnData] = useState<EspnImportPreview | null>(null)
+  const [espnErr, setEspnErr] = useState('')
+  const [importing, setImporting] = useState(false)
 
+  const hasEspnId = !!ESPN_MATCH_IDS[match.id]
   const hasOdds = Object.keys(MATCH_ODDS[match.id]?.scores ?? {}).length > 0
+
+  async function fetchEspn() {
+    setEspnState('loading')
+    setEspnData(null)
+    try {
+      const res = await fetch(`/api/admin/espn-import?matchId=${match.id}`)
+      const data = await res.json()
+      if (!res.ok) { setEspnErr(data.error ?? 'Onbekende fout'); setEspnState('error'); return }
+      setEspnData(data)
+      setEspnState('preview')
+    } catch {
+      setEspnErr('Netwerk fout')
+      setEspnState('error')
+    }
+  }
+
+  async function applyEspnStats() {
+    if (!espnData || !onEspnImport) return
+    const delta: Record<string, { goals: number; assists: number }> = {}
+    for (const p of espnData.matched) {
+      delta[p.internalName] = { goals: p.goals, assists: p.assists }
+    }
+    setImporting(true)
+    await onEspnImport(delta)
+    setImporting(false)
+    setEspnState('idle')
+  }
 
   function handleSelect(score: string) {
     setUitslag(score)
@@ -952,6 +1001,21 @@ function MatchResultRow({ match, result, saving, onSave, onDelete }: {
           {uitslag || 'Uitslag'}
         </button>
 
+        {/* ESPN knop */}
+        {hasEspnId && (
+          <button
+            onClick={() => espnState === 'idle' || espnState === 'error' ? fetchEspn() : setEspnState('idle')}
+            disabled={espnState === 'loading'}
+            className={`h-9 px-2.5 rounded-lg border text-xs font-bold transition-colors ${
+              espnState === 'preview'
+                ? 'bg-[#1a6b8a]/20 border-[#1a6b8a]/60 text-[#4db8d4]'
+                : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#4db8d4] text-[#555]'
+            }`}
+          >
+            {espnState === 'loading' ? '⏳' : '📡'}
+          </button>
+        )}
+
         {/* Opslaan */}
         <button
           onClick={() => uitslag.trim() && onSave(toto, uitslag.trim())}
@@ -984,6 +1048,80 @@ function MatchResultRow({ match, result, saving, onSave, onDelete }: {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ESPN preview panel */}
+      {espnState === 'error' && (
+        <div className="px-3 pb-3">
+          <p className="text-xs text-[#E74C3C] px-1">{espnErr}</p>
+        </div>
+      )}
+      {espnState === 'preview' && espnData && (
+        <div className="px-3 pb-3 border-t border-[#1a1a1a]">
+          <div className="rounded-xl border border-[#1a6b8a]/30 p-3" style={{ background: 'rgba(10,20,26,0.85)' }}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-[#4db8d4] uppercase font-heading tracking-wide">ESPN · {espnData.status}</span>
+              <button onClick={() => setEspnState('idle')} className="text-[#444] hover:text-[#888] text-xs leading-none">✕</button>
+            </div>
+
+            {/* Uitslag */}
+            <div className="flex items-center gap-2 mb-3">
+              <span className="font-heading text-lg font-bold text-white">{espnData.uitslag}</span>
+              <span className="text-[10px] bg-[#FF6B00]/20 text-[#FF6B00] font-bold px-2 py-0.5 rounded">{espnData.toto}</span>
+              <button
+                onClick={() => { setToto(espnData.toto); setUitslag(espnData.uitslag) }}
+                className="ml-auto text-[10px] bg-[#1e1e1e] border border-[#333] text-white px-2 py-1 rounded-lg hover:border-[#FF6B00] transition-colors"
+              >
+                Uitslag overnemen
+              </button>
+            </div>
+
+            {/* Gematchte spelers */}
+            {espnData.matched.length > 0 && (
+              <div className="flex flex-col gap-1 mb-2">
+                {espnData.matched.map((p) => (
+                  <div key={p.espnName} className="flex items-center gap-2 text-xs">
+                    <span className="text-white font-bold flex-1 truncate">{p.internalName}</span>
+                    {p.goals > 0 && <span className="text-[#FF6B00]">⚽ {p.goals}</span>}
+                    {p.assists > 0 && <span className="text-[#888]">🅰 {p.assists}</span>}
+                    <span className="text-[10px] text-[#444] shrink-0">{p.country}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Niet gematchte spelers */}
+            {espnData.unmatched.length > 0 && (
+              <div className="flex flex-col gap-1 mb-2 pt-2 border-t border-[#1a2a30]">
+                <span className="text-[9px] text-[#E74C3C] uppercase font-heading tracking-wide">Niet gevonden in WK-spelers</span>
+                {espnData.unmatched.map((p) => (
+                  <div key={p.espnName} className="flex items-center gap-2 text-xs">
+                    <span className="text-[#444] flex-1 truncate">{p.espnName}</span>
+                    {p.goals > 0 && <span className="text-[#555]">⚽ {p.goals}</span>}
+                    {p.assists > 0 && <span className="text-[#555]">🅰 {p.assists}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Geen goals */}
+            {espnData.matched.length === 0 && espnData.unmatched.length === 0 && (
+              <p className="text-xs text-[#444] italic mb-2">Geen doelpunten of assists gevonden</p>
+            )}
+
+            {/* Fantasy stats importeren */}
+            {espnData.matched.length > 0 && onEspnImport && (
+              <button
+                onClick={applyEspnStats}
+                disabled={importing}
+                className="w-full mt-1 py-2 rounded-lg bg-[#2ECC71]/15 text-[#2ECC71] text-xs font-bold hover:bg-[#2ECC71]/25 disabled:opacity-50 transition-colors"
+              >
+                {importing ? 'Bezig…' : `+ Fantasy stats toevoegen (${espnData.matched.length} speler${espnData.matched.length !== 1 ? 's' : ''})`}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

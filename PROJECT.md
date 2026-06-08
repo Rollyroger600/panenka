@@ -845,6 +845,23 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-09 — Features: ESPN auto-import, klikbare links in chat, WK-selectie Nederland gewijzigd (Claude Code)
+
+**ESPN auto-import in admin (optie 1)**
+- Nieuwe API route `app/api/admin/espn-import/route.ts`: haalt ESPN-data op voor een wedstrijd (auth-beveiligd, no-cache), mapt spelernamen via `WK_PLAYERS.middleName`/`fullName`, geeft uitslag + doelpuntenmakers/assists terug
+- 📡 knop in elke `MatchResultRow` (verschijnt zodra `ESPN_MATCH_IDS[matchId]` is ingevuld)
+- Inline preview panel: uitslag, toto, gematchte spelers (met intern naam + land), ongematchte spelers apart in rood
+- "Uitslag overnemen" → vult toto/uitslag-velden in; "Fantasy stats toevoegen" → mergt delta in cumulatieve `fantasy_stats` KV
+- Werkt in zowel het Uitslagen-tab als KO Wedstrijden-tab
+
+**Klikbare links in chat**
+- `components/chat/ChatMessage.tsx`: `renderMessageText()` helper splitst tekst op URLs (`https?://...`) én `@mentions`
+- URLs worden als `<a target="_blank">` gerenderd; styling past bij berichtkleur (wit bij eigen, oranje bij anderen)
+
+**WK-selectie Nederland: Timber → Geertruida**
+- `lib/data/wkOfficialSquads.ts`: `TIMBER Jurrien` vervangen door `GEERTRUIDA Lutsharel` (dob: 2000-07-18)
+- `scripts/wk_override_ids.txt`: ID 251805 → 241187
+
 ### 2026-06-08 — Fix: Fantasy squad hydratatie bij laden (stale KV data) (Claude Code)
 
 **Probleem:** De KV store slaat volledige Player-objecten op (inclusief `leagueId`, `league`, `club`). Na een spelerstransfer die in `players.ts` werd bijgewerkt, bevatte het opgeslagen squad verouderde data — waardoor validatie foutief een competitie-overtreding meldde.
