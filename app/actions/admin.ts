@@ -232,6 +232,85 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
   return scores
 }
 
+// ── Voortgang deelnemers ──────────────────────────────────────────────────────
+
+export type VoortgangEntry = {
+  name: string
+  initials: string
+  totoCount: number
+  uitslagCount: number
+  tokensBudget: number
+  tokensUsed: number
+  koLandenCount: number
+  fantasyCount: number
+  oranjeCount: number
+  oranjeTotal: number
+}
+
+export async function loadVoortgang(groupId: GroupId = 'og'): Promise<VoortgangEntry[]> {
+  const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
+  const oranjeVragen = await loadOranjeVragenAdmin(groupId)
+
+  // Collect all published questions: { matchId, authorKey }
+  const published: { matchId: number; authorKey: string }[] = []
+  for (const [matchIdStr, matchVragen] of Object.entries(oranjeVragen)) {
+    for (const [authorKey, vraag] of Object.entries(matchVragen)) {
+      if (vraag.gepubliceerd) published.push({ matchId: parseInt(matchIdStr), authorKey })
+    }
+  }
+
+  const entries = await Promise.all(
+    groupParticipants.map(async (p) => {
+      const initialsLC = p.initials.toLowerCase()
+      const [predictions, knockoutPicks, fantasyData, antwoorden] = await Promise.all([
+        kvGet<Record<number, Prediction>>(participantKey('predictions', p.initials)),
+        kvGet<KnockoutPicks>(participantKey('knockout', p.initials)),
+        kvGet<{ squad: Record<string, unknown> }>(participantKey('fantasy', p.initials)),
+        kvGet<OranjeAntwoordenMap>(groupKey('oranje_antwoorden', groupId, p.initials)),
+      ])
+
+      const preds = predictions ?? {}
+      let totoCount = 0, uitslagCount = 0, pouleTokens = 0
+      for (const [idStr, pred] of Object.entries(preds)) {
+        if (parseInt(idStr) <= 72) {
+          if (pred.toto !== null) totoCount++
+          if (pred.uitslag !== null && pred.uitslag !== '') uitslagCount++
+          pouleTokens += pred.tokens ?? 1
+        }
+      }
+
+      let koLandenCount = 0, koTokens = 0
+      for (const slot of Object.values(knockoutPicks ?? {})) {
+        if (slot.country) { koLandenCount++; koTokens += slot.tok }
+      }
+
+      const fantasyCount = Object.values(fantasyData?.squad ?? {}).filter(v => v !== null).length
+
+      // Oranje: count answered published questions from others
+      const ant = antwoorden ?? {}
+      const oranjeTotal = published.filter(q => q.authorKey !== initialsLC).length
+      const oranjeCount = published.filter(
+        q => q.authorKey !== initialsLC && ant[q.matchId]?.[q.authorKey] !== undefined
+      ).length
+
+      return {
+        name: p.name,
+        initials: p.initials,
+        totoCount,
+        uitslagCount,
+        tokensBudget: 335 + p.extra,
+        tokensUsed: pouleTokens + koTokens,
+        koLandenCount,
+        fantasyCount,
+        oranjeCount,
+        oranjeTotal,
+      }
+    })
+  )
+
+  return entries
+}
+
 // ── Token diagnose ────────────────────────────────────────────────────────────
 
 export type TokenUsageEntry = {

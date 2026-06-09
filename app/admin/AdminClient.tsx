@@ -10,9 +10,9 @@ import {
   saveResult, deleteResult, saveKoResults, saveKoMatchTeams,
   saveOranjeResults, computeAndSaveScores,
   updateOranjeVraag, saveOranjeCorrect, saveOranjeBeoordeling,
-  saveFantasyStats, setAdminGroup, loadAllTokenUsage,
+  saveFantasyStats, setAdminGroup, loadAllTokenUsage, loadVoortgang,
 } from '@/app/actions/admin'
-import type { KoMatchTeams, TokenUsageEntry } from '@/app/actions/admin'
+import type { KoMatchTeams, TokenUsageEntry, VoortgangEntry } from '@/app/actions/admin'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
@@ -35,7 +35,7 @@ const NED_MATCHES = [
   { id: 58, label: 'TUN – NED (26 jun)' },
 ]
 
-type Tab = 'matches' | 'knockout' | 'ko_matches' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday' | 'tokens'
+type Tab = 'matches' | 'knockout' | 'ko_matches' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday' | 'tokens' | 'voortgang'
 
 interface Props {
   groupId: GroupId
@@ -64,6 +64,8 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   const [computing, setComputing] = useState(false)
   const [tokenUsage, setTokenUsage] = useState<TokenUsageEntry[] | null>(null)
   const [loadingTokens, setLoadingTokens] = useState(false)
+  const [voortgang, setVoortgang] = useState<VoortgangEntry[] | null>(null)
+  const [loadingVoortgang, setLoadingVoortgang] = useState(false)
   const [search, setSearch] = useState('')
   const [saving, setSaving] = useState<number | null>(null)
   const [fantasyStats, setFantasyStats] = useState<FantasyStats>(initialFantasyStats)
@@ -167,6 +169,13 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     setTab('tokens')
   }
 
+  async function handleLoadVoortgang() {
+    setLoadingVoortgang(true)
+    const data = await loadVoortgang(groupId)
+    setVoortgang(data)
+    setLoadingVoortgang(false)
+  }
+
   async function handleExport() {
     const res = await fetch(`/api/export?group=${groupId}`)
     if (!res.ok) { alert(`Export mislukt (HTTP ${res.status}):\n${await res.text() || '(geen foutmelding)'}`) ; return }
@@ -241,6 +250,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     { id: 'links',      label: 'Links' },
     { id: 'matchday',   label: '📅 Matchday' },
     { id: 'tokens',     label: '🪙 Tokens' },
+    { id: 'voortgang',  label: '✅ Voortgang' },
   ]
 
   return (
@@ -618,6 +628,78 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                 </div>
                 <p className="mt-3 text-[10px] text-[#444]">
                   Rood = te veel ingezet • Groen = nog ruimte over • {tokenUsage.filter(e => e.over > 0).length} deelnemer(s) over budget
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Voortgang deelnemers ───────────────────────────────────────────────── */}
+        {tab === 'voortgang' && (
+          <div>
+            {!voortgang ? (
+              <div className="flex flex-col items-center gap-4 py-8">
+                <p className="text-[#555] text-sm">Laad voortgang voor alle deelnemers in deze groep.</p>
+                <button
+                  onClick={handleLoadVoortgang}
+                  disabled={loadingVoortgang}
+                  className="px-4 py-2 rounded-lg bg-[#FF6B00] text-white text-sm font-bold hover:bg-[#FF8C33] disabled:opacity-50 transition-colors"
+                >
+                  {loadingVoortgang ? 'Laden…' : '✅ Laad voortgang'}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-[#555] text-xs">Groen = klaar · Oranje = deels · Grijs = nog niet begonnen</p>
+                  <button
+                    onClick={handleLoadVoortgang}
+                    disabled={loadingVoortgang}
+                    className="text-[10px] px-2 py-1 rounded bg-[#1e1e1e] border border-[#333] text-[#888] hover:text-white transition-colors"
+                  >
+                    ↺ Herlaad
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <div className="rounded-xl border border-[#2a2a2a] overflow-hidden min-w-[580px]" style={{ background: 'rgba(22,22,22,0.82)' }}>
+                    <div className="grid grid-cols-[1fr_3.5rem_3.5rem_4.5rem_3.5rem_3.5rem_2.5rem] gap-1 px-3 py-2 text-[10px] text-[#444] uppercase" style={{ background: 'rgba(10,10,10,0.75)' }}>
+                      <span>Naam</span>
+                      <span className="text-center">Toto</span>
+                      <span className="text-center">Uitsl</span>
+                      <span className="text-center">Tokens</span>
+                      <span className="text-center">KO</span>
+                      <span className="text-center">Fantasy</span>
+                      <span className="text-center">🟠</span>
+                    </div>
+                    {voortgang.map((entry) => {
+                      const cel = (count: number, total: number) => {
+                        const done = count === total
+                        const none = count === 0
+                        const color = done ? 'text-[#2ECC71]' : none ? 'text-[#444]' : 'text-[#F39C12]'
+                        return <span className={`text-center text-xs font-semibold tabular-nums ${color}`}>{count}/{total}</span>
+                      }
+                      const tokenColor = entry.tokensUsed > entry.tokensBudget ? 'text-[#E74C3C]' : entry.tokensUsed === entry.tokensBudget ? 'text-[#2ECC71]' : entry.tokensUsed === 0 ? 'text-[#444]' : 'text-[#F39C12]'
+                      return (
+                        <div
+                          key={entry.initials}
+                          className="grid grid-cols-[1fr_3.5rem_3.5rem_4.5rem_3.5rem_3.5rem_2.5rem] gap-1 px-3 py-2.5 border-t border-[#1a1a1a] items-center"
+                        >
+                          <span className="text-sm font-medium text-white">
+                            {entry.name} <span className="text-[#555] text-xs">{entry.initials}</span>
+                          </span>
+                          {cel(entry.totoCount, 72)}
+                          {cel(entry.uitslagCount, 72)}
+                          <span className={`text-center text-xs font-semibold tabular-nums ${tokenColor}`}>{entry.tokensUsed}/{entry.tokensBudget}</span>
+                          {cel(entry.koLandenCount, 63)}
+                          {cel(entry.fantasyCount, 15)}
+                          {cel(entry.oranjeCount, entry.oranjeTotal)}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                <p className="mt-3 text-[10px] text-[#444]">
+                  KO = 63 landen-slots (w1/w2/w3/r16/r8/r4/finale/winner) · Fantasy = 15 spelers · 🟠 = gepubliceerde vragen van anderen beantwoord
                 </p>
               </div>
             )}

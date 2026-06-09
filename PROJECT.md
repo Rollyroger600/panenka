@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-09 — Admin voortgangstabel deelnemers (Claude Code)
+
+- **Nieuw tabblad "✅ Voortgang"** toegevoegd aan admin dashboard
+- Tabel toont per deelnemer de voortgang op 6 kolommen: Toto (x/72), Uitsl (x/72), Tokens (gebruikt/budget), KO landen (x/63), Fantasy (x/15), Oranje vragen (x/n)
+- **Oranje vragen**: telt hoeveel gepubliceerde vragen van andere deelnemers beantwoord zijn (totaal dynamisch per persoon, eigen vraag telt niet mee)
+- Kleurcodering: groen = klaar, oranje = deels, grijs = niet begonnen, rood = tokens over budget
+- Lazy loading via knop + herlaad-knop; horizontaal scrollbaar op smalle schermen
+- Nieuwe server action `loadVoortgang` in `app/actions/admin.ts`
+
 ### 2026-06-09 — Token bugfix ASC-bonus + deadline 23:59 (Claude Code)
 
 - **ASC bonus tokens niet meegeteld**: `useTokenBudget` had een hardcoded `EXTRA_TOKENS`-map die alleen OG-deelnemers bevatte; ASC-deelnemers (JS/CV/BV/AR/MB/JH/JK/NS/PN/CB/DK/WW/VH) kregen daardoor budget 335 i.p.v. 341 — zij zagen 6 tokens "over" maar konden die niet inzetten. Fix: map vervangen door `PARTICIPANTS.find(...)` uit `lib/participants.ts` (single source of truth)
