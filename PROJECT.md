@@ -845,6 +845,11 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-09 — Deadline poule vastgesteld (admin)
+
+- Deadline deelnemers: 2026-06-09 23:59
+- Deadline admin (RA): 2026-06-10 — nog veel voorbereidend adminwerk te doen
+
 ### 2026-06-09 — Quoteringen bijgewerkt (260609) (Claude Code)
 
 - `npm run update_quoteringen` uitgevoerd: 72 wedstrijden + 48 landen KO-outrights bijgewerkt
