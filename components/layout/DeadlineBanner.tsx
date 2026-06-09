@@ -23,7 +23,7 @@ export function DeadlineBanner() {
   if (isPast) {
     return (
       <div className="w-full bg-[#1a1a1a] text-[#555] text-center text-xs font-bold py-2 tracking-widest uppercase">
-        🔒 Deadline verstreken · 9 juni 2026 · 17:00
+        🔒 Deadline verstreken · 9 juni 2026 · 23:59
       </div>
     )
   }
@@ -37,7 +37,7 @@ export function DeadlineBanner() {
     <div className="w-full border-b border-[#FF6B00] text-[#FF6B00] text-center text-xs font-bold py-2 tracking-widest uppercase">
       <span className="inline-flex items-center justify-center gap-2">
         <StopwatchIcon className="h-3.5 w-3.5 shrink-0" />
-        Deadline: 9 juni 2026 · 17:00 &nbsp;·&nbsp; nog {parts.join(' ')}
+        Deadline: 9 juni 2026 · 23:59 &nbsp;·&nbsp; nog {parts.join(' ')}
       </span>
     </div>
   )

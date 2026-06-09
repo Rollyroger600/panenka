@@ -180,7 +180,7 @@ const SLIDES = [
         <div>
           <h2 className="font-heading text-base uppercase tracking-widest text-white mb-1">Wedstrijden</h2>
           <p className="text-xs leading-relaxed" style={{ color: '#aaa' }}>
-            Voor aanvang van het toernooi vul je je voorspelling in voor alle 72 poulewedstrijden. De deadline hiervoor is <span className="text-white font-bold">9 juni</span> <span style={{ color: '#555' }}>|</span> <span className="text-white font-bold">17:00</span>. Per wedstrijd vul je 3 dingen in:
+            Voor aanvang van het toernooi vul je je voorspelling in voor alle 72 poulewedstrijden. De deadline hiervoor is <span className="text-white font-bold">9 juni</span> <span style={{ color: '#555' }}>|</span> <span className="text-white font-bold">23:59</span>. Per wedstrijd vul je 3 dingen in:
           </p>
           <ul className="mt-2 space-y-1 text-xs" style={{ color: '#aaa' }}>
             <li><span className="text-[#FF6B00] font-bold">Tokens</span> <span style={{ color: '#555' }}>|</span> Jouw inzet op deze wedstrijd (min 1–max 6)</li>

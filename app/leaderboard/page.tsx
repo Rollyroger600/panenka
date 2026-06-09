@@ -57,7 +57,7 @@ export default async function LeaderboardPage() {
           <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-6 text-center mb-6">
             <div className="text-3xl mb-2">⏳</div>
             <div className="text-[#888] text-sm">
-              Scores worden berekend na de deadline (9 juni 17:00)
+              Scores worden berekend na de deadline (9 juni 23:59)
             </div>
           </div>
         )}

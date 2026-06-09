@@ -845,6 +845,11 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-09 — Token bugfix ASC-bonus + deadline 23:59 (Claude Code)
+
+- **ASC bonus tokens niet meegeteld**: `useTokenBudget` had een hardcoded `EXTRA_TOKENS`-map die alleen OG-deelnemers bevatte; ASC-deelnemers (JS/CV/BV/AR/MB/JH/JK/NS/PN/CB/DK/WW/VH) kregen daardoor budget 335 i.p.v. 341 — zij zagen 6 tokens "over" maar konden die niet inzetten. Fix: map vervangen door `PARTICIPANTS.find(...)` uit `lib/participants.ts` (single source of truth)
+- **Deadline bijgewerkt van 17:00 naar 23:59**: `useDeadline.ts`, `DeadlineBanner.tsx` (2x), `leaderboard/page.tsx` en `OnboardingSlides.tsx` bijgewerkt
+
 ### 2026-06-09 — Token bugfix: overspending hersteld en geblokkeerd (Claude Code)
 
 **Diagnose & fix van token-overspending door 6 OG + 5 ASC deelnemers**

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-const DEADLINE             = new Date('2026-06-09T15:00:00Z') // 17:00 CEST
+const DEADLINE             = new Date('2026-06-09T21:59:00Z') // 23:59 CEST
 const VRAAG_DEADLINE       = new Date('2026-05-31T21:59:00Z') // 31 mei 23:59 CEST
 const VRAAG_GRACE_DEADLINE = new Date('2026-06-03T21:59:00Z') // 3 juni 23:59 CEST – voor wie niets had ingediend
 
