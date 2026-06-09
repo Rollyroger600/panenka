@@ -845,6 +845,19 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-09 — WK-selectiewijzigingen n.a.v. nieuwe FIFA PDF (260609) (Claude Code)
+
+**WK-selectiewijzigingen n.a.v. nieuwe officiële FIFA PDF (6 landen)**
+- `lib/data/wkOfficialSquads.ts` + `lib/data/players.ts` bijgewerkt:
+  - **Brazilië**: WESLEY (DF) vervangen door EDERSON SILVA (MF, dob 1999-07-07, id 266866)
+  - **Ghana**: ISSAHAKU Fatawu → FATAWU Abdul (zelfde speler, naamspresentatie FIFA; dob ongewijzigd)
+  - **Irak**: AHMED YAHYA (DF) vervangen door AHMED MAKNAZI (DF, dob 2001-09-24); nieuw toegevoegd als id 999999 in players.ts
+  - **Jordanië**: IBRAHIM SABRA (FW) vervangen door MOHAMMAD ABUGHOUSH (MF, dob 2005-07-13); nieuw toegevoegd als id 999998 in players.ts
+  - **Algerije**: TITRAOUI geboortedatum gecorrigeerd: 2003-08-26 → 2003-07-26
+  - **Paraguay**: AVALOS Gabriel geboortedatum gecorrigeerd: 1990-10-12 → 1991-07-09
+- **NED Timber-tweeling fix**: `sofifaId: 251806` toegevoegd aan TIMBER Quinten — voorkomt dat J. Timber (verwijderd) nog een vinkje toont via DOB-match
+- Controle: alle 48 landen hebben nog exact 26 spelers
+
 ### 2026-06-09 — Features: ESPN auto-import, klikbare links in chat, WK-selectie Nederland gewijzigd (Claude Code)
 
 **ESPN auto-import in admin (optie 1)**
