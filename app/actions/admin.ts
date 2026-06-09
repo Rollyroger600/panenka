@@ -231,3 +231,36 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
   await kvSet(groupKey('scores', groupId), scores)
   return scores
 }
+
+// ── Token diagnose ────────────────────────────────────────────────────────────
+
+export type TokenUsageEntry = {
+  name: string
+  initials: string
+  budget: number
+  poule: number
+  koPicks: number
+  used: number
+  over: number
+}
+
+export async function loadAllTokenUsage(groupId: GroupId = 'og'): Promise<TokenUsageEntry[]> {
+  const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
+  const entries = await Promise.all(
+    groupParticipants.map(async (p) => {
+      const [predictions, knockoutPicks] = await Promise.all([
+        kvGet<Record<number, Prediction>>(participantKey('predictions', p.initials)),
+        kvGet<KnockoutPicks>(participantKey('knockout', p.initials)),
+      ])
+      const budget = 335 + p.extra
+      const poule = Object.entries(predictions ?? {})
+        .filter(([id]) => parseInt(id) <= 72)
+        .reduce((sum, [, pred]) => sum + (pred.tokens ?? 1), 0)
+      const koPicks = Object.values(knockoutPicks ?? {})
+        .reduce((sum, slot) => sum + (slot.country ? slot.tok : 0), 0)
+      const used = poule + koPicks
+      return { name: p.name, initials: p.initials, budget, poule, koPicks, used, over: used - budget }
+    })
+  )
+  return entries.sort((a, b) => b.over - a.over)
+}

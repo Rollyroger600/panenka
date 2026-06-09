@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </AppShell>
 
-      <GlobalDataLoader />
+      <GlobalDataLoader initials={initials} />
       <SaveIndicator />
       <PopupToast currentUserName={name} groupId={groupId} />
       <OnboardingController />

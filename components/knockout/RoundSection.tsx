@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useTokenBudget } from '@/hooks/useTokenBudget'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { TokenStepper } from './TokenStepper'
 import { ALL_COUNTRIES } from '@/lib/data/countries'
@@ -40,6 +41,7 @@ interface Props {
 
 export function RoundSection({ round }: Props) {
   const { knockoutPicks, setKnockoutSlot, clearKnockoutSlot } = useGameStore()
+  const { remaining } = useTokenBudget()
   const [openPicker, setOpenPicker] = useState<string | null>(null)
 
   function getSlot(key: string) {
@@ -156,7 +158,7 @@ export function RoundSection({ round }: Props) {
                   <TokenStepper
                     value={slot.tok}
                     min={round.minTokens}
-                    max={round.maxTokens}
+                    max={remaining > 0 ? Math.min(round.maxTokens, slot.tok + remaining) : slot.tok}
                     onChange={(tok) => setTok(key, tok)}
                   />
                 </div>

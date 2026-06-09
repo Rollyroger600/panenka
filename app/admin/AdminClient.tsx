@@ -10,9 +10,9 @@ import {
   saveResult, deleteResult, saveKoResults, saveKoMatchTeams,
   saveOranjeResults, computeAndSaveScores,
   updateOranjeVraag, saveOranjeCorrect, saveOranjeBeoordeling,
-  saveFantasyStats, setAdminGroup,
+  saveFantasyStats, setAdminGroup, loadAllTokenUsage,
 } from '@/app/actions/admin'
-import type { KoMatchTeams } from '@/app/actions/admin'
+import type { KoMatchTeams, TokenUsageEntry } from '@/app/actions/admin'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
@@ -35,7 +35,7 @@ const NED_MATCHES = [
   { id: 58, label: 'TUN – NED (26 jun)' },
 ]
 
-type Tab = 'matches' | 'knockout' | 'ko_matches' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday'
+type Tab = 'matches' | 'knockout' | 'ko_matches' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday' | 'tokens'
 
 interface Props {
   groupId: GroupId
@@ -62,6 +62,8 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   const alleAntwoorden = initialAlleAntwoorden
   const [scores, setScores] = useState<Record<string, ParticipantScore> | null>(null)
   const [computing, setComputing] = useState(false)
+  const [tokenUsage, setTokenUsage] = useState<TokenUsageEntry[] | null>(null)
+  const [loadingTokens, setLoadingTokens] = useState(false)
   const [search, setSearch] = useState('')
   const [saving, setSaving] = useState<number | null>(null)
   const [fantasyStats, setFantasyStats] = useState<FantasyStats>(initialFantasyStats)
@@ -157,6 +159,14 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     setTab('scores')
   }
 
+  async function handleLoadTokens() {
+    setLoadingTokens(true)
+    const data = await loadAllTokenUsage(groupId)
+    setTokenUsage(data)
+    setLoadingTokens(false)
+    setTab('tokens')
+  }
+
   async function handleExport() {
     const res = await fetch(`/api/export?group=${groupId}`)
     if (!res.ok) { alert(`Export mislukt (HTTP ${res.status}):\n${await res.text() || '(geen foutmelding)'}`) ; return }
@@ -230,6 +240,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     { id: 'scores',     label: 'Scores' },
     { id: 'links',      label: 'Links' },
     { id: 'matchday',   label: '📅 Matchday' },
+    { id: 'tokens',     label: '🪙 Tokens' },
   ]
 
   return (
@@ -545,6 +556,73 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
 
         {/* ── Matchday beheer ────────────────────────────────────────────────────── */}
         {tab === 'matchday' && <MatchdayAdminTab groupId={groupId} />}
+
+        {/* ── Token diagnose ──────────────────────────────────────────────────────── */}
+        {tab === 'tokens' && (
+          <div>
+            {!tokenUsage ? (
+              <div className="flex flex-col items-center gap-4 py-8">
+                <p className="text-[#555] text-sm">Laad tokengebruik voor alle deelnemers in deze groep.</p>
+                <button
+                  onClick={handleLoadTokens}
+                  disabled={loadingTokens}
+                  className="px-4 py-2 rounded-lg bg-[#FF6B00] text-white text-sm font-bold hover:bg-[#FF8C33] disabled:opacity-50 transition-colors"
+                >
+                  {loadingTokens ? 'Laden…' : '🪙 Laad token overzicht'}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-[#555] text-xs">
+                    Budget = 335 + bonus. Poule = wedstrijden 1–72. KO = landen picks.
+                  </p>
+                  <button
+                    onClick={handleLoadTokens}
+                    disabled={loadingTokens}
+                    className="text-[10px] px-2 py-1 rounded bg-[#1e1e1e] border border-[#333] text-[#888] hover:text-white transition-colors"
+                  >
+                    ↺ Herlaad
+                  </button>
+                </div>
+                <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+                  <div className="grid grid-cols-[1fr_2.5rem_3rem_3rem_3rem_3.5rem] gap-1 px-3 py-2 text-[10px] text-[#444] uppercase" style={{ background: 'rgba(10,10,10,0.75)' }}>
+                    <span>Naam</span>
+                    <span className="text-right">Budget</span>
+                    <span className="text-right">Poule</span>
+                    <span className="text-right">KO</span>
+                    <span className="text-right">Totaal</span>
+                    <span className="text-right font-bold">Over/Onder</span>
+                  </div>
+                  {tokenUsage.map((entry) => {
+                    const isOver = entry.over > 0
+                    const isUnder = entry.over < 0
+                    return (
+                      <div
+                        key={entry.initials}
+                        className="grid grid-cols-[1fr_2.5rem_3rem_3rem_3rem_3.5rem] gap-1 px-3 py-2 border-t border-[#1a1a1a] text-sm"
+                      >
+                        <span className="font-medium text-white">
+                          {entry.name} <span className="text-[#555] text-xs">{entry.initials}</span>
+                        </span>
+                        <span className="text-right text-[#888]">{entry.budget}</span>
+                        <span className="text-right text-[#aaa]">{entry.poule}</span>
+                        <span className="text-right text-[#aaa]">{entry.koPicks}</span>
+                        <span className="text-right text-[#ccc] font-semibold">{entry.used}</span>
+                        <span className={`text-right font-bold ${isOver ? 'text-[#E74C3C]' : isUnder ? 'text-[#2ECC71]' : 'text-[#555]'}`}>
+                          {isOver ? `+${entry.over}` : entry.over === 0 ? '±0' : `${entry.over}`}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <p className="mt-3 text-[10px] text-[#444]">
+                  Rood = te veel ingezet • Groen = nog ruimte over • {tokenUsage.filter(e => e.over > 0).length} deelnemer(s) over budget
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Scores ─────────────────────────────────────────────────────────────── */}
         {tab === 'scores' && (

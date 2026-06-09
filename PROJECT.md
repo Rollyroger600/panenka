@@ -845,6 +845,17 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-09 — Token bugfix: overspending hersteld en geblokkeerd (Claude Code)
+
+**Diagnose & fix van token-overspending door 6 OG + 5 ASC deelnemers**
+
+- **Grondoorzaak gevonden**: `useTokenBudget` gebruikte `pred.tokens ?? 0` terwijl de UI `pred.tokens ?? 1` toont — deelnemers zagen meer ruimte dan er was, waardoor de banner overspending niet correct signaleerde
+- **Fix**: `?? 0` → `?? 1` in `useTokenBudget.ts` (poule-berekening) én `loadAllTokenUsage` (admin-diagnostiek); export-route was al correct
+- **Admin diagnose-tab**: Nieuwe "🪙 Tokens" tab in admin toont per deelnemer: budget, poule tokens, KO picks, totaal ingezet, over/onder — gesorteerd van meest over naar minst
+- **TokenBanner**: Toont nu rood kader + `"X te veel — verlaag je tokens"` bij negatief restbudget; balk kleurt rood
+- **Blokkering bij remaining ≤ 0**: `+` knop uitgeschakeld in `MatchCard` (groepsfase), `Ronde32Section` (w1/w2/w3 TokenSteppers) en `RoundSection` (KO-rondes) — verlaging blijft altijd mogelijk
+- **initials in store**: `participantInitials` opgeslagen in Zustand store via `GlobalDataLoader` — `useTokenBudget()` werkt nu zonder prop-drilling vanuit elk component
+
 ### 2026-06-09 — Deadline poule vastgesteld (admin)
 
 - Deadline deelnemers: 2026-06-09 23:59

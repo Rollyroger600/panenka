@@ -8,16 +8,18 @@ const EXTRA_TOKENS: Record<string, number> = {
 }
 
 // Budget voor groepsfase (1–72) + KO-landen picks
-export function useTokenBudget(initials: string) {
+export function useTokenBudget(initials?: string) {
+  const storeInitials = useGameStore((s) => s.participantInitials)
+  const effectiveInitials = initials ?? storeInitials
   const predictions = useGameStore((s) => s.predictions)
   const knockoutPicks = useGameStore((s) => s.knockoutPicks)
   const base = 335
-  const bonus = EXTRA_TOKENS[initials] ?? 0
+  const bonus = EXTRA_TOKENS[effectiveInitials] ?? 0
   const total = base + bonus
   const used = useMemo(() => {
     const poule = Object.entries(predictions)
       .filter(([id]) => parseInt(id) <= 72)
-      .reduce((sum, [, p]) => sum + (p.tokens ?? 0), 0)
+      .reduce((sum, [, p]) => sum + (p.tokens ?? 1), 0)
     const ko = Object.values(knockoutPicks).reduce(
       (sum, slot) => sum + (slot.country ? slot.tok : 0),
       0,

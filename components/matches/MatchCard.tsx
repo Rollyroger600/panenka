@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useTokenBudget } from '@/hooks/useTokenBudget'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { ODDS_TRENDS } from '@/lib/data/odds_trends'
 import type { OddsTrend } from '@/lib/data/odds_trends'
@@ -31,6 +32,7 @@ function TrendIndicator({ trend }: { trend: OddsTrend }) {
 
 export function MatchCard({ match }: Props) {
   const { predictions, setPrediction } = useGameStore()
+  const { remaining } = useTokenBudget()
   const pred = predictions[match.id] ?? { toto: null, uitslag: null, tokens: null }
   const effectiveTokens = pred.tokens ?? 1
   const [openPanel, setOpenPanel] = useState<Panel>(null)
@@ -166,7 +168,7 @@ export function MatchCard({ match }: Props) {
           >−</button>
           <button
             onClick={() => setPrediction(match.id, { tokens: Math.min(6, effectiveTokens + 1) })}
-            disabled={effectiveTokens >= 6}
+            disabled={effectiveTokens >= 6 || remaining <= 0}
             className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
           >+</button>
         </div>

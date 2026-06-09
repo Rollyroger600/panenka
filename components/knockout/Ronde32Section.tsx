@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useTokenBudget } from '@/hooks/useTokenBudget'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { TokenStepper } from './TokenStepper'
 import { GROUP_TEAMS, POULE_LETTERS, getW3Excluded } from '@/lib/knockoutHelpers'
@@ -42,6 +43,7 @@ const W3_MAX_SLOTS = 8
 
 export function Ronde32Section() {
   const { knockoutPicks, setKnockoutSlot, clearKnockoutSlot } = useGameStore()
+  const { remaining } = useTokenBudget()
   const [openPicker, setOpenPicker] = useState<string | null>(null)
 
   function applyAllSuggestions(suggestions: Suggestion[], bestThird: StandingRow[]) {
@@ -121,6 +123,7 @@ export function Ronde32Section() {
         setTok={setTok}
         min={W1_MIN}
         max={W1_MAX}
+        remaining={remaining}
         qkey="winnaar_poule"
       />
 
@@ -143,6 +146,7 @@ export function Ronde32Section() {
         setTok={setTok}
         min={W1_MIN}
         max={W1_MAX}
+        remaining={remaining}
         qkey="tweede"
       />
 
@@ -222,7 +226,7 @@ export function Ronde32Section() {
                         <TokenStepper
                           value={slot.tok}
                           min={W1_MIN}
-                          max={W1_MAX}
+                          max={remaining > 0 ? Math.min(W1_MAX, slot.tok + remaining) : slot.tok}
                           onChange={(tok) => setTok(key, tok)}
                         />
                       </div>
@@ -266,7 +270,7 @@ interface SlotDef {
 }
 
 function SlotSection({
-  title, slots, openPicker, setOpenPicker, pickCountry, setTok, min, max, qkey,
+  title, slots, openPicker, setOpenPicker, pickCountry, setTok, min, max, remaining, qkey,
 }: {
   title: string
   slots: SlotDef[]
@@ -276,6 +280,7 @@ function SlotSection({
   setTok: (key: string, tok: number) => void
   min: number
   max: number
+  remaining: number
   qkey?: string
 }) {
   const filled = slots.filter((s) => s.slot.country).length
@@ -344,7 +349,7 @@ function SlotSection({
                       </button>
                     )}
                   </div>
-                  <TokenStepper value={slot.tok} min={min} max={max} onChange={(tok) => setTok(key, tok)} />
+                  <TokenStepper value={slot.tok} min={min} max={remaining > 0 ? Math.min(max, slot.tok + remaining) : slot.tok} onChange={(tok) => setTok(key, tok)} />
                 </div>
               ))}
             </div>
