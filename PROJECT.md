@@ -845,6 +845,11 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-09 — Quoteringen bijgewerkt (260609) (Claude Code)
+
+- `npm run update_quoteringen` uitgevoerd: 72 wedstrijden + 48 landen KO-outrights bijgewerkt
+- 46 wedstrijden met gewijzigde match-quotes; 32 landen met gewijzigde KO-quotes
+
 ### 2026-06-09 — WK-selectiewijzigingen n.a.v. nieuwe FIFA PDF (260609) (Claude Code)
 
 **WK-selectiewijzigingen n.a.v. nieuwe officiële FIFA PDF (6 landen)**
