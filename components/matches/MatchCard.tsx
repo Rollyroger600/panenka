@@ -11,7 +11,7 @@ import { TotoButtons } from './TotoButtons'
 import { ScorePicker } from './ScorePicker'
 import type { Match } from '@/lib/data/matches'
 
-interface Props { match: Match }
+interface Props { match: Match; readOnly?: boolean }
 type Panel = 'score' | null
 
 const MUTED = '#7e7667'
@@ -30,7 +30,7 @@ function TrendIndicator({ trend }: { trend: OddsTrend }) {
   )
 }
 
-export function MatchCard({ match }: Props) {
+export function MatchCard({ match, readOnly = false }: Props) {
   const { predictions, setPrediction } = useGameStore()
   const { remaining } = useTokenBudget()
   const pred = predictions[match.id] ?? { toto: null, uitslag: null, tokens: null }
@@ -67,7 +67,7 @@ export function MatchCard({ match }: Props) {
         </div>
 
         {/* Wis-knop — gespiegeld rechts */}
-        {(pred.toto !== null || pred.uitslag !== null) && (
+        {!readOnly && (pred.toto !== null || pred.uitslag !== null) && (
           <button
             onClick={() => {
               setPrediction(match.id, { toto: null, uitslag: null, tokens: 1 })
@@ -113,6 +113,7 @@ export function MatchCard({ match }: Props) {
               selected={pred.toto}
               onChange={(toto) => setPrediction(match.id, { toto })}
               odds={odds ? { home: odds.home, draw: odds.draw, away: odds.away } : undefined}
+              disabled={readOnly}
             />
           </div>
           <div className="flex flex-col items-center gap-1">
@@ -133,10 +134,13 @@ export function MatchCard({ match }: Props) {
           <div className="flex flex-col items-center gap-1">
             <span className={LABEL} style={{ color: MUTED }}>Uitslag</span>
             <button
-              onClick={() => setOpenPanel((p) => (p === 'score' ? null : 'score'))}
+              onClick={() => !readOnly && setOpenPanel((p) => (p === 'score' ? null : 'score'))}
+              disabled={readOnly}
               className={`font-heading h-9 w-14 rounded-lg text-sm font-bold transition-colors flex items-center justify-center border ${
                 pred.uitslag !== null
                   ? 'bg-[#FF6B00] border-[#FF6B00] text-white'
+                  : readOnly
+                  ? 'bg-[#1a1a1a] border-[#2a2a2a] cursor-not-allowed'
                   : 'bg-[#1e1e1e] border-[#3a3a3a] hover:border-[#FF6B00]'
               }`}
               style={pred.uitslag === null ? { color: MUTED } : undefined}
@@ -163,12 +167,12 @@ export function MatchCard({ match }: Props) {
         <div className="w-10 flex gap-0.5">
           <button
             onClick={() => setPrediction(match.id, { tokens: Math.max(1, effectiveTokens - 1) })}
-            disabled={effectiveTokens <= 1}
+            disabled={readOnly || effectiveTokens <= 1}
             className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
           >−</button>
           <button
             onClick={() => setPrediction(match.id, { tokens: Math.min(6, effectiveTokens + 1) })}
-            disabled={effectiveTokens >= 6 || remaining <= 0}
+            disabled={readOnly || effectiveTokens >= 6 || remaining <= 0}
             className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
           >+</button>
         </div>

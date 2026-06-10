@@ -138,7 +138,7 @@ export function PoulefaseClient({ initials }: Props) {
           ) : (
             <div className="flex flex-col gap-2">
               {todoMatches.map((match) => (
-                <MatchCard key={match.id} match={match} />
+                <MatchCard key={match.id} match={match} readOnly={isPast} />
               ))}
             </div>
           )}
@@ -152,7 +152,7 @@ export function PoulefaseClient({ initials }: Props) {
               <div key={round} className="mb-6">
                 <div className="flex flex-col gap-2">
                   {(pouleRounds[round] ?? []).map((match) => (
-                    <MatchCard key={match.id} match={match} />
+                    <MatchCard key={match.id} match={match} readOnly={isPast} />
                   ))}
                 </div>
               </div>
@@ -166,7 +166,7 @@ export function PoulefaseClient({ initials }: Props) {
           ) : (
             <div className="flex flex-col gap-2">
               {visibleKoMatches.map((match) => (
-                <MatchCard key={match.id} match={match} />
+                <MatchCard key={match.id} match={match} readOnly={isPast} />
               ))}
             </div>
           )}
