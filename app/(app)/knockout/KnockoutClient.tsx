@@ -8,6 +8,7 @@ import { RoundSection } from '@/components/knockout/RoundSection'
 import { SkeletonList } from '@/components/ui/Skeleton'
 import { ScheduleView } from '@/components/knockout/ScheduleView'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
+import { APP_PHASE } from '@/lib/config'
 
 const TABS = [
   { id: 'ronde32', label: 'R 32' },
@@ -20,11 +21,12 @@ const TABS = [
 
 const NON32_ROUNDS = KNOCKOUT_ROUNDS.filter((r) => r.uiTab !== 'ronde32')
 
-export function KnockoutClient() {
+export function KnockoutClient({ koResults }: { koResults: Record<string, string[]> }) {
   const { isLoaded } = useKnockoutPicks()
   usePredictions()
   const { isPast } = useDeadline()
   const [activeTab, setActiveTab] = useState('ronde32')
+  const readOnly = APP_PHASE >= 2
 
   const activeRound = NON32_ROUNDS.find((r) => r.uiTab === activeTab)
 
@@ -32,12 +34,6 @@ export function KnockoutClient() {
     <div>
       <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Knockout</h1>
       <p className="font-accent font-light text-white text-xs mb-4 text-center">Voorspel welke landen doorgaan per ronde</p>
-
-      {isPast && (
-        <div className="rounded-xl bg-[#1a1a1a] border border-[#333] p-3 mb-4 text-center text-xs text-white font-bold uppercase tracking-widest">
-          🔒 Deadline verstreken · alleen lezen
-        </div>
-      )}
 
       {/* Round tabs — centered */}
       <div className="flex gap-1.5 mb-5 rounded-xl p-1" style={{ background: 'rgba(22,22,22,0.82)' }}>
@@ -62,8 +58,8 @@ export function KnockoutClient() {
         <SkeletonList count={4} />
       ) : (
         <>
-          {activeTab === 'ronde32' && <Ronde32Section />}
-          {activeRound && <RoundSection round={activeRound} />}
+          {activeTab === 'ronde32' && <Ronde32Section readOnly={readOnly} koResults={koResults} />}
+          {activeRound && <RoundSection round={activeRound} readOnly={readOnly} koResults={koResults} />}
         </>
       )}
     </div>

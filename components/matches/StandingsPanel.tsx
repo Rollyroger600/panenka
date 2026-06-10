@@ -1,9 +1,10 @@
 'use client'
 import { useMemo } from 'react'
 import { useGameStore } from '@/store/gameStore'
-import { computeStandings, type StandingRow } from '@/lib/standings'
+import { computeStandings, computeStandingsFromResults, type StandingRow } from '@/lib/standings'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { abbrevCountry } from '@/lib/helpers'
+import type { MatchResult } from '@/lib/scoring'
 
 const POULES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
 
@@ -13,15 +14,18 @@ function getBest3Set(standings: Record<string, StandingRow[]>): Set<string> {
   return new Set(thirds.slice(0, 8).map((r) => r.country))
 }
 
-export function StandingsPanel() {
+export function StandingsPanel({ results }: { results?: Record<number, MatchResult> }) {
   const predictions = useGameStore((s) => s.predictions)
-  const standings = useMemo(() => computeStandings(predictions), [predictions])
+  const standings = useMemo(
+    () => results ? computeStandingsFromResults(results) : computeStandings(predictions),
+    [results, predictions],
+  )
   const best3Set = useMemo(() => getBest3Set(standings), [standings])
 
   return (
     <div>
       <p className="text-white text-sm font-bold text-center mb-4">
-        Poulestand op basis van voorspelde uitslagen
+        {results ? 'Poulestand op basis van gespeelde wedstrijden' : 'Poulestand op basis van voorspelde uitslagen'}
       </p>
       <PouleGrid standings={standings} best3Set={best3Set} />
     </div>

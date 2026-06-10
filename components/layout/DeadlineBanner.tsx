@@ -20,13 +20,7 @@ function StopwatchIcon({ className }: { className?: string }) {
 export function DeadlineBanner() {
   const { isPast, days, hours, minutes } = useDeadline()
 
-  if (isPast) {
-    return (
-      <div className="w-full bg-[#1a1a1a] text-[#555] text-center text-xs font-bold py-2 tracking-widest uppercase">
-        🔒 Deadline verstreken · 9 juni 2026 · 23:59
-      </div>
-    )
-  }
+  if (isPast) return null
 
   const parts: string[] = []
   if (days > 0) parts.push(`${days}d`)

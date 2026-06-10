@@ -19,7 +19,7 @@ const TABS_PHASE2 = [
   { href: '/knockout',  label: 'Landen',      Icon: IconKO },
   { href: '/fantasy',   label: 'Fantasy',     Icon: IconFantasy },
   { href: '/oranje',    label: 'Oranje',      Icon: IconOranje },
-  { href: '/stand',     label: 'Stand',       Icon: IconBeker },
+  { href: '/stand',     label: 'Stand',       Icon: IconOverzicht },
   { href: '/chat',      label: 'Chat',        Icon: IconChat },
 ]
 

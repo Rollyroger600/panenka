@@ -36,12 +36,6 @@ export function FantasyClient({ participantName }: Props) {
       <p className="font-accent font-light text-white text-xs mb-4 text-center">Stel je eigen droomteam samen</p>
       <TeamNameEditor />
 
-      {isPast && (
-        <div className="rounded-xl bg-[#1a1a1a] border border-[#333] p-3 mb-4 text-center text-xs text-[#555] font-bold uppercase tracking-widest">
-          🔒 Deadline verstreken · alleen lezen
-        </div>
-      )}
-
       <RulesPanel />
 
       <div className="mb-2 text-center">

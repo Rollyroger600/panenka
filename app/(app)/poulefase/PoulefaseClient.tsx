@@ -4,12 +4,14 @@ import { usePredictions } from '@/hooks/usePredictions'
 import { useDeadline } from '@/hooks/useDeadline'
 import { useGameStore } from '@/store/gameStore'
 import { MatchCard } from '@/components/matches/MatchCard'
+import type { MatchResult } from '@/lib/scoring'
 import { StandingsPanel } from '@/components/matches/StandingsPanel'
 import { SkeletonList } from '@/components/ui/Skeleton'
 import { MATCHES } from '@/lib/data/matches'
 import type { KoRound } from '@/lib/data/matches'
+import { APP_PHASE } from '@/lib/config'
 
-interface Props { initials: string }
+interface Props { initials: string; results: Record<number, MatchResult> }
 
 type Phase = 'poule' | 'knockout'
 type PouleFilter = number | 'standen' | 'todo'
@@ -34,13 +36,20 @@ function groupKoMatches() {
   return rounds
 }
 
-const POULE_FILTERS: { label: string; value: PouleFilter }[] = [
-  { label: 'Ronde 1', value: 1 },
-  { label: 'Ronde 2', value: 2 },
-  { label: 'Ronde 3', value: 3 },
-  { label: 'TO-DO',   value: 'todo' },
-  { label: 'Standen', value: 'standen' },
-]
+const POULE_FILTERS: { label: string; value: PouleFilter }[] = APP_PHASE >= 2
+  ? [
+      { label: 'Ronde 1', value: 1 },
+      { label: 'Ronde 2', value: 2 },
+      { label: 'Ronde 3', value: 3 },
+      { label: 'Standen', value: 'standen' },
+    ]
+  : [
+      { label: 'Ronde 1', value: 1 },
+      { label: 'Ronde 2', value: 2 },
+      { label: 'Ronde 3', value: 3 },
+      { label: 'TO-DO',   value: 'todo' },
+      { label: 'Standen', value: 'standen' },
+    ]
 
 const ROUND_LABEL: Record<number, string> = { 1: 'Ronde 1', 2: 'Ronde 2', 3: 'Ronde 3' }
 
@@ -52,7 +61,7 @@ const KO_FILTERS: { label: string; rounds: KoRound[] }[] = [
   { label: 'FIN',  rounds: ['brons', 'finale'] },
 ]
 
-export function PoulefaseClient({ initials }: Props) {
+export function PoulefaseClient({ initials, results }: Props) {
   const { isLoaded } = usePredictions()
   const { isPast } = useDeadline()
   const { predictions } = useGameStore()
@@ -85,11 +94,7 @@ export function PoulefaseClient({ initials }: Props) {
       <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Wedstrijden</h1>
       <p className="font-accent font-light text-white text-xs mb-3 text-center">kies tokens, toto en uitslag</p>
 
-      {isPast && (
-        <div className="rounded-xl bg-[#1a1a1a] border border-[#333] p-3 mb-4 text-center text-xs text-white font-bold uppercase tracking-widest">
-          🔒 Deadline verstreken · alleen lezen
-        </div>
-      )}
+
 
       {/* Tabs */}
       {phase === 'poule' ? (
@@ -126,7 +131,7 @@ export function PoulefaseClient({ initials }: Props) {
 
       {/* Content */}
       {showStandings ? (
-        <StandingsPanel />
+        <StandingsPanel results={APP_PHASE >= 2 ? results : undefined} />
       ) : showTodo ? (
         <>
           {!isLoaded ? (
@@ -138,7 +143,7 @@ export function PoulefaseClient({ initials }: Props) {
           ) : (
             <div className="flex flex-col gap-2">
               {todoMatches.map((match) => (
-                <MatchCard key={match.id} match={match} readOnly={isPast} />
+                <MatchCard key={match.id} match={match} readOnly={isPast} result={results[match.id]} />
               ))}
             </div>
           )}
@@ -152,7 +157,7 @@ export function PoulefaseClient({ initials }: Props) {
               <div key={round} className="mb-6">
                 <div className="flex flex-col gap-2">
                   {(pouleRounds[round] ?? []).map((match) => (
-                    <MatchCard key={match.id} match={match} readOnly={isPast} />
+                    <MatchCard key={match.id} match={match} readOnly={isPast} result={results[match.id]} />
                   ))}
                 </div>
               </div>
@@ -166,7 +171,7 @@ export function PoulefaseClient({ initials }: Props) {
           ) : (
             <div className="flex flex-col gap-2">
               {visibleKoMatches.map((match) => (
-                <MatchCard key={match.id} match={match} readOnly={isPast} />
+                <MatchCard key={match.id} match={match} readOnly={isPast} result={results[match.id]} />
               ))}
             </div>
           )}

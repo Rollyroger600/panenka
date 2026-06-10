@@ -10,8 +10,9 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import { TotoButtons } from './TotoButtons'
 import { ScorePicker } from './ScorePicker'
 import type { Match } from '@/lib/data/matches'
+import type { MatchResult } from '@/lib/scoring'
 
-interface Props { match: Match; readOnly?: boolean }
+interface Props { match: Match; readOnly?: boolean; result?: MatchResult }
 type Panel = 'score' | null
 
 const MUTED = '#7e7667'
@@ -30,7 +31,7 @@ function TrendIndicator({ trend }: { trend: OddsTrend }) {
   )
 }
 
-export function MatchCard({ match, readOnly = false }: Props) {
+export function MatchCard({ match, readOnly = false, result }: Props) {
   const { predictions, setPrediction } = useGameStore()
   const { remaining } = useTokenBudget()
   const pred = predictions[match.id] ?? { toto: null, uitslag: null, tokens: null }
@@ -55,8 +56,22 @@ export function MatchCard({ match, readOnly = false }: Props) {
       ? effectiveTokens * totoOdd + effectiveTokens * scoreOdd
       : null
 
+  const earnedScore = result && odds
+    ? (() => {
+        let s = 0
+        if (pred.toto && pred.toto === result.toto) {
+          const tOdd = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
+          s += effectiveTokens * tOdd
+        }
+        if (pred.uitslag && pred.uitslag === result.uitslag) {
+          s += effectiveTokens * (odds.scores[pred.uitslag] ?? 0)
+        }
+        return Math.round(s * 100) / 100
+      })()
+    : null
+
   return (
-    <div className={`rounded-xl border overflow-hidden ${isComplete ? 'border-[#FF6B00]' : 'border-[#2a2a2a]'}`} style={{ background: 'rgba(22,22,22,0.82)' }}>
+    <div className={`rounded-xl border overflow-hidden ${result ? 'border-[#FF6B00]' : 'border-[#2a2a2a]'}`} style={{ background: 'rgba(22,22,22,0.82)' }}>
 
       {/* Header */}
       <div className="relative flex flex-col items-center px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
@@ -124,7 +139,7 @@ export function MatchCard({ match, readOnly = false }: Props) {
               style={totoOdd == null ? { color: MUTED } : undefined}
             >
               {totoOdd != null ? totoOdd.toFixed(2) : '—'}
-              <TrendIndicator trend={totoTrend} />
+              {!readOnly && <TrendIndicator trend={totoTrend} />}
             </span>
           </div>
         </div>
@@ -156,27 +171,71 @@ export function MatchCard({ match, readOnly = false }: Props) {
               style={scoreOdd == null ? { color: MUTED } : undefined}
             >
               {scoreOdd != null ? scoreOdd.toFixed(2) : '—'}
-              <TrendIndicator trend={scoreTrend} />
+              {!readOnly && <TrendIndicator trend={scoreTrend} />}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Steppers + Max score */}
-      <div className="px-2 pb-2 flex justify-between items-center">
-        <div className="w-10 flex gap-0.5">
-          <button
-            onClick={() => setPrediction(match.id, { tokens: Math.max(1, effectiveTokens - 1) })}
-            disabled={readOnly || effectiveTokens <= 1}
-            className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
-          >−</button>
-          <button
-            onClick={() => setPrediction(match.id, { tokens: Math.min(6, effectiveTokens + 1) })}
-            disabled={readOnly || effectiveTokens >= 6 || remaining <= 0}
-            className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
-          >+</button>
+      {/* Resultaatrij */}
+      {result && (
+        <div className="flex justify-between items-center px-2 pb-2 border-t border-[#222]">
+          {/* Tokens spacer */}
+          <div className="w-10" />
+
+          {/* Toto pijl + Quote spacer */}
+          <div className="flex items-center gap-1">
+            <div className="flex gap-1">
+              {(['1', 'X', '2'] as const).map((t) => (
+                <div key={t} className="w-9 flex justify-center pt-1.5">
+                  {result.toto === t && (
+                    <span className={`text-base leading-none font-bold ${pred.toto === result.toto ? 'text-emerald-400' : 'text-white'}`}>↑</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="w-9" />
+          </div>
+
+          {/* Werkelijke uitslag + Quote spacer */}
+          <div className="flex items-center gap-1">
+            <div className="w-14 flex justify-center pt-1.5">
+              <span className={`font-heading text-sm font-bold ${
+                pred.uitslag === result.uitslag ? 'text-emerald-400' : 'text-white'
+              }`}>
+                {result.uitslag}
+              </span>
+            </div>
+            <div className="w-9" />
+          </div>
         </div>
-        {maxScore !== null && (
+      )}
+
+      {/* Steppers + Score */}
+      <div className={`px-2 pb-2 flex items-center ${readOnly ? 'justify-end' : 'justify-between'}`}>
+        {!readOnly && (
+          <div className="w-10 flex gap-0.5">
+            <button
+              onClick={() => setPrediction(match.id, { tokens: Math.max(1, effectiveTokens - 1) })}
+              disabled={effectiveTokens <= 1}
+              className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
+            >−</button>
+            <button
+              onClick={() => setPrediction(match.id, { tokens: Math.min(6, effectiveTokens + 1) })}
+              disabled={effectiveTokens >= 6 || remaining <= 0}
+              className="flex-1 h-6 rounded bg-[#252525] text-[#aaa] text-sm font-bold disabled:opacity-30 hover:bg-[#333] transition-colors"
+            >+</button>
+          </div>
+        )}
+        {readOnly ? (
+          <span className="font-heading text-sm font-bold uppercase tracking-widest" style={{ color: MUTED }}>
+            Score{' '}
+            {earnedScore !== null && earnedScore > 0
+              ? <span className="text-[#FF6B00]">{earnedScore.toFixed(2)} pts</span>
+              : <span style={{ color: MUTED }}>0.00 pts</span>
+            }
+          </span>
+        ) : maxScore !== null && (
           <span className="font-heading text-sm font-bold uppercase tracking-widest" style={{ color: MUTED }}>
             Max. score{' '}
             <span className="text-[#FF6B00]">{maxScore.toFixed(1)} pts</span>

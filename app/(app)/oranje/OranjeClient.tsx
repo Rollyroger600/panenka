@@ -95,18 +95,12 @@ export function OranjeClient({ mijnInitials }: Props) {
         ) : (
           <>
             <p className="font-accent font-light text-white text-xs mb-2 text-center">
-              {isPast ? 'Deadline verstreken · alleen lezen' : 'Beantwoord alle vragen van de deelnemers'}
+              {'Beantwoord alle vragen van de deelnemers'}
             </p>
             <div className="rounded-xl border border-[#2a2a2a] px-4 py-2.5 mb-5 text-center text-xs text-white font-bold" style={{ background: 'rgba(22,22,22,0.82)' }}>
               {totalBeantwoord} / {totalGepubliceerd} antwoorden ingevuld
             </div>
           </>
-        )}
-
-        {isPast && (
-          <div className="rounded-xl bg-[#1a1a1a] border border-[#333] p-3 mb-4 text-center text-xs text-[#555] font-bold uppercase tracking-widest">
-            🔒 Deadline verstreken · alleen lezen
-          </div>
         )}
 
         {NED_MATCHES.map((match) => {
