@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-10 — Fase 2 navigatie + poulefase read-only (Claude Code)
+
+- **`lib/config.ts`**: `APP_PHASE` constante (nu `2`); naar `3` zetten voor knock-outfase
+- **Fase 2 tabs** in `BottomNav`: Wedstrijden · Landen · Fantasy · Oranje · **Stand** · Chat (vervangt: KO → Landen, Overzicht weg, Stand nieuw)
+- **`/stand` pagina** (`app/(app)/stand/page.tsx`): tussenstand ingebakken in app-shell met bottom nav, auto-refresh elke 60 sec, group afgeleid van participant-cookie
+- **`middleware.ts`**: `/stand` beveiligd met participant-cookie check
+- **Fix poulefase read-only**: `MatchCard` knoppen (toto, uitslag, token +/−, wis) waren na deadline nog klikbaar ondanks de banner — `readOnly=isPast` nu doorgegeven vanuit `PoulefaseClient`; `TotoButtons` krijgt `disabled` prop
+
 ### 2026-06-10 — ESPN match IDs groepsfase + deadline gesloten (Claude Code)
 
 - **ESPN event IDs ingevuld**: alle 72 groepsfase-wedstrijden gemapped in `lib/data/espnMatchIds.ts` (IDs 760414–760485) — live-feature is nu volledig operationeel voor speelronde 1 t/m 3
