@@ -845,6 +845,12 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-10 — ESPN match IDs groepsfase + deadline gesloten (Claude Code)
+
+- **ESPN event IDs ingevuld**: alle 72 groepsfase-wedstrijden gemapped in `lib/data/espnMatchIds.ts` (IDs 760414–760485) — live-feature is nu volledig operationeel voor speelronde 1 t/m 3
+- Script `scripts/fetch_espn_ids.py` toegevoegd om IDs op te halen via ESPN scoreboard API; knock-out IDs (~73–104) aanvullen zodra ESPN ze publiceert (verwacht ~1 jul)
+- **Deadline overrides verwijderd**: `deadlineOverride` velden voor Daan (DM), Robert (RA) en Mark (MB) verwijderd uit `lib/participants.ts` — iedereen heeft ingevuld, deur staat voor alle deelnemers dicht (globale deadline 2026-06-09T21:59:00Z)
+
 ### 2026-06-10 — ASC bonus-tokens Robert (Claude Code)
 
 - **3 extra scoring-tokens voor RA in ASC-groep**: wedstrijden 10, 33 en 58 (= Nederland-wedstrijden) tellen elk +1 token bij ASC-scoring
