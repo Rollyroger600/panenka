@@ -845,6 +845,34 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-10 — Fantasy XV fase 2 + Team Viewer (Claude Code)
+
+**Fantasy fase 2 (read-only weergave na deadline)**
+- Spelers kunnen niet meer worden gewisseld of verwijderd
+- `RulesPanel` verwijderd uit fase 2
+- Spelerstegels vereenvoudigd: `#` · vlag · naam · quotering · aantal (Romeins) · G · A · Pts
+- Kolomkoppen wit en groter; quoteringsbadge `w-11` (vaste breedte); pts-kolom `w-12`
+- Nieuwe kolom met Romeinse cijfers: hoe vaak de speler is gekozen in de eigen groep (kladblok telt niet mee)
+- Goals/assists uit `FantasyStats`; punten = `(goals + assists) × quote`; dashboard-style totaalscore onderaan
+- Klikken op speler opent nog steeds `PlayerInfoCard`-dropdown (zelfde als fase 1)
+- Teamnaam statisch weergegeven (niet meer bewerkbaar na deadline)
+- Trend-pijltjes verwijderd
+
+**Team Viewer (ogen-icoon)**
+- SVG ogen-icoon (`public/icons/eyes.svg`) naast "Fantasy XV" koptekst — wit en horizontaal gespiegeld
+- Klikken opent volledig-scherm overlay met teams van andere deelnemers (eigen team uitgesloten)
+- Zelfde layout als fase 2 minus koptekst/ondertitel/kladblok/uitleg puntentelling
+- Links/rechts swipen (touch) of pijltjesknopjes (desktop) navigeren tussen deelnemers
+- WS/RA krijgen OG/ASC-toggle (zelfde patroon als chat); overige deelnemers zien alleen eigen groep
+- Achtergrondafbeelding zichtbaar door semi-transparante overlay (`rgba(10,10,10,0.88)`)
+- Spelersaantal per Romeins cijfer gescheiden per groep (OG vs. ASC), uitgerekend uit `ogSquads`/`ascSquads`
+- Scroll-positie reset bij navigeren naar nieuw team (`key={current.initials}`)
+
+**Technisch**
+- `app/actions/admin.ts`: `ParticipantSquadData` type + `loadSquadsForGroup()` + `_hydrateSquad()` helper
+- `app/(app)/fantasy/page.tsx`: server component laadt squads per groep, berekent `ogPlayerCounts`/`ascPlayerCounts`
+- `app/(app)/fantasy/FantasyClient.tsx`: major rewrite — `Phase2PlayerRow`, `TeamViewer`, `EyesIcon` componenten
+
 ### 2026-06-10 — Fase 2 read-only UI voor poulefase en knockout (Claude Code)
 
 **MatchCard (poulefase, fase 2)**

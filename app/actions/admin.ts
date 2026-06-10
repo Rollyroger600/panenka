@@ -7,6 +7,8 @@ import type { FantasyStats } from '@/lib/scoring'
 import { PARTICIPANTS } from '@/lib/participants'
 import { GROUP_MEMBERS, DUAL_GROUP_INITIALS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
+import { WK_PLAYERS } from '@/lib/data/players'
+import type { Player } from '@/lib/data/players'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
 import type { ParticipantScore } from '@/app/leaderboard/types'
@@ -169,6 +171,57 @@ export async function loadFantasyStats(): Promise<FantasyStats> {
 
 export async function saveFantasyStats(data: FantasyStats): Promise<void> {
   await kvSet('fantasy_stats', data)
+}
+
+export type ParticipantSquadData = {
+  initials: string
+  name: string
+  teamName: string
+  squad: Record<string, Player | null>
+}
+
+const _wkPlayerById = Object.fromEntries(WK_PLAYERS.map((p) => [p.id, p]))
+
+function _hydrateSquad(squad: Record<string, Player | null>): Record<string, Player | null> {
+  return Object.fromEntries(
+    Object.entries(squad).map(([slot, player]) => [
+      slot,
+      player ? (_wkPlayerById[player.id] ?? player) : null,
+    ])
+  )
+}
+
+export async function loadSquadsForGroup(groupId: GroupId): Promise<ParticipantSquadData[]> {
+  const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
+  return Promise.all(
+    groupParticipants.map(async (p) => {
+      const data = await kvGet<{ squad: Record<string, Player | null>; teamName: string }>(
+        participantKey('fantasy', p.initials)
+      )
+      return {
+        initials: p.initials,
+        name: p.name,
+        teamName: data?.teamName ?? '',
+        squad: data?.squad ? _hydrateSquad(data.squad) : {},
+      }
+    })
+  )
+}
+
+export async function loadAllPlayerCounts(): Promise<Record<string, number>> {
+  const squads = await Promise.all(
+    PARTICIPANTS.map((p) =>
+      kvGet<{ squad: Record<string, { name: string } | null> }>(participantKey('fantasy', p.initials))
+    )
+  )
+  const counts: Record<string, number> = {}
+  for (const data of squads) {
+    if (!data?.squad) continue
+    for (const player of Object.values(data.squad)) {
+      if (player?.name) counts[player.name] = (counts[player.name] ?? 0) + 1
+    }
+  }
+  return counts
 }
 
 // ── Score berekening ──────────────────────────────────────────────────────
