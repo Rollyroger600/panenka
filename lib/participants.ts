@@ -3,6 +3,7 @@ export interface Participant {
   initials: string
   extra: number
   token: string
+  deadlineOverride?: string // ISO UTC string, overrides global DEADLINE for this participant
 }
 
 export const PARTICIPANTS: Participant[] = [
@@ -12,7 +13,7 @@ export const PARTICIPANTS: Participant[] = [
   { name: 'Thom',     initials: 'TW',  extra: 4,  token: 'E3bWhhx3IS' },
   { name: 'Henk Jan', initials: 'HP',  extra: 2,  token: '3AKaYpYOer' },
   { name: 'Rogier',   initials: 'RH',  extra: 10, token: 'APM1qt41Cm' },
-  { name: 'Daan',     initials: 'DM',  extra: 9,  token: 'CFHby83vWE' },
+  { name: 'Daan',     initials: 'DM',  extra: 9,  token: 'CFHby83vWE', deadlineOverride: '2026-06-10T15:00:00Z' },
   { name: 'Barthold', initials: 'BM',  extra: 5,  token: 'RiXBASlUbu' },
   { name: 'Robert',   initials: 'RA',  extra: 3,  token: 'DEbcLvondx' },
   { name: 'Tom',      initials: 'TdL', extra: 1,  token: 'ovaNvswUu7' },
@@ -27,7 +28,7 @@ export const PARTICIPANTS: Participant[] = [
   { name: 'Christian',initials: 'CV',  extra: 6,  token: 'hT3fYwBsOi' },
   { name: 'Bregt',    initials: 'BV',  extra: 6,  token: 'rGjC8dMuZe' },
   { name: 'Lex',      initials: 'AR',  extra: 6,  token: 'xL4nWoFpRk' },
-  { name: 'Mark',     initials: 'MB',  extra: 6,  token: 'tA9sEqHvJc' },
+  { name: 'Mark',     initials: 'MB',  extra: 6,  token: 'tA9sEqHvJc', deadlineOverride: '2026-06-10T15:00:00Z' },
   { name: 'Jelle',    initials: 'JH',  extra: 6,  token: 'bU2zNmKyPd' },
   { name: 'Jorn',     initials: 'JK',  extra: 6,  token: 'wI6rCxBfTg' },
   { name: 'Niels',    initials: 'NS',  extra: 6,  token: 'qO5aVlJeHn' },

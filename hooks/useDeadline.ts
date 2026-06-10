@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { PARTICIPANTS } from '@/lib/participants'
+import { useGameStore } from '@/store/gameStore'
 
 const DEADLINE             = new Date('2026-06-09T21:59:00Z') // 23:59 CEST
 const VRAAG_DEADLINE       = new Date('2026-05-31T21:59:00Z') // 31 mei 23:59 CEST
@@ -8,19 +10,27 @@ const VRAAG_GRACE_DEADLINE = new Date('2026-06-03T21:59:00Z') // 3 juni 23:59 CE
 
 export function useDeadline() {
   const [now, setNow] = useState(() => new Date())
+  const participantInitials = useGameStore((s) => s.participantInitials)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(id)
   }, [])
 
-  const isPast           = now >= DEADLINE
+  const participant = participantInitials
+    ? PARTICIPANTS.find(p => p.initials === participantInitials)
+    : undefined
+  const effectiveDeadline = participant?.deadlineOverride
+    ? new Date(participant.deadlineOverride)
+    : DEADLINE
+
+  const isPast           = now >= effectiveDeadline
   const isVraagPast      = now >= VRAAG_DEADLINE
   const isVraagGracePast = now >= VRAAG_GRACE_DEADLINE
-  const msLeft = Math.max(0, DEADLINE.getTime() - now.getTime())
+  const msLeft = Math.max(0, effectiveDeadline.getTime() - now.getTime())
   const days    = Math.floor(msLeft / 86_400_000)
   const hours   = Math.floor((msLeft % 86_400_000) / 3_600_000)
   const minutes = Math.floor((msLeft % 3_600_000) / 60_000)
 
-  return { isPast, isVraagPast, isVraagGracePast, days, hours, minutes, deadline: DEADLINE, vraagDeadline: VRAAG_DEADLINE }
+  return { isPast, isVraagPast, isVraagGracePast, days, hours, minutes, deadline: effectiveDeadline, vraagDeadline: VRAAG_DEADLINE }
 }

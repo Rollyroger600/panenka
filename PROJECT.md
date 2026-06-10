@@ -845,6 +845,12 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-10 — Deadline-override per deelnemer (Claude Code)
+
+- **Per-deelnemer deadline**: `Participant` interface in `lib/participants.ts` krijgt optioneel veld `deadlineOverride?: string` (ISO UTC)
+- Daan (DM) en Mark (MB) krijgen `deadlineOverride: '2026-06-10T15:00:00Z'` (= 17:00 CEST) zodat zij hun invulformulier nog kunnen bijwerken
+- `useDeadline.ts` leest `participantInitials` uit Zustand store en gebruikt de participant-specifieke deadline als die aanwezig is — alle call sites ongewijzigd
+
 ### 2026-06-09 — Admin voortgangstabel deelnemers (Claude Code)
 
 - **Nieuw tabblad "✅ Voortgang"** toegevoegd aan admin dashboard
