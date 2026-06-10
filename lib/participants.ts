@@ -4,6 +4,7 @@ export interface Participant {
   extra: number
   token: string
   deadlineOverride?: string // ISO UTC string, overrides global DEADLINE for this participant
+  ascBonusTokens?: Record<number, number> // extra scoring tokens per match, only counted in ASC group
 }
 
 export const PARTICIPANTS: Participant[] = [
@@ -15,7 +16,7 @@ export const PARTICIPANTS: Participant[] = [
   { name: 'Rogier',   initials: 'RH',  extra: 10, token: 'APM1qt41Cm' },
   { name: 'Daan',     initials: 'DM',  extra: 9,  token: 'CFHby83vWE', deadlineOverride: '2026-06-10T15:00:00Z' },
   { name: 'Barthold', initials: 'BM',  extra: 5,  token: 'RiXBASlUbu' },
-  { name: 'Robert',   initials: 'RA',  extra: 3,  token: 'DEbcLvondx', deadlineOverride: '2026-06-10T15:00:00Z' },
+  { name: 'Robert',   initials: 'RA',  extra: 3,  token: 'DEbcLvondx', deadlineOverride: '2026-06-10T15:00:00Z', ascBonusTokens: { 10: 1, 33: 1, 58: 1 } },
   { name: 'Tom',      initials: 'TdL', extra: 1,  token: 'ovaNvswUu7' },
   { name: 'Willem',   initials: 'WP',  extra: 4,  token: '9lOW3oj68N' },
   { name: 'Bert',     initials: 'BS',  extra: 7,  token: 'QW7fgfHllK' },

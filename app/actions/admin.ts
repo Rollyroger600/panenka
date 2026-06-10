@@ -209,6 +209,7 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
         heeftNieuweSysteem ? oranjeCorrect : undefined,
         p.initials.toLowerCase(),
         beoordeling,
+        groupId === 'asc' ? p.ascBonusTokens : undefined,
       )
 
       const fantasy = scoreFantasy(fantasyData?.squad ?? {}, fantasyStats)

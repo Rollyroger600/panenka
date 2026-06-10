@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-10 — ASC bonus-tokens Robert (Claude Code)
+
+- **3 extra scoring-tokens voor RA in ASC-groep**: wedstrijden 10, 33 en 58 (= Nederland-wedstrijden) tellen elk +1 token bij ASC-scoring
+- `Participant` interface krijgt optioneel veld `ascBonusTokens?: Record<number, number>`
+- RA: `ascBonusTokens: { 10: 1, 33: 1, 58: 1 }` — admin-geconfigureerd, niet door deelnemer instelbaar
+- `scoreParticipant` in `lib/scoring.ts` accepteert optionele `ascBonusTokens` parameter; telt de bonus op bij `effectiveTokens` voor de betreffende wedstrijd
+- `computeAndSaveScores` in `app/actions/admin.ts` geeft `p.ascBonusTokens` mee bij ASC-run, `undefined` bij OG-run
+- Roberts zichtbare tokenbudget (338) en OG-scoring zijn ongewijzigd
+
 ### 2026-06-10 — Token-correctie WS (admin)
 
 - Tokens van Wouter (WS) handmatig gecorrigeerd via `scripts/fix_ws_tokens.mjs`

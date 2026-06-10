@@ -108,6 +108,7 @@ export function scoreParticipant(
   oranjeCorrect?: OranjeCorrectMap,
   participantKey?: string,
   beoordeling?: OranjeBeoordeling,
+  ascBonusTokens?: Record<number, number>,
 ): ScoreBreakdown {
   // ── Poulefase (wedstrijden 1–72) ─────────────────────────────────────────
   let poulefase = 0
@@ -116,7 +117,7 @@ export function scoreParticipant(
     const matchId = parseInt(idStr)
     const actual = results[matchId]
     if (!actual) continue
-    const effectiveTokens = pred.tokens ?? 1
+    const effectiveTokens = (pred.tokens ?? 1) + (ascBonusTokens?.[matchId] ?? 0)
     if (effectiveTokens === 0) continue
 
     const isKoMatch = matchId >= 73
