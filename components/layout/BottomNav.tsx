@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { IconPoule, IconKO, IconOranje, IconFantasy, IconOverzicht, IconChat } from '@/components/icons/NavIcons'
+import { IconPoule, IconKO, IconOranje, IconFantasy, IconOverzicht, IconChat, IconBeker } from '@/components/icons/NavIcons'
+import { APP_PHASE } from '@/lib/config'
 
-const TABS = [
+const TABS_PHASE1 = [
   { href: '/poulefase', label: 'Wedstrijden', Icon: IconPoule },
   { href: '/knockout',  label: 'KO',          Icon: IconKO },
   { href: '/fantasy',   label: 'Fantasy',     Icon: IconFantasy },
@@ -12,6 +13,17 @@ const TABS = [
   { href: '/overzicht', label: 'Overzicht',   Icon: IconOverzicht },
   { href: '/chat',      label: 'Chat',        Icon: IconChat },
 ]
+
+const TABS_PHASE2 = [
+  { href: '/poulefase', label: 'Wedstrijden', Icon: IconPoule },
+  { href: '/knockout',  label: 'Landen',      Icon: IconKO },
+  { href: '/fantasy',   label: 'Fantasy',     Icon: IconFantasy },
+  { href: '/oranje',    label: 'Oranje',      Icon: IconOranje },
+  { href: '/stand',     label: 'Stand',       Icon: IconBeker },
+  { href: '/chat',      label: 'Chat',        Icon: IconChat },
+]
+
+const TABS = APP_PHASE >= 2 ? TABS_PHASE2 : TABS_PHASE1
 
 export function BottomNav() {
   const pathname = usePathname()
