@@ -845,6 +845,45 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-10 — Fase 2 read-only UI voor poulefase en knockout (Claude Code)
+
+**MatchCard (poulefase, fase 2)**
+- Oranje randje alleen zichtbaar als wedstrijd gespeeld (result known), niet meer altijd
+- "Max. score" vervangen door "Score" met verdiende punten (`earnedScore`); standaard 0.00 pts
+- Trend-pijltjes en token-steppers verborgen in `readOnly`
+- Score-label rechtuit (`justify-end`) nu steppers weg zijn
+- Nieuwe resultaatrij onder knoprij: ↑ bij juiste toto + uitslag; groen = correct, wit = fout
+
+**DeadlineBanner**: geeft `null` terug als deadline verstreken — banner verdwijnt automatisch
+
+**BottomNav**: tab 'Stand' gebruikt `IconOverzicht` in fase 2 (was `IconBeker`)
+
+**PoulefaseClient**
+- TO-DO-filter verwijderd in fase 2 (geen nieuwe voorspellingen)
+- Standen-tabblad toont echte WK-stand via `computeStandingsFromResults()` (niet uit voorspellingen)
+- "Deadline verstreken — alleen lezen" banner verwijderd
+
+**Alle tabbladen**: "🔒 Deadline verstreken · alleen lezen" banners verwijderd uit poulefase, knockout, fantasy en oranje
+
+**Knockout read-only (fase 2)**
+- Landen-picker uitgeschakeld, wis-knop verborgen, trend-pijltjes weg, token-steppers weg
+- Token-aantal zichtbaar als statisch getal
+- Max. score → Score met verdiende punten (zelfde logica als MatchCard)
+- `SuggestionsPanel` verborgen in readOnly
+- **Slimme tegel-indicatoren** (RoundSection + Ronde32Section):
+  - Correct: oranje randje + groen ✓
+  - Incorrect: geen randje + rood ✗
+  - Onbekend: geen randje, geen indicatie
+  - R32 partieel (land door, maar andere rol): wit randje + oranje ✓
+
+**Nieuwe/gewijzigde bestanden**
+- `lib/standings.ts`: `computeStandingsFromResults()` toegevoegd
+- `components/matches/StandingsPanel.tsx`: `results` prop; gebruikt nieuwe functie als results aanwezig
+- `app/(app)/knockout/page.tsx`: server component laadt `koResults` via `loadKoResults()`
+- `app/(app)/knockout/KnockoutClient.tsx`: `koResults` prop doorgegeven aan `Ronde32Section` en `RoundSection`
+- `components/knockout/RoundSection.tsx`: `getSlotStatus()` + readOnly props
+- `components/knockout/Ronde32Section.tsx`: `getSlotStatusR32()` met partial-logica + readOnly props
+
 ### 2026-06-10 — Fase 2 navigatie + poulefase read-only (Claude Code)
 
 - **`lib/config.ts`**: `APP_PHASE` constante (nu `2`); naar `3` zetten voor knock-outfase
