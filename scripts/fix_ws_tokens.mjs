@@ -19,7 +19,7 @@ async function kvSet(key, value) {
   const res = await fetch(`${UPSTASH_URL}/set/${key}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(JSON.stringify(value)),
+    body: JSON.stringify(value),
   })
   return res.json()
 }
