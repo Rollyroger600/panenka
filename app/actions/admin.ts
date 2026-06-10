@@ -286,11 +286,11 @@ export async function loadVoortgang(groupId: GroupId = 'og'): Promise<VoortgangE
 
       const fantasyCount = Object.values(fantasyData?.squad ?? {}).filter(v => v !== null).length
 
-      // Oranje: count answered published questions from others
+      // Oranje: count all answered published questions (including own)
       const ant = antwoorden ?? {}
-      const oranjeTotal = published.filter(q => q.authorKey !== initialsLC).length
+      const oranjeTotal = published.length
       const oranjeCount = published.filter(
-        q => q.authorKey !== initialsLC && ant[q.matchId]?.[q.authorKey] !== undefined
+        q => ant[q.matchId]?.[q.authorKey] !== undefined
       ).length
 
       return {

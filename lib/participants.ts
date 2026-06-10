@@ -26,7 +26,6 @@ export const PARTICIPANTS: Participant[] = [
   // ── ASC-only (extra = 6 bonus tokens) ───────────────────────────────────
   { name: 'Jan',      initials: 'JS',  extra: 6,  token: 'mNpQ7xKaLv' },
   { name: 'Christian',initials: 'CV',  extra: 6,  token: 'hT3fYwBsOi' },
-  { name: 'Bregt',    initials: 'BV',  extra: 6,  token: 'rGjC8dMuZe' },
   { name: 'Lex',      initials: 'AR',  extra: 6,  token: 'xL4nWoFpRk' },
   { name: 'Mark',     initials: 'MB',  extra: 6,  token: 'tA9sEqHvJc', deadlineOverride: '2026-06-10T15:00:00Z' },
   { name: 'Jelle',    initials: 'JH',  extra: 6,  token: 'bU2zNmKyPd' },

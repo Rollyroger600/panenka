@@ -3301,6 +3301,18 @@ Timo's (TG) vraag voor match 33 (NED–SWE, 20 jun) was niet correct opgeslagen.
 - **Type:** `speler_beide` (speler NL of tegenstander, 2×26 opties)
 - **Status:** `gepubliceerd: false` — te publiceren via admin UI
 
+#### Admin voortgang: oranjeTotal inclusief eigen vraag (`app/actions/admin.ts`)
+
+`oranjeTotal` filterde ten onrechte de eigen gepubliceerde vraag eruit (deelnemers vullen ook hun eigen vraag in). Fix: filter `q.authorKey !== initialsLC` verwijderd uit zowel `oranjeTotal` als `oranjeCount`. Deelnemers zien nu correct 39/39 i.p.v. 36/36.
+
+#### Deelnemer verwijderd: Bregt (BV) ASC (`lib/participants.ts`)
+
+Bregt heeft besloten niet meer mee te doen. Verwijderd uit de deelnemerslijst. Geen KV-data aanwezig.
+
+#### Tokens handmatig opgehoogd via script (KV)
+
+Niels (NS), Peter (PN) en Wiger (WW) hadden nog 6 tokens over na de deadline. Via eenmalig Node.js-script (`scripts/add_tokens.mjs`) elk +2 tokens toegevoegd bij wedstrijden 10, 33 en 58.
+
 #### Chat: afbeelding uploaden repareerd op iOS (`components/chat/ChatInput.tsx`, `components/chat/ChatPage.tsx`)
 
 **Probleem:** Gebruikers konden op het camera-icoontje drukken en een afbeelding selecteren, maar er gebeurde daarna niets.
