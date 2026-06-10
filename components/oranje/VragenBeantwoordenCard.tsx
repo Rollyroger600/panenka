@@ -1,9 +1,11 @@
 'use client'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { abbrevCountry } from '@/lib/helpers'
 import { PARTICIPANTS } from '@/lib/participants'
 import { WK_PLAYERS } from '@/lib/data/players'
+import { parseCorrectWaarden } from '@/lib/types/oranjeVragen'
+import type { Participant } from '@/lib/participants'
 import type { Match } from '@/lib/data/matches'
 import type { OranjeVraag, OranjeAntwoordenMap } from '@/lib/types/oranjeVragen'
 import { MINUUT_OPTIES } from '@/lib/types/oranjeVragen'
@@ -12,13 +14,21 @@ import { getWKSquadStatus } from '@/lib/wkSquadCheck'
 interface Props {
   match: Match
   vragen: Record<string, OranjeVraag>          // authorInitials → vraag
-  antwoorden: OranjeAntwoordenMap
+  antwoorden: OranjeAntwoordenMap              // mijn eigen antwoorden
+  correctMap: Record<string, string | null>    // questionAuthorKey → correct antwoord
+  alleAntwoorden: Record<string, OranjeAntwoordenMap>  // initials → antwoordenMap
+  groupParticipants: Participant[]
   mijnInitials: string
   onAntwoord: (matchId: number, authorInitials: string, waarde: string | null) => void
   readOnly: boolean
 }
 
-export function VragenBeantwoordenCard({ match, vragen, antwoorden, mijnInitials, onAntwoord, readOnly }: Props) {
+export function VragenBeantwoordenCard({
+  match, vragen, antwoorden, correctMap, alleAntwoorden, groupParticipants,
+  mijnInitials, onAntwoord, readOnly,
+}: Props) {
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+
   const opponent = match.home === 'Nederland' ? match.away : match.home
 
   const nedPlayers = useMemo(
@@ -38,83 +48,141 @@ export function VragenBeantwoordenCard({ match, vragen, antwoorden, mijnInitials
 
   if (gepubliceerdeVragen.length === 0) {
     return (
-      <div className="rounded-xl border border-[#2a2a2a] p-4 mb-4 text-center text-xs text-[#444]" style={{ background: 'rgba(22,22,22,0.82)' }}>
+      <div className="rounded-xl border border-[#2a2a2a] p-4 text-center text-xs text-[#444]" style={{ background: 'rgba(22,22,22,0.82)' }}>
         Nog geen vragen gepubliceerd voor{' '}
         <span className="text-[#666]">
-          {match.home === 'Nederland' ? 'Nederland' : match.away} – {opponent}
+          {abbrevCountry(match.home)} – {abbrevCountry(match.away)}
         </span>
       </div>
     )
   }
 
+  function toggleExpand(key: string) {
+    setExpandedKeys((prev) => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
   return (
-    <div className="rounded-xl border border-[#FF6B00]/30 overflow-hidden mb-4" style={{ background: 'rgba(22,22,22,0.82)' }}>
-      {/* Header */}
-      <div className="relative flex flex-col items-center px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] font-heading text-sm font-bold text-white"
-          style={{ background: 'rgba(37,37,37,0.8)' }}>
-          # {match.id}
-        </div>
-        <div className="flex items-center gap-2">
-          <FlagImage country={match.home} size={24} />
-          <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.home)}</span>
-          <span className="font-heading font-bold text-[#7e7667]">-</span>
-          <span className="font-accent font-light text-sm text-white">{abbrevCountry(match.away)}</span>
-          <FlagImage country={match.away} size={24} />
-        </div>
-        <p className="font-heading font-light text-[12px] uppercase tracking-widest mt-0.5 text-[#7e7667]">
-          {match.date} · {match.stadium}
-        </p>
-        <span className="text-[10px] text-[#555] mt-0.5">
-          {Object.values(matchAntwoorden).filter(Boolean).length}/{gepubliceerdeVragen.length} ingevuld
-        </span>
-      </div>
+    <div className="flex flex-col gap-3">
+      {gepubliceerdeVragen.map((auteur) => {
+        const key = auteur.initials.toLowerCase()
+        const vraag = vragen[key]!
+        const effectiefType = vraag.adminType ?? (vraag.type !== 'anders' ? vraag.type : null)
+        const huidigAntwoord = matchAntwoorden[key] ?? null
+        const isExpanded = expandedKeys.has(key)
 
-      <div className="divide-y divide-[#1e1e1e]">
-        {gepubliceerdeVragen.map((auteur) => {
-          const key = auteur.initials.toLowerCase()
-          const vraag = vragen[key]!
-          const effectiefType = vraag.adminType ?? (vraag.type !== 'anders' ? vraag.type : null)
-          const huidigAntwoord = matchAntwoorden[key] ?? null
+        const correctAntwoord = correctMap?.[key] ?? null
+        const correctValues = parseCorrectWaarden(correctAntwoord)
+        const heeftCorrectAntwoord = correctValues.length > 0
+        const isCorrect = heeftCorrectAntwoord && huidigAntwoord !== null && correctValues.includes(huidigAntwoord)
+        const isWrong = heeftCorrectAntwoord && huidigAntwoord !== null && !correctValues.includes(huidigAntwoord)
 
-          return (
-            <div key={key} className="px-4 py-3 flex flex-col gap-2">
-              {/* Vraagregel */}
-              <div className="flex items-start gap-2">
-                <FlagImage country="Nederland" size={16} className="shrink-0 mt-0.5 opacity-60" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-[10px] text-[#555] font-bold">{auteur.name}</span>
-                  <p className="text-sm text-white leading-snug">{vraag.tekst}</p>
-                </div>
+        return (
+          <div
+            key={key}
+            className="rounded-xl border border-[#2a2a2a] p-4 flex flex-col gap-3"
+            style={{ background: 'rgba(22,22,22,0.82)' }}
+          >
+            {/* Vraagregel */}
+            <div className="flex items-start gap-2">
+              <FlagImage country="Nederland" size={16} className="shrink-0 mt-0.5 opacity-60" />
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] text-[#555] font-bold">{auteur.name}</span>
+                <p className="text-sm text-white leading-snug">{vraag.tekst}</p>
               </div>
-
-              {/* Antwoordinvoer */}
-              {effectiefType && !readOnly && (
-                <AntwoordInvoer
-                  type={effectiefType}
-                  waarde={huidigAntwoord}
-                  opponent={opponent}
-                  nedPlayers={nedPlayers.map((p) => p.name)}
-                  oppPlayers={oppPlayers.map((p) => p.name)}
-                  onChange={(v) => onAntwoord(match.id, key, v)}
-                />
-              )}
-
-              {/* Read-only weergave */}
-              {readOnly && huidigAntwoord && (
-                <span className="text-xs text-[#FF6B00] font-bold bg-[#FF6B00]/10 border border-[#FF6B00]/20 px-2 py-0.5 rounded-lg self-start">
-                  {huidigAntwoord}{effectiefType === 'percentage' ? '%' : ''}
-                </span>
-              )}
-              {readOnly && !huidigAntwoord && (
-                <span className="text-xs text-[#333]">— niet ingevuld</span>
-              )}
             </div>
-          )
-        })}
-      </div>
+
+            {/* Antwoordinvoer (answering phase) */}
+            {effectiefType && !readOnly && (
+              <AntwoordInvoer
+                type={effectiefType}
+                waarde={huidigAntwoord}
+                opponent={opponent}
+                nedPlayers={nedPlayers.map((p) => p.name)}
+                oppPlayers={oppPlayers.map((p) => p.name)}
+                onChange={(v) => onAntwoord(match.id, key, v)}
+              />
+            )}
+
+            {/* Read-only: eigen antwoord + indicator + expand */}
+            {readOnly && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  {huidigAntwoord ? (
+                    <span className="text-xs text-[#FF6B00] font-bold bg-[#FF6B00]/10 border border-[#FF6B00]/20 px-2 py-0.5 rounded-lg">
+                      {formatAntwoord(huidigAntwoord, effectiefType, opponent)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-[#333]">— niet ingevuld</span>
+                  )}
+                  {isCorrect && <span className="text-[#4adf8a] text-sm font-bold">✓</span>}
+                  {isWrong && <span className="text-[#f44] text-sm font-bold">✗</span>}
+                  {heeftCorrectAntwoord && (
+                    <span className="text-[10px] text-[#4adf8a] bg-[#4adf8a]/10 border border-[#4adf8a]/20 px-2 py-0.5 rounded-lg">
+                      ✓ {formatAntwoord(correctValues[0], effectiefType, opponent)}
+                    </span>
+                  )}
+
+                  <button
+                    onClick={() => toggleExpand(key)}
+                    className="ml-auto text-[10px] text-[#555] hover:text-[#888] border border-[#2a2a2a] px-2 py-0.5 rounded-lg transition-colors"
+                  >
+                    {isExpanded ? '▲' : '▼'} anderen
+                  </button>
+                </div>
+
+                {/* Uitklapbaar: antwoorden andere deelnemers */}
+                {isExpanded && (
+                  <div className="border-t border-[#1e1e1e] pt-2.5 flex flex-col gap-1.5">
+                    {groupParticipants
+                      .filter((p) => p.initials.toLowerCase() !== mijnInitials.toLowerCase())
+                      .map((p) => {
+                        const pKey = p.initials.toLowerCase()
+                        const pAntwoord = alleAntwoorden[pKey]?.[match.id]?.[key] ?? null
+                        const pCorrect = heeftCorrectAntwoord && pAntwoord !== null && correctValues.includes(pAntwoord)
+                        const pWrong = heeftCorrectAntwoord && pAntwoord !== null && !correctValues.includes(pAntwoord)
+
+                        return (
+                          <div key={pKey} className="flex items-center justify-between">
+                            <span className="text-[11px] text-[#666]">{p.name}</span>
+                            <div className="flex items-center gap-1.5">
+                              {pAntwoord ? (
+                                <span className="text-[11px] text-[#888]">
+                                  {formatAntwoord(pAntwoord, effectiefType, opponent)}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-[#444]">—</span>
+                              )}
+                              {pCorrect && <span className="text-[#4adf8a] text-xs font-bold">✓</span>}
+                              {pWrong && <span className="text-[#f44] text-xs font-bold">✗</span>}
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
+}
+
+// ── Hulpfunctie: formatteer antwoordwaarde voor display ───────────────────
+
+function formatAntwoord(
+  waarde: string,
+  type: Exclude<import('@/lib/types/oranjeVragen').AntwoordType, 'anders'> | null,
+  opponent: string,
+): string {
+  if (type === 'percentage') return `${waarde}%`
+  if (type === 'nl_opp') return waarde === 'NL' ? 'Nederland' : opponent
+  return waarde
 }
 
 // ── Invoerveld per type ───────────────────────────────────────────────────

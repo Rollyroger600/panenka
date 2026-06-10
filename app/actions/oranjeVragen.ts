@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { kvGet, kvSet, groupKey } from '@/lib/kv/kv'
 import type { GroupId } from '@/lib/groups'
 import { DUAL_GROUP_INITIALS } from '@/lib/groups'
+import { PARTICIPANTS } from '@/lib/participants'
 import type { OranjeVraag, OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap } from '@/lib/types/oranjeVragen'
 
 async function getGroupId(): Promise<GroupId> {
@@ -95,4 +96,26 @@ export async function saveOranjeAntwoordenForGroup(data: OranjeAntwoordenMap, gr
 export async function loadOranjeCorrect(): Promise<OranjeCorrectMap> {
   const groupId = await getGroupId()
   return (await kvGet<OranjeCorrectMap>(groupKey('oranje_correct', groupId))) ?? {}
+}
+
+export async function loadOranjeCorrectForGroup(groupId: GroupId): Promise<OranjeCorrectMap> {
+  return (await kvGet<OranjeCorrectMap>(groupKey('oranje_correct', groupId))) ?? {}
+}
+
+// ── Alle antwoorden (voor read-only weergave) ─────────────────────────────
+
+export async function loadAllOranjeAntwoorden(): Promise<Record<string, OranjeAntwoordenMap>> {
+  const groupId = await getGroupId()
+  return loadAllOranjeAntwoordenForGroup(groupId)
+}
+
+export async function loadAllOranjeAntwoordenForGroup(groupId: GroupId): Promise<Record<string, OranjeAntwoordenMap>> {
+  const result: Record<string, OranjeAntwoordenMap> = {}
+  await Promise.all(
+    PARTICIPANTS.map(async (p) => {
+      const data = await kvGet<OranjeAntwoordenMap>(groupKey('oranje_antwoorden', groupId, p.initials))
+      if (data) result[p.initials.toLowerCase()] = data
+    }),
+  )
+  return result
 }

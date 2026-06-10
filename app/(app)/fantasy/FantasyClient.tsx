@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { PlayerInfoCard } from '@/components/fantasy/PlayerInfoCard'
 import { useFantasyXV } from '@/hooks/useFantasyXV'
 import { useDeadline } from '@/hooks/useDeadline'
@@ -69,7 +70,7 @@ function Phase2PlayerRow({ slotIndex, player, stats, counts }: { slotIndex: numb
         <span className="text-sm font-bold text-[#888] w-6 shrink-0 text-right">#{slotIndex}</span>
         <FlagImage country={player.country} size={24} className="shrink-0" />
         <span className="text-sm font-bold text-white flex-1 min-w-0 truncate">{player.name}</span>
-        <span className="font-heading text-sm font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0 w-11 text-center">
+        <span className="font-heading text-sm font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0 w-10 text-center">
           {formatQuote(quote)}
         </span>
         <span className="w-8 text-center text-xs font-bold shrink-0" style={{ color: count > 0 ? '#888' : MUTED }}>
@@ -77,7 +78,7 @@ function Phase2PlayerRow({ slotIndex, player, stats, counts }: { slotIndex: numb
         </span>
         <span className="w-7 text-center text-sm font-bold text-white shrink-0">{s.goals > 0 ? s.goals : <span style={{ color: MUTED }}>–</span>}</span>
         <span className="w-7 text-center text-sm font-bold text-white shrink-0">{s.assists > 0 ? s.assists : <span style={{ color: MUTED }}>–</span>}</span>
-        <span className="w-12 text-right text-sm font-bold shrink-0" style={{ color: pts > 0 ? '#FF6B00' : MUTED }}>
+        <span className="w-10 text-right text-sm font-bold shrink-0" style={{ color: pts > 0 ? '#FF6B00' : MUTED }}>
           {pts > 0 ? pts.toFixed(2) : '–'}
         </span>
       </div>
@@ -96,7 +97,7 @@ function Phase2ScratchpadRow({ player, stats, counts }: { player: Player; stats:
     <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-[#222]" style={{ background: '#0d0d0d' }}>
       <FlagImage country={player.country} size={24} className="shrink-0 opacity-60" />
       <span className="text-sm font-medium text-[#888] flex-1 min-w-0 truncate">{player.name}</span>
-      <span className="font-heading text-sm font-bold text-[#555] border border-[#333] px-2 py-0.5 rounded-lg shrink-0 w-11 text-center">
+      <span className="font-heading text-sm font-bold text-[#555] border border-[#333] px-2 py-0.5 rounded-lg shrink-0 w-10 text-center">
         {formatQuote(quote)}
       </span>
       <span className="w-8 text-center text-xs font-bold shrink-0" style={{ color: count > 0 ? '#666' : MUTED }}>
@@ -104,7 +105,7 @@ function Phase2ScratchpadRow({ player, stats, counts }: { player: Player; stats:
       </span>
       <span className="w-7 text-center text-sm font-bold shrink-0" style={{ color: s.goals > 0 ? '#aaa' : MUTED }}>{s.goals > 0 ? s.goals : '–'}</span>
       <span className="w-7 text-center text-sm font-bold shrink-0" style={{ color: s.assists > 0 ? '#aaa' : MUTED }}>{s.assists > 0 ? s.assists : '–'}</span>
-      <span className="w-12 text-right text-sm font-bold shrink-0" style={{ color: pts > 0 ? '#FF6B00' : MUTED }}>
+      <span className="w-10 text-right text-sm font-bold shrink-0" style={{ color: pts > 0 ? '#FF6B00' : MUTED }}>
         {pts > 0 ? pts.toFixed(2) : '–'}
       </span>
     </div>
@@ -117,11 +118,11 @@ function ColHeader() {
       <span className="w-6 shrink-0" />
       <span className="w-6 shrink-0" />
       <span className="flex-1" />
-      <span className="w-11 shrink-0" />
+      <span className="w-10 shrink-0" />
       <span className="w-8 shrink-0" />
       <span className="w-7 text-center shrink-0">G</span>
       <span className="w-7 text-center shrink-0">A</span>
-      <span className="w-12 text-right shrink-0">Pts</span>
+      <span className="w-10 text-right shrink-0">Pts</span>
     </div>
   )
 }
@@ -150,29 +151,27 @@ function TotalScoreBar({ squad, stats }: { squad: Record<string, Player | null>;
 // ── TeamViewer ─────────────────────────────────────────────────────────────────
 
 function TeamViewer({
-  ogSquads, ascSquads, isDualGroup, defaultGroup, participantInitials,
+  ogSquads, ascSquads, activeGroup, participantInitials,
   fantasyStats, ogPlayerCounts, ascPlayerCounts, onClose,
 }: {
   ogSquads: ParticipantSquadData[]
   ascSquads: ParticipantSquadData[] | null
-  isDualGroup: boolean
-  defaultGroup: GroupId
+  activeGroup: GroupId
   participantInitials: string
   fantasyStats: FantasyStats
   ogPlayerCounts: Record<string, number>
   ascPlayerCounts: Record<string, number> | null
   onClose: () => void
 }) {
-  const [group, setGroup] = useState<GroupId>(defaultGroup)
   const [index, setIndex] = useState(0)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
 
-  const squads = (group === 'og' ? ogSquads : ascSquads ?? ogSquads)
+  const squads = (activeGroup === 'og' ? ogSquads : ascSquads ?? ogSquads)
     .filter(s => s.initials !== participantInitials)
-  const counts = group === 'og' ? ogPlayerCounts : (ascPlayerCounts ?? ogPlayerCounts)
+  const counts = activeGroup === 'og' ? ogPlayerCounts : (ascPlayerCounts ?? ogPlayerCounts)
 
-  useEffect(() => { setIndex(0) }, [group])
+  useEffect(() => { setIndex(0) }, [activeGroup])
 
   const current = squads[index]
 
@@ -190,22 +189,6 @@ function TeamViewer({
         >
           ✕
         </button>
-
-        {isDualGroup && (
-          <div className="flex rounded-full bg-[#1E1E1E] border border-[#333] p-0.5 gap-0.5">
-            {(['og', 'asc'] as GroupId[]).map((g) => (
-              <button
-                key={g}
-                onClick={() => setGroup(g)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                  group === g ? 'bg-[#FF6B00] text-white' : 'text-[#888] hover:text-white'
-                }`}
-              >
-                {g.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        )}
 
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -305,6 +288,12 @@ export function FantasyClient({
   const [modalSlot, setModalSlot] = useState<string | null>(null)
   const [scratchpadModalSlot, setScratchpadModalSlot] = useState<string | null>(null)
   const [viewerOpen, setViewerOpen] = useState(false)
+  const [activeGroup, setActiveGroup] = useState<GroupId>(defaultGroup)
+  const [headerToggleEl, setHeaderToggleEl] = useState<Element | null>(null)
+
+  useEffect(() => {
+    setHeaderToggleEl(document.getElementById('header-chat-toggle'))
+  }, [])
 
   const openModal = (slotKey: string) => { if (!isPast) setModalSlot(slotKey) }
   const closeModal = () => setModalSlot(null)
@@ -332,14 +321,30 @@ export function FantasyClient({
     <TeamViewer
       ogSquads={ogSquads}
       ascSquads={ascSquads}
-      isDualGroup={isDualGroup}
-      defaultGroup={defaultGroup}
+      activeGroup={activeGroup}
       participantInitials={participantInitials}
       fantasyStats={fantasyStats}
       ogPlayerCounts={ogPlayerCounts}
       ascPlayerCounts={ascPlayerCounts}
       onClose={() => setViewerOpen(false)}
     />
+  ) : null
+
+  const headerToggle = headerToggleEl && isDualGroup ? createPortal(
+    <div className="flex rounded-full bg-[#1E1E1E] border border-[#333] p-0.5 gap-0.5">
+      {(['og', 'asc'] as GroupId[]).map((g) => (
+        <button
+          key={g}
+          onClick={() => setActiveGroup(g)}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+            activeGroup === g ? 'bg-[#FF6B00] text-white' : 'text-[#888] hover:text-white'
+          }`}
+        >
+          {g.toUpperCase()}
+        </button>
+      ))}
+    </div>,
+    headerToggleEl,
   ) : null
 
   if (!isLoaded) return <SkeletonList count={8} />
@@ -351,12 +356,13 @@ export function FantasyClient({
     return (
       <div>
         {viewerEl}
+        {headerToggle}
 
         <div className="relative flex items-center justify-center mb-1">
           <h1 className="font-accent font-bold text-3xl text-white">Fantasy XV</h1>
           {eyesButton}
         </div>
-        <p className="font-accent font-light text-white text-xs mb-4 text-center">Stel je eigen droomteam samen</p>
+        <p className="font-accent font-light text-white text-xs mb-4 text-center">Jouw droomteam</p>
         <div className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 flex items-center justify-center">
           <span className="font-script text-[28px] text-white">{teamName || 'Naamloos'}</span>
         </div>
@@ -418,6 +424,7 @@ export function FantasyClient({
   return (
     <div>
       {viewerEl}
+      {headerToggle}
 
       <div className="relative flex items-center justify-center mb-1">
         <h1 className="font-accent font-bold text-3xl text-white">Fantasy XV</h1>

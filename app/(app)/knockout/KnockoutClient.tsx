@@ -33,7 +33,7 @@ export function KnockoutClient({ koResults }: { koResults: Record<string, string
   return (
     <div>
       <h1 className="font-accent font-bold text-3xl text-white mb-1 text-center">Knockout</h1>
-      <p className="font-accent font-light text-white text-xs mb-4 text-center">Voorspel welke landen doorgaan per ronde</p>
+      <p className="font-accent font-light text-white text-xs mb-4 text-center">{readOnly ? 'Jouw doorgaande landen' : 'Voorspel welke landen doorgaan per ronde'}</p>
 
       {/* Round tabs — centered */}
       <div className="flex gap-1.5 mb-5 rounded-xl p-1" style={{ background: 'rgba(22,22,22,0.82)' }}>

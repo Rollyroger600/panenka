@@ -845,6 +845,35 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-10 — Oranje fase 2 UI, Overzicht-tabblad, ondertitels (Claude Code)
+
+**Oranje tabblad fase 2 — volledig herontworpen**
+- `VraagIndienenCard` (eigen vraag + ingediend-melding) verwijderd uit fase 2
+- Match-navigatie: 3 knoppen (🇳🇱–🇯🇵 / 🇳🇱–🇸🇪 / 🇹🇳–🇳🇱) met vlaggen, volledige breedte, gecentreerd
+- Balk: toont "ingevuld" tijdens antwoordfase; "correct · tokens verdiend" na deadline
+- Per-vraag eigen container (afgeronde kaart)
+- Read-only: groen ✓ / rood ✗ als goed antwoord bekend; goed antwoord als groen badge
+- "▼ anderen" uitklapknop per vraag: antwoorden + indicatoren van alle groepsdeelnemers
+- Bug fix: Tom (TdL) en Tim (TvL) misten bij "anderen" door `.toUpperCase()` vergelijkingsfout
+- Nieuwe server actions: `loadAllOranjeAntwoorden`, `loadAllOranjeAntwoordenForGroup`, `loadOranjeCorrectForGroup`
+
+**Overzicht-tabblad (was: Stand)**
+- Tabblad omgebouwd naar client component (`StandClient.tsx`)
+- Titel → "Overzicht", ondertitel → datum van de dag (Nederlands)
+- 3 sub-tabs in poulefase-stijl: **Stand**, **Inzet** (placeholder), **Pot** (placeholder)
+- OG/ASC-toggle in app-header voor Wouter en Robert (via portal, identiek aan Oranje/Chat)
+- Nieuwe server action: `loadScoresForGroup`
+
+**Fantasy XV fase 2**
+- OG/ASC-toggle verplaatst van TeamViewer-modal naar app-header (via portal)
+- Quotering-breedte: `w-11` → `w-10`; Pts-breedte: `w-12` → `w-10`
+- Ondertitel → "Jouw droomteam"
+
+**Ondertitels aangepast voor fase 2**
+- Poulefase: "Jouw tokens, toto en uitslag"
+- Knockout: "Jouw doorgaande landen"
+- Oranje: "Jouw oranje antwoorden"
+
 ### 2026-06-10 — Fantasy XV fase 2 + Team Viewer (Claude Code)
 
 **Fantasy fase 2 (read-only weergave na deadline)**
