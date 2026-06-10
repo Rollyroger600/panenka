@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-10 — Token-correctie WS (admin)
+
+- Tokens van Wouter (WS) handmatig gecorrigeerd via `scripts/fix_ws_tokens.mjs`
+- Wedstrijden 1–24 → 1 token elk; diverse wedstrijden 25–63 verlaagd (6→5, 5→4, 4→3, 3→2)
+- Totaal: 120 poulefase + 221 KO = 341 tokens (exact op budget)
+- Correctie: in instructie stond wedstrijd 33, bedoeld was wedstrijd 32 (5→4)
+
 ### 2026-06-10 — Deadline-override per deelnemer (Claude Code)
 
 - **Per-deelnemer deadline**: `Participant` interface in `lib/participants.ts` krijgt optioneel veld `deadlineOverride?: string` (ISO UTC)
