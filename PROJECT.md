@@ -964,6 +964,12 @@ The following decisions were made during implementation that deviate from or ext
 - `computeAndSaveScores` in `app/actions/admin.ts` geeft `p.ascBonusTokens` mee bij ASC-run, `undefined` bij OG-run
 - Roberts zichtbare tokenbudget (338) en OG-scoring zijn ongewijzigd
 
+### 2026-06-10 — Teamnaam gecentreerd bij meerdere regels (Claude Code)
+
+- `block text-center` toegevoegd aan teamnaam-`<span>` in `FantasyClient.tsx` (leesweergave + eigen view) en `TeamNameEditor.tsx`
+- Lange namen zoals "Het bestuur van ASC staat achter Wiger Wijnen" zijn nu gecentreerd over meerdere regels
+- Tevens teamnamen ingevuld voor 8 deelnemers via Redis (LV, TdL, MG, BH, RH, DK, PN, AR)
+
 ### 2026-06-10 — Token-correctie WS (admin)
 
 - Tokens van Wouter (WS) handmatig gecorrigeerd via `scripts/fix_ws_tokens.mjs`
