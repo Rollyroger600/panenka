@@ -229,8 +229,8 @@ function TeamViewer({
           }}
         >
           {/* Teamnaam */}
-          <div className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 flex items-center justify-center">
-            <span className="font-script text-[28px] text-white">{current.teamName || current.name}</span>
+          <div className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 text-center">
+            <span className="font-script text-[28px] text-white block">{current.teamName || current.name}</span>
           </div>
 
           {/* Spelers */}
@@ -363,8 +363,8 @@ export function FantasyClient({
           {eyesButton}
         </div>
         <p className="font-accent font-light text-white text-xs mb-4 text-center">Jouw droomteam</p>
-        <div className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 flex items-center justify-center">
-          <span className="font-script text-[28px] text-white">{teamName || 'Naamloos'}</span>
+        <div className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 text-center">
+          <span className="font-script text-[28px] text-white block">{teamName || 'Naamloos'}</span>
         </div>
 
         <div className="mb-2 text-center">

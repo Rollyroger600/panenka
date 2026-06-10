@@ -45,10 +45,10 @@ export function TeamNameEditor() {
   return (
     <button
       onClick={startEdit}
-      className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 flex items-center justify-center"
+      className="w-full rounded-xl bg-[rgba(22,22,22,0.82)] border border-[#2a2a2a] px-4 py-2 mb-4 text-center"
     >
       <span
-        className={`font-script text-[28px] transition-colors ${teamName ? 'text-white' : 'text-[#555]'}`}
+        className={`font-script text-[28px] transition-colors block text-center ${teamName ? 'text-white' : 'text-[#555]'}`}
       >
         {teamName || 'Teamnaam kiezen'}
       </span>
