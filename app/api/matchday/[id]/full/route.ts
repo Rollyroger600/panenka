@@ -98,7 +98,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         return {
           initials: p.initials,
           name: p.name,
-          tokens: pred?.tokens ?? null,
+          tokens: pred?.tokens ?? 1,
           toto: pred?.toto ?? null,
           uitslag: pred?.uitslag ?? null,
           uitslagQuote: pred?.uitslag && odds ? (odds.scores[pred.uitslag] ?? null) : null,

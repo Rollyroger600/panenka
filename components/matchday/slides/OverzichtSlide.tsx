@@ -69,7 +69,7 @@ export const OverzichtSlide = forwardRef<HTMLDivElement, Props>(
     const padded = String(matchdayId).padStart(2, '0')
 
     return (
-      <SlideWrapper ref={ref} title={`OVERZICHT ${padded}`} titleFont="accent" minHeight={720} exporting={exporting}>
+      <SlideWrapper ref={ref} title={`OVERZICHT ${padded}`} titleFont="accent" minHeight={720}>
 
         {/* Tabel 1: Poule | KO | FXV | Toto | Uitsl */}
         <div className="mb-4" style={{ paddingTop: 8 }}>

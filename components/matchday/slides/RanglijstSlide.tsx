@@ -48,7 +48,7 @@ export const RanglijstSlide = forwardRef<HTMLDivElement, Props>(
     )
 
     return (
-      <SlideWrapper ref={ref} title={`RANGLIJST ${padded}`} titleFont="accent" minHeight={720} exporting={exporting}>
+      <SlideWrapper ref={ref} title={`RANGLIJST ${padded}`} titleFont="accent" minHeight={720}>
 
         {/* ProgressChart */}
         <ProgressChart

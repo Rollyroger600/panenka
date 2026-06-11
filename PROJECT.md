@@ -845,6 +845,32 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-11 — Matchday slides live + bugfixes (Claude Code)
+
+#### Fantasy fase 2: kolombreedtes & padding
+- `FantasyClient.tsx`: quotering-container en PTS-kolom verkleind naar 38px (was 40px), rij-padding naar 8px — naam-kolom krijgt meer ruimte op kleine schermen.
+
+#### MatchdayButton in header
+- `AppHeader.tsx`: `MatchdayButton` toegevoegd links naast de beker-knop; `groupId` prop correct gedestructureerd.
+- `MatchdayButton.tsx`: border/rondje verwijderd, bal vergroot naar 24px, opacity verhoogd naar 0.85.
+
+#### Matchday slides: data-flow bugfixes
+- `lib/matchday.ts`: import `ALL_SLOTS` gewijzigd van `@/store/gameStore` naar `@/lib/data/slots` — was server-side niet itereerbaar (Turbopack crash).
+- `lib/matchday.ts` + `full/route.ts`: null-tokens behandeld als 1 (minimale inzet), consistent met admin-export. Scoring sloeg eerder null-token voorspellingen ten onrechte over.
+
+#### Live slide: alleen tijdens actieve wedstrijden
+- `MatchdayDrawer.tsx`: `hasLive` checkt nu alleen `IN_PLAY` / `PAUSED` — FINISHED matches tonen de live slide niet meer.
+- `.env.local`: `ESPN_TEST_MATCH` uitgecommentarieerd.
+
+#### InzetSlide: pot en grafiek verwijderd
+- `InzetSlide.tsx`: "Stand van de pot" en `PotChart` verwijderd; `potHistory`, `config`, `group` props verwijderd.
+
+#### SlideWrapper: padding en export-logica opgeruimd
+- `SlideWrapper.tsx`: `paddingBottom: 80` verwijderd (was alleen nodig voor PNG-export, nu niet meer relevant). `exporting` prop verwijderd uit interface en alle slide-aanroepen.
+- `MatchdayDrawer.tsx`: logo + dots voorzien van `paddingBottom: calc(5rem + env(safe-area-inset-bottom))` zodat ze boven de navigatiebalk vallen.
+
+---
+
 ### 2026-06-11 — Stand pagina fase 2: Inzet, Pot, sub-toggle Stand (Claude Code)
 
 **Tabblad Inzet (OG)**

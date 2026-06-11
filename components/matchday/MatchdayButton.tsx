@@ -13,7 +13,7 @@ export function MatchdayButton({ group }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="w-8 h-8 rounded-full border border-[#333] flex items-center justify-center transition-colors hover:border-[#FF6B00]"
+        className="flex items-center justify-center transition-opacity hover:opacity-100"
         aria-label="Matchday openen"
         title="Matchday"
       >
@@ -21,8 +21,8 @@ export function MatchdayButton({ group }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/icons/icon-ball.svg"
-            width={17} height={17} alt=""
-            style={{ animation: 'matchday-spin 1.4s linear infinite', opacity: 0.6, filter: 'brightness(0.7)' }}
+            width={24} height={24} alt=""
+            style={{ animation: 'matchday-spin 1.4s linear infinite', opacity: 0.85, filter: 'brightness(1.1)' }}
           />
         </span>
       </button>

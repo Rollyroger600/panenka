@@ -8,7 +8,6 @@ interface Props {
   className?: string
   titleFont?: 'heading' | 'accent'
   minHeight?: number
-  exporting?: boolean
 }
 
 // Fixed-size portrait slide that matches the Panenka visual style.
@@ -17,7 +16,7 @@ interface Props {
 // so it always appears at the same screen position across all slides.
 // During PNG export, the logo is temporarily injected into the slide div.
 export const SlideWrapper = forwardRef<HTMLDivElement, Props>(
-  ({ title, titleDecoration, children, className = '', titleFont = 'heading', minHeight, exporting = false }, ref) => {
+  ({ title, titleDecoration, children, className = '', titleFont = 'heading', minHeight }, ref) => {
     return (
       <div
         ref={ref}
@@ -25,10 +24,7 @@ export const SlideWrapper = forwardRef<HTMLDivElement, Props>(
         style={{
           width: 390,
           background: 'transparent',
-          paddingBottom: 80,
-          ...(exporting
-            ? { height: 844, overflow: 'hidden', paddingTop: 16 }
-            : { minHeight }),
+          ...(minHeight ? { minHeight } : {}),
         }}
       >
         {/* Title */}

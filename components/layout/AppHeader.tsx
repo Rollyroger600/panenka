@@ -4,14 +4,16 @@ import { TokenCount } from './TokenCount'
 import { useGameStore } from '@/store/gameStore'
 import { FifaInfoDrawer } from './FifaInfoDrawer'
 import { IconBeker } from '@/components/icons/NavIcons'
+import { MatchdayButton } from '@/components/matchday/MatchdayButton'
+import type { GroupId } from '@/lib/groups'
 
 interface Props {
   name: string
   initials: string
-  groupId?: string
+  groupId?: GroupId
 }
 
-export function AppHeader({ name, initials }: Props) {
+export function AppHeader({ name, initials, groupId }: Props) {
   const [compact, setCompact] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const setOnboardingOpen = useGameStore((s) => s.setOnboardingOpen)
@@ -59,7 +61,7 @@ export function AppHeader({ name, initials }: Props) {
             <span className="text-[#555]">|</span>
             <TokenCount initials={initials} />
           </div>
-          <div className="absolute left-4">
+          <div className="absolute left-4 flex items-center gap-2">
             <button
               onClick={() => setDrawerOpen(true)}
               className="flex items-center justify-center text-[#FF6B00] hover:text-[#ff8c33] transition-colors"
@@ -67,6 +69,7 @@ export function AppHeader({ name, initials }: Props) {
             >
               <IconBeker className="w-7 h-7" />
             </button>
+            {groupId && <MatchdayButton group={groupId} />}
           </div>
           <div className="absolute right-4 flex items-center gap-1">
             <div id="header-chat-extras" className="flex items-center gap-1" />

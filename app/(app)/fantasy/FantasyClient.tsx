@@ -64,13 +64,13 @@ function Phase2PlayerRow({ slotIndex, player, stats, counts }: { slotIndex: numb
     <>
       <div
         onClick={() => setIsOpen((v) => !v)}
-        className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[#2a2a2a] cursor-pointer hover:bg-white/5 transition-colors"
+        className="flex items-center gap-2 p-2 rounded-xl border border-[#2a2a2a] cursor-pointer hover:bg-white/5 transition-colors"
         style={{ background: isOpen ? '#252525' : 'rgba(22,22,22,0.82)' }}
       >
         <span className="text-sm font-bold text-[#888] w-6 shrink-0 text-right">#{slotIndex}</span>
         <FlagImage country={player.country} size={24} className="shrink-0" />
         <span className="text-sm font-bold text-white flex-1 min-w-0 truncate">{player.name}</span>
-        <span className="font-heading text-sm font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0 w-10 text-center">
+        <span className="font-heading text-sm font-bold text-[#FF6B00] border border-[#FF6B00] px-2 py-0.5 rounded-lg shrink-0 w-[38px] text-center">
           {formatQuote(quote)}
         </span>
         <span className="w-8 text-center text-xs font-bold shrink-0" style={{ color: count > 0 ? '#888' : MUTED }}>
@@ -78,7 +78,7 @@ function Phase2PlayerRow({ slotIndex, player, stats, counts }: { slotIndex: numb
         </span>
         <span className="w-7 text-center text-sm font-bold text-white shrink-0">{s.goals > 0 ? s.goals : <span style={{ color: MUTED }}>–</span>}</span>
         <span className="w-7 text-center text-sm font-bold text-white shrink-0">{s.assists > 0 ? s.assists : <span style={{ color: MUTED }}>–</span>}</span>
-        <span className="w-10 text-right text-sm font-bold shrink-0" style={{ color: pts > 0 ? '#FF6B00' : MUTED }}>
+        <span className="w-[38px] text-right text-sm font-bold shrink-0" style={{ color: pts > 0 ? '#FF6B00' : MUTED }}>
           {pts > 0 ? pts.toFixed(2) : '–'}
         </span>
       </div>
@@ -94,10 +94,10 @@ function Phase2ScratchpadRow({ player, stats, counts }: { player: Player; stats:
   const count = counts[player.name] ?? 0
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-[#222]" style={{ background: '#0d0d0d' }}>
+    <div className="flex items-center gap-2 p-2 rounded-xl border border-dashed border-[#222]" style={{ background: '#0d0d0d' }}>
       <FlagImage country={player.country} size={24} className="shrink-0 opacity-60" />
       <span className="text-sm font-medium text-[#888] flex-1 min-w-0 truncate">{player.name}</span>
-      <span className="font-heading text-sm font-bold text-[#555] border border-[#333] px-2 py-0.5 rounded-lg shrink-0 w-10 text-center">
+      <span className="font-heading text-sm font-bold text-[#555] border border-[#333] px-2 py-0.5 rounded-lg shrink-0 w-[38px] text-center">
         {formatQuote(quote)}
       </span>
       <span className="w-8 text-center text-xs font-bold shrink-0" style={{ color: count > 0 ? '#666' : MUTED }}>
@@ -105,7 +105,7 @@ function Phase2ScratchpadRow({ player, stats, counts }: { player: Player; stats:
       </span>
       <span className="w-7 text-center text-sm font-bold shrink-0" style={{ color: s.goals > 0 ? '#aaa' : MUTED }}>{s.goals > 0 ? s.goals : '–'}</span>
       <span className="w-7 text-center text-sm font-bold shrink-0" style={{ color: s.assists > 0 ? '#aaa' : MUTED }}>{s.assists > 0 ? s.assists : '–'}</span>
-      <span className="w-10 text-right text-sm font-bold shrink-0" style={{ color: pts > 0 ? '#FF6B00' : MUTED }}>
+      <span className="w-[38px] text-right text-sm font-bold shrink-0" style={{ color: pts > 0 ? '#FF6B00' : MUTED }}>
         {pts > 0 ? pts.toFixed(2) : '–'}
       </span>
     </div>
@@ -114,15 +114,15 @@ function Phase2ScratchpadRow({ player, stats, counts }: { player: Player; stats:
 
 function ColHeader() {
   return (
-    <div className="flex items-center gap-2 px-3 pb-1 text-xs uppercase tracking-widest font-heading text-white">
+    <div className="flex items-center gap-2 px-2 pb-1 text-xs uppercase tracking-widest font-heading text-white">
       <span className="w-6 shrink-0" />
       <span className="w-6 shrink-0" />
       <span className="flex-1" />
-      <span className="w-10 shrink-0" />
+      <span className="w-[38px] shrink-0" />
       <span className="w-8 shrink-0" />
       <span className="w-7 text-center shrink-0">G</span>
       <span className="w-7 text-center shrink-0">A</span>
-      <span className="w-10 text-right shrink-0">Pts</span>
+      <span className="w-[38px] text-right shrink-0">Pts</span>
     </div>
   )
 }

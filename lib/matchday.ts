@@ -4,7 +4,7 @@ import { PARTICIPANTS } from '@/lib/participants'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
-import { ALL_SLOTS } from '@/store/gameStore'
+import { ALL_SLOTS } from '@/lib/data/slots'
 import { scoreFantasy } from '@/lib/scoring'
 import { getLastMatchBeforeMatchday, MATCHDAY_COUNT } from '@/lib/data/matchdayMap'
 import type { GroupId } from '@/lib/groups'
@@ -231,21 +231,22 @@ export async function computeMatchdayScores(
         const matchId = parseInt(idStr)
         if (matchId > cutoff) continue
         const actual = results[matchId]
-        if (!actual || !pred.tokens) continue
+        if (!actual) continue
         const odds = MATCH_ODDS[matchId]
         if (!odds) continue
+        const tokens = pred.tokens ?? 1
 
         const isGroup = matchId <= 72
 
         if (pred.toto && pred.toto === actual.toto) {
           const totoOdd = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
-          const pts = pred.tokens * totoOdd
+          const pts = tokens * totoOdd
           if (isGroup) poulefase += pts; else kofase += pts
           totoGoed++
         }
         if (pred.uitslag && pred.uitslag === actual.uitslag) {
           const scoreOdd = odds.scores[pred.uitslag] ?? 0
-          const pts = pred.tokens * scoreOdd
+          const pts = tokens * scoreOdd
           if (isGroup) poulefase += pts; else kofase += pts
           uitslagGoed++
         }

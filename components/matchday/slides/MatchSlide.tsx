@@ -157,7 +157,7 @@ export const MatchSlide = forwardRef<HTMLDivElement, Props>(
     const padded = String(matchdayId).padStart(2, '0')
 
     return (
-      <SlideWrapper ref={ref} title={`MATCHDAY ${padded}`} titleFont="accent" minHeight={720} exporting={exporting}>
+      <SlideWrapper ref={ref} title={`MATCHDAY ${padded}`} titleFont="accent" minHeight={720}>
         {matches.map((m, i) => (
           <MatchSection key={m.matchId} data={m} last={i === matches.length - 1} />
         ))}

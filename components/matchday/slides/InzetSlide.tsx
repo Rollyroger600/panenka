@@ -3,33 +3,27 @@ import { forwardRef } from 'react'
 import { SlideWrapper } from '@/components/matchday/SlideWrapper'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { resolveTotoOdds, resolveUitslagOdds } from '@/lib/matchday'
-import type { MatchdayConfig, MatchdayQuote } from '@/lib/matchday'
-import type { MatchSlideData, PotPoint } from '@/lib/types/matchday'
-import { PotChart } from '@/components/matchday/charts/PotChart'
+import type { MatchdayQuote } from '@/lib/matchday'
+import type { MatchSlideData } from '@/lib/types/matchday'
 
 interface Props {
   matchdayId: number
-  config: MatchdayConfig
-  group: 'og' | 'asc'
   totoVanDeDagName: string | null
-  totoVanDeDagInitials: string | null
   matchData: Array<{
     match: MatchSlideData['match']
     quote: MatchdayQuote
     participantToto: '1' | 'X' | '2' | null
     participantUitslag: string | null
   }>
-  potHistory: PotPoint[]
   exporting?: boolean
 }
 
 export const InzetSlide = forwardRef<HTMLDivElement, Props>(
-  ({ matchdayId, config, group, totoVanDeDagName, matchData, potHistory, exporting = false }, ref) => {
+  ({ matchdayId, totoVanDeDagName, matchData, exporting = false }, ref) => {
     const padded = String(matchdayId).padStart(2, '0')
-    const potStand = group === 'og' ? config.og.potStand : config.asc.potStand
 
     return (
-      <SlideWrapper ref={ref} title={`INZET ${padded}`} titleFont="accent" minHeight={720} exporting={exporting}>
+      <SlideWrapper ref={ref} title={`INZET ${padded}`} titleFont="accent" minHeight={720}>
 
         {/* Subtitle — één regel, alles wit */}
         <p className="text-center mb-4 leading-snug" style={{ paddingTop: 8 }}>
@@ -114,20 +108,6 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
           })}
         </div>
 
-        {/* Stand van de pot */}
-        <div className="mb-1 text-center">
-          <p className="font-heading text-[18px] text-white tracking-wider uppercase mb-1">
-            STAND VAN DE POT:
-          </p>
-          <p className="font-heading text-[18px] text-white">
-            € {potStand.toFixed(2).replace('.', ',')}
-          </p>
-        </div>
-
-        {/* Pot evolutie grafiek */}
-        <div className="px-2">
-          <PotChart data={potHistory} totalMatchdays={27} />
-        </div>
 
       </SlideWrapper>
     )

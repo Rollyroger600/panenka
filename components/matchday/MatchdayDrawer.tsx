@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { toPng } from 'html-to-image'
-import { PARTICIPANTS } from '@/lib/participants'
 import { MatchSlide } from '@/components/matchday/slides/MatchSlide'
 import { InzetSlide } from '@/components/matchday/slides/InzetSlide'
 import { LiveSlide } from '@/components/matchday/slides/LiveSlide'
@@ -190,7 +189,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
 
   if (!open) return null
 
-  const hasLive = liveMatches.length > 0
+  const hasLive = liveMatches.some((m) => m.status === 'IN_PLAY' || m.status === 'PAUSED')
   const liveOffset = hasLive ? 1 : 0
   const totalSlides = data ? (data.matchSlides.length === 1 ? 2 : 3) + liveOffset : 3 + liveOffset
 
@@ -335,12 +334,8 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
                 <InzetSlide
                   ref={slideRefs[inzetIdx]}
                   matchdayId={matchdayId}
-                  config={data.config}
-                  group={group}
                   totoVanDeDagName={data.totoVanDeDagName}
-                  totoVanDeDagInitials={data.totoVanDeDagInitials}
                   matchData={buildInzetMatchData()}
-                  potHistory={data.potHistory}
                   exporting={exporting}
                 />
               </div>
@@ -359,9 +354,9 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
         />
       </div>
 
-      {/* Dot indicators — onderkant */}
+      {/* Dot indicators — boven de nav bar */}
       {data && (
-        <div className="flex justify-center gap-2 py-3">
+        <div className="flex justify-center gap-2 py-2" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
           {Array.from({ length: totalSlides }, (_, i) => (
             <button
               key={i}
