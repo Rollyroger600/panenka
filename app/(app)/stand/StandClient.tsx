@@ -9,6 +9,52 @@ import type { GroupId } from '@/lib/groups'
 import type { ParticipantScore } from '@/app/leaderboard/types'
 
 type Tab = 'stand' | 'inzet' | 'pot'
+type StandView = 'totaal' | 'poule' | 'fxv' | 'landen' | 'toto' | 'uitsl'
+
+const STAND_VIEWS: { label: string; value: StandView; scoreKey: keyof ParticipantScore; scoreLabel: string }[] = [
+  { label: 'Totaal', value: 'totaal', scoreKey: 'total',         scoreLabel: 'Tot.'   },
+  { label: 'Poule',  value: 'poule',  scoreKey: 'poulefase',     scoreLabel: 'Poule'  },
+  { label: 'FXV',    value: 'fxv',    scoreKey: 'fantasy',       scoreLabel: 'FXV'    },
+  { label: 'Landen', value: 'landen', scoreKey: 'knockout',      scoreLabel: 'Landen' },
+  { label: 'TOTO',   value: 'toto',   scoreKey: 'totoCorrect',   scoreLabel: 'TOTO'   },
+  { label: 'UITSL',  value: 'uitsl',  scoreKey: 'uitslagCorrect',scoreLabel: 'UITSL'  },
+]
+
+interface Weddenschap {
+  weddenschap: string
+  inzet: string
+  quotering: number
+  maxWinst: string
+}
+
+interface PotRegel {
+  datum: string
+  omschrijving: string
+  bedrag: number  // positief = +, negatief = -
+}
+
+const POT_REGELS: Record<string, PotRegel[]> = {
+  og: [
+    // Nieuwste bovenaan
+    { datum: '2026-06-11', omschrijving: 'Toernooi weddenschappen', bedrag: -20 },
+    { datum: '2026-06-11', omschrijving: "Toto's en uitslagen matchday 01", bedrag: -5 },
+    { datum: '2026-06-11', omschrijving: 'Welkomstbonus inzet', bedrag: -1 },
+    { datum: '2026-06-10', omschrijving: 'Beginbedrag', bedrag: 300 },
+  ],
+  asc: [],
+}
+
+const WEDDENSCHAPPEN: Record<string, Weddenschap[]> = {
+  og: [
+    { weddenschap: 'Brazilië scoort tegen Marokko', inzet: '€ 1,00', quotering: 100, maxWinst: '€ 100,00' },
+    { weddenschap: 'Frankrijk winnaar WK', inzet: '€ 5,00', quotering: 6, maxWinst: '€ 30,00' },
+    { weddenschap: 'Brazilië winnaar WK', inzet: '€ 5,00', quotering: 10, maxWinst: '€ 50,00' },
+    { weddenschap: 'Nederland winnaar WK', inzet: '€ 5,00', quotering: 19, maxWinst: '€ 95,00' },
+    { weddenschap: 'Kane Topscoorder WK', inzet: '€ 3,00', quotering: 7, maxWinst: '€ 21,00' },
+    { weddenschap: 'Haaland Topscoorder WK', inzet: '€ 2,00', quotering: 15, maxWinst: '€ 30,00' },
+  ],
+  asc: [],
+}
 
 const TABS: { label: string; value: Tab }[] = [
   { label: 'Stand',  value: 'stand' },
@@ -25,6 +71,8 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
   const isDualGroup = DUAL_GROUP_INITIALS.includes(mijnInitials.toUpperCase())
   const [activeGroup, setActiveGroup] = useState<GroupId>(defaultGroup)
   const [activeTab, setActiveTab] = useState<Tab>('stand')
+  const [standView, setStandView] = useState<StandView>('totaal')
+  const [refreshActive, setRefreshActive] = useState(false)
   const [scores, setScores] = useState<ParticipantScore[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
   const [headerToggleEl, setHeaderToggleEl] = useState<Element | null>(null)
@@ -51,8 +99,10 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
   }, [activeGroup, load])
 
   const hasScores = scores.some((s) => s.total > 0)
-  const top3 = scores.slice(0, 3)
-  const rest = scores.slice(3)
+  const activeView = STAND_VIEWS.find((v) => v.value === standView)!
+  const sortedScores = [...scores].sort((a, b) => (b[activeView.scoreKey] as number) - (a[activeView.scoreKey] as number))
+  const top3 = sortedScores.slice(0, 3)
+  const rest = sortedScores.slice(3)
 
   return (
     <>
@@ -62,10 +112,14 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
           {activeTab === 'stand' && (
             <div className="absolute right-0">
               <button
-                onClick={() => load(activeGroup)}
-                className="text-xs text-[#555] hover:text-[#FF6B00] transition-colors font-bold uppercase tracking-wide"
+                onClick={() => {
+                  setRefreshActive(true)
+                  load(activeGroup)
+                  setTimeout(() => setRefreshActive(false), 600)
+                }}
+                className={`text-xl transition-colors ${refreshActive ? 'text-[#FF6B00]' : 'text-white'}`}
               >
-                ↻ Vernieuwen
+                ↻
               </button>
             </div>
           )}
@@ -93,28 +147,37 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
         {/* Tab: Stand */}
         {activeTab === 'stand' && (
           <>
+            {/* Sub-toggle */}
+            <div className="flex gap-1 mb-4 rounded-xl p-1" style={{ background: 'rgba(22,22,22,0.82)' }}>
+              {STAND_VIEWS.map(({ label, value }) => (
+                <button
+                  key={value}
+                  onClick={() => setStandView(value)}
+                  className={[
+                    'flex-1 py-1.5 rounded-lg font-heading text-[10px] font-bold tracking-wide uppercase transition-all',
+                    standView === value ? 'bg-[#FF6B00] text-white' : 'text-white hover:text-[#FF6B00]',
+                  ].join(' ')}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {!isLoaded && (
               <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-6 text-center mb-6">
                 <div className="text-[#555] text-sm">Laden…</div>
               </div>
             )}
 
-            {isLoaded && !hasScores && (
-              <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-6 text-center mb-6">
-                <div className="text-3xl mb-2">⏳</div>
-                <div className="text-[#888] text-sm">
-                  Scores worden berekend na de eerste wedstrijden
-                </div>
-              </div>
-            )}
-
-            {isLoaded && hasScores && <Podium top3={top3} />}
+{isLoaded && hasScores && <Podium top3={top3} scoreKey={activeView.scoreKey} />}
 
             {isLoaded && (
               <RankList
-                participants={hasScores ? rest : scores}
+                participants={hasScores ? rest : sortedScores}
                 currentInitials={mijnInitials}
                 startRank={hasScores ? 4 : 1}
+                scoreKey={standView !== 'totaal' ? activeView.scoreKey : undefined}
+                scoreLabel={activeView.scoreLabel}
               />
             )}
           </>
@@ -122,19 +185,79 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
 
         {/* Tab: Inzet */}
         {activeTab === 'inzet' && (
-          <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-6 text-center">
-            <div className="text-3xl mb-2">🎯</div>
-            <div className="text-[#888] text-sm">Toernooiweddenschappen komen hier</div>
+          <div className="flex flex-col gap-3">
+            {(WEDDENSCHAPPEN[activeGroup] ?? []).length === 0 ? (
+              <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-6 text-center">
+                <div className="text-3xl mb-2">🎯</div>
+                <div className="text-[#888] text-sm">Geen weddenschappen voor deze groep</div>
+              </div>
+            ) : (WEDDENSCHAPPEN[activeGroup] ?? []).map((w, i) => (
+              <div key={i} className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-4">
+                <div className="flex items-start gap-3">
+                  <span className="font-heading font-bold text-[#FF6B00] text-sm mt-0.5 shrink-0">#{i + 1}</span>
+                  <div className="flex-1">
+                    <div className="font-heading font-semibold text-white text-sm mb-3">{w.weddenschap}</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="flex flex-col">
+                        <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-0.5">Inzet</span>
+                        <span className="text-white text-sm font-semibold">{w.inzet}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-0.5">Quote</span>
+                        <span className="text-white text-sm font-semibold">{w.quotering.toFixed(2)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-0.5">Max winst</span>
+                        <span className="text-[#FF6B00] text-sm font-bold">{w.maxWinst}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Tab: Pot */}
-        {activeTab === 'pot' && (
-          <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-6 text-center">
-            <div className="text-3xl mb-2">💰</div>
-            <div className="text-[#888] text-sm">Overzicht van de pot komt hier</div>
-          </div>
-        )}
+        {activeTab === 'pot' && (() => {
+          const regels = POT_REGELS[activeGroup] ?? []
+          const totaal = regels.reduce((sum, r) => sum + r.bedrag, 0)
+          const fmt = (n: number) =>
+            '€ ' + Math.abs(n).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          return (
+            <div className="flex flex-col gap-3">
+              {/* Potstand */}
+              <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-5 text-center">
+                <div className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-1">Huidige pot</div>
+                <div className="font-accent font-bold text-4xl text-[#FF6B00]">{fmt(totaal)}</div>
+              </div>
+
+              {/* Balans */}
+              <div className="flex flex-col gap-2">
+                {regels.length === 0 ? (
+                  <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-6 text-center text-[#888] text-sm">Geen regels</div>
+                ) : regels.map((r, i) => (
+                  <div key={i} className="rounded-xl bg-[#161616] border border-[#2a2a2a] px-4 py-3 grid items-center" style={{ gridTemplateColumns: '70px 1fr 70px' }}>
+                    <div className="text-left">
+                      {r.bedrag >= 0 && (
+                        <span className="text-[#4CAF50] font-bold text-sm">+{fmt(r.bedrag)}</span>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <div className="text-white text-sm font-semibold">{r.omschrijving}</div>
+                      <div className="text-[#555] text-[11px]">{new Date(r.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}</div>
+                    </div>
+                    <div className="text-right">
+                      {r.bedrag < 0 && (
+                        <span className="text-[#888] font-bold text-sm">−{fmt(r.bedrag)}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {headerToggleEl && isDualGroup && createPortal(

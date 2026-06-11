@@ -845,6 +845,32 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-11 — Stand pagina fase 2: Inzet, Pot, sub-toggle Stand (Claude Code)
+
+**Tabblad Inzet (OG)**
+- `StandClient.tsx`: weddenschappen data-structuur toegevoegd (`WEDDENSCHAPPEN`), elke weddenschap eigen card met #nummer, omschrijving, inzet, quotering (2 decimalen), max winst
+- 6 weddenschappen ingevoerd voor OG: Brazilië scoort/Marokko, Frankrijk/Brazilië/Nederland winnaar WK, Kane/Haaland topscoorder
+
+**Tabblad Pot (OG)**
+- `StandClient.tsx`: potbalans data-structuur (`POT_REGELS`) + huidige potstand bovenin (groot, dynamisch berekend)
+- Lopende balans: elke regel eigen card, 3-koloms grid (70px | 1fr | 70px), + links groen / − rechts grijs, omschrijving gecentreerd
+- Beginbedrag €300 + 3 uitgaven ingevoerd: welkomstbonus (−€1), matchday 01 toto's (−€5), toernooi weddenschappen (−€20) → pot = €274
+
+**Sub-toggle Stand-tabblad**
+- `StandClient.tsx`: 6 views: Totaal / Poule / FXV / Landen / TOTO / UITSL
+- Ranglijst sorteert per geselecteerde view; Podium en RankList tonen bijbehorende score
+- `RankList.tsx`: enkelvoudige scorekolom bij niet-totaal views; kolomkop "KO" → "Landen"; headers lichter (#888)
+- `Podium.tsx`: `scoreKey` prop toegevoegd
+- Vernieuwen-knop: tekst weg, alleen pijltje (wit → oranje bij klik, 600ms)
+- Placeholder "Scores worden berekend…" verwijderd
+
+**totoCorrect / uitslagCorrect — nieuw scoreveld**
+- `lib/scoring.ts` + `ScoreBreakdown`: totoCorrect en uitslagCorrect geteld per wedstrijd (poule + KO), tellen NIET mee in totaalscore
+- `app/leaderboard/types.ts`, `app/actions/scores.ts`, `app/actions/admin.ts`, `app/leaderboard/page.tsx`: nieuwe velden doorgevoerd
+
+**Matchday slides**
+- `MatchdayDrawer.tsx`: RanglijstSlide en OverzichtSlide verwijderd uit active slides (bestanden bewaard); slide refs 4+5 weg; totalSlides bijgewerkt
+
 ### 2026-06-11 — Poll max opties uitgebreid naar 6 (Claude Code)
 
 - `PollCreatorPanel.tsx`: limiet verhoogd van 4 naar 6 opties per poll

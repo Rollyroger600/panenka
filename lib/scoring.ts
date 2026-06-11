@@ -28,6 +28,8 @@ export interface ScoreBreakdown {
   oranje: number
   oranjeTokens: number
   total: number
+  totoCorrect: number
+  uitslagCorrect: number
 }
 
 // qkey → KO_QUOTES field
@@ -113,6 +115,8 @@ export function scoreParticipant(
   // ── Poulefase (wedstrijden 1–72) ─────────────────────────────────────────
   let poulefase = 0
   let koWedstrijden = 0
+  let totoCorrect = 0
+  let uitslagCorrect = 0
   for (const [idStr, pred] of Object.entries(predictions)) {
     const matchId = parseInt(idStr)
     const actual = results[matchId]
@@ -128,10 +132,12 @@ export function scoreParticipant(
     if (pred.toto && pred.toto === actual.toto) {
       const totoOdd = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
       matchScore += effectiveTokens * totoOdd
+      totoCorrect++
     }
     if (pred.uitslag && pred.uitslag === actual.uitslag) {
       const scoreOdd = odds.scores[pred.uitslag] ?? 0
       matchScore += effectiveTokens * scoreOdd
+      uitslagCorrect++
     }
 
     if (isKoMatch) {
@@ -200,6 +206,8 @@ export function scoreParticipant(
     oranje,
     oranjeTokens,
     total,
+    totoCorrect,
+    uitslagCorrect,
   }
 }
 

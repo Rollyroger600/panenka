@@ -8,4 +8,6 @@ export interface ParticipantScore {
   oranje: number
   oranjeTokens: number
   fantasy: number
+  totoCorrect: number
+  uitslagCorrect: number
 }

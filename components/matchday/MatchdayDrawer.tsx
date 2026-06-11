@@ -4,8 +4,6 @@ import { toPng } from 'html-to-image'
 import { PARTICIPANTS } from '@/lib/participants'
 import { MatchSlide } from '@/components/matchday/slides/MatchSlide'
 import { InzetSlide } from '@/components/matchday/slides/InzetSlide'
-import { OverzichtSlide } from '@/components/matchday/slides/OverzichtSlide'
-import { RanglijstSlide } from '@/components/matchday/slides/RanglijstSlide'
 import { LiveSlide } from '@/components/matchday/slides/LiveSlide'
 import { MATCHDAY_COUNT } from '@/lib/data/matchdayMap'
 import type { FullMatchdayData, LiveMatchData } from '@/lib/types/matchday'
@@ -44,9 +42,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
   const slide1Ref = useRef<HTMLDivElement>(null)
   const slide2Ref = useRef<HTMLDivElement>(null)
   const slide3Ref = useRef<HTMLDivElement>(null)
-  const slide4Ref = useRef<HTMLDivElement>(null)
-  const slide5Ref = useRef<HTMLDivElement>(null)
-  const slideRefs = [slide0Ref, slide1Ref, slide2Ref, slide3Ref, slide4Ref, slide5Ref]
+  const slideRefs = [slide0Ref, slide1Ref, slide2Ref, slide3Ref]
   const touchStartX = useRef<number | null>(null)
 
   const loadData = useCallback(async (md: number) => {
@@ -196,7 +192,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
 
   const hasLive = liveMatches.length > 0
   const liveOffset = hasLive ? 1 : 0
-  const totalSlides = data ? (data.matchSlides.length === 1 ? 4 : 5) + liveOffset : 5 + liveOffset
+  const totalSlides = data ? (data.matchSlides.length === 1 ? 2 : 3) + liveOffset : 3 + liveOffset
 
   // Build totoVanDeDag per-match prediction data for InzetSlide
   function buildInzetMatchData() {
@@ -304,11 +300,9 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
         {data && !loading && (() => {
           const has2MatchSlides = data.matchSlides.length === 2
           // Slide index mapping (with optional live slide at index 0):
-          // live=0 (optional), match1=0+off, match2=1+off (optional), inzet, overzicht, ranglijst
+          // live=0 (optional), match1=0+off, match2=1+off (optional), inzet
           const off = liveOffset
-          const inzetIdx     = (has2MatchSlides ? 2 : 1) + off
-          const overzichtIdx = (has2MatchSlides ? 3 : 2) + off
-          const ranglijstIdx = (has2MatchSlides ? 4 : 3) + off
+          const inzetIdx = (has2MatchSlides ? 2 : 1) + off
 
           return (
             <div className="relative" style={{ overflow: 'hidden' }}>
@@ -351,25 +345,6 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
                 />
               </div>
 
-              <div style={slideIndex === overzichtIdx ? {} : { position: 'absolute', left: -9999, width: 390 }}>
-                <OverzichtSlide
-                  ref={slideRefs[overzichtIdx]}
-                  matchdayId={matchdayId}
-                  rows={data.scores}
-                  exporting={exporting}
-                />
-              </div>
-
-              <div style={slideIndex === ranglijstIdx ? {} : { position: 'absolute', left: -9999, width: 390 }}>
-                <RanglijstSlide
-                  ref={slideRefs[ranglijstIdx]}
-                  matchdayId={matchdayId}
-                  rows={data.scores}
-                  scoreHistory={data.scoreHistory}
-                  totalMatchdays={MATCHDAY_COUNT}
-                  exporting={exporting}
-                />
-              </div>
             </div>
           )
         })()}

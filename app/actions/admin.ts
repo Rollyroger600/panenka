@@ -278,6 +278,8 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
         oranjeTokens: breakdown.oranjeTokens,
         fantasy,
         total,
+        totoCorrect: breakdown.totoCorrect,
+        uitslagCorrect: breakdown.uitslagCorrect,
       }
     }),
   )

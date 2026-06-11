@@ -2,6 +2,7 @@ import type { ParticipantScore } from '@/app/leaderboard/types'
 
 interface Props {
   top3: ParticipantScore[]
+  scoreKey?: keyof ParticipantScore
 }
 
 const ORDER = [1, 0, 2] // visual order: 2nd | 1st | 3rd
@@ -10,7 +11,7 @@ const MEDAL = ['🥇', '🥈', '🥉']
 const HEIGHT = ['h-20', 'h-28', 'h-14']
 const NAME_SIZE = ['text-sm', 'text-base', 'text-sm']
 
-export function Podium({ top3 }: Props) {
+export function Podium({ top3, scoreKey = 'total' }: Props) {
   if (top3.length === 0) return null
 
   return (
@@ -22,7 +23,7 @@ export function Podium({ top3 }: Props) {
           <div key={i} className="flex-1 flex flex-col items-center">
             <span className="text-2xl mb-1">{MEDAL[i]}</span>
             <span className={`font-bold text-white text-center ${NAME_SIZE[i]}`}>{p.name}</span>
-            <span className="text-[#FF6B00] text-lg font-bold">{p.total}</span>
+            <span className="text-[#FF6B00] text-lg font-bold">{p[scoreKey] as number}</span>
             <div
               className={`w-full rounded-t-lg mt-2 flex items-center justify-center ${HEIGHT[i]} ${
                 i === 0
