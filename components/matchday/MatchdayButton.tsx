@@ -4,9 +4,10 @@ import { MatchdayDrawer } from '@/components/matchday/MatchdayDrawer'
 
 interface Props {
   group: 'og' | 'asc'
+  isDualGroup?: boolean
 }
 
-export function MatchdayButton({ group }: Props) {
+export function MatchdayButton({ group, isDualGroup }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -31,6 +32,7 @@ export function MatchdayButton({ group }: Props) {
         open={open}
         onClose={() => setOpen(false)}
         group={group}
+        isDualGroup={isDualGroup}
       />
     </>
   )

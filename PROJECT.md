@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-11 — Matchday slides OG/ASC toggle (Claude Code)
+
+#### Matchday drawer: groep-toggle voor Robert en Wouter
+- `app/(app)/layout.tsx`: `isDualGroup` berekend via `DUAL_GROUP_INITIALS` en doorgegeven aan `AppShell`.
+- `AppShell.tsx` → `AppHeader.tsx` → `MatchdayButton.tsx`: `isDualGroup` prop doorgesluisd.
+- `MatchdayDrawer.tsx`: intern `activeGroup` state (geïnitialiseerd vanuit `group` prop); OG/ASC toggle pill linksboven in de top bar — alleen zichtbaar voor WS en RA. Bij wisselen herlaadt de data automatisch voor het gekozen groep. Stijl identiek aan de chat toggle (oranje pill actief, grijs inactief).
+
 ### 2026-06-11 — Matchday slides live + bugfixes (Claude Code)
 
 #### Fantasy fase 2: kolombreedtes & padding

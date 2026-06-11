@@ -11,6 +11,7 @@ interface Props {
   open: boolean
   onClose: () => void
   group: 'og' | 'asc'
+  isDualGroup?: boolean
   initialMatchday?: number
   mockData?: FullMatchdayData
   mockLiveData?: LiveMatchData[]
@@ -18,8 +19,9 @@ interface Props {
   fdoLiveEnabled?: boolean
 }
 
-export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData, mockLiveData, showExport, fdoLiveEnabled }: Props) {
+export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatchday, mockData, mockLiveData, showExport, fdoLiveEnabled }: Props) {
   const [matchdayId, setMatchdayId] = useState(initialMatchday ?? 1)
+  const [activeGroup, setActiveGroup] = useState<'og' | 'asc'>(group)
   const [slideIndex, setSlideIndex] = useState(0)
   const [data, setData] = useState<FullMatchdayData | null>(mockData ?? null)
   const [loading, setLoading] = useState(false)
@@ -49,7 +51,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
     setError(null)
     setData(null)
     try {
-      const res = await fetch(`/api/matchday/${md}/full?group=${group}`)
+      const res = await fetch(`/api/matchday/${md}/full?group=${activeGroup}`)
       if (res.status === 404) {
         setError('Matchday nog niet geconfigureerd door de admin.')
         return
@@ -63,7 +65,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
     } finally {
       setLoading(false)
     }
-  }, [group])
+  }, [activeGroup])
 
   useEffect(() => {
     if (open && !mockData) loadData(matchdayId)
@@ -76,7 +78,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
 
     async function pollLive() {
       try {
-        const res = await fetch(`/api/matchday/live?matchday=${matchdayId}&group=${group}`)
+        const res = await fetch(`/api/matchday/live?matchday=${matchdayId}&group=${activeGroup}`)
         if (res.ok) {
           const json = await res.json()
           setLiveMatches(json.liveMatches ?? [])
@@ -87,7 +89,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
     pollLive()
     const interval = setInterval(pollLive, 30_000)
     return () => clearInterval(interval)
-  }, [open, matchdayId, group, fdoLiveEnabled])
+  }, [open, matchdayId, activeGroup, fdoLiveEnabled])
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
@@ -153,7 +155,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
       const dataUrl = await captureSlide(el)
       const a = document.createElement('a')
       a.href = dataUrl
-      a.download = `matchday-${String(matchdayId).padStart(2, '0')}-slide-${idx - liveOffset + 1}-${group}.png`
+      a.download = `matchday-${String(matchdayId).padStart(2, '0')}-slide-${idx - liveOffset + 1}-${activeGroup}.png`
       a.click()
     } finally {
       removeExportLogo(el)
@@ -178,7 +180,7 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
         clearExportBackground(el)
         const a = document.createElement('a')
         a.href = dataUrl
-        a.download = `matchday-${String(matchdayId).padStart(2, '0')}-slide-${i - liveOffset + 1}-${group}.png`
+        a.download = `matchday-${String(matchdayId).padStart(2, '0')}-slide-${i - liveOffset + 1}-${activeGroup}.png`
         a.click()
         await new Promise((r) => setTimeout(r, 200))
       }
@@ -222,6 +224,23 @@ export function MatchdayDrawer({ open, onClose, group, initialMatchday, mockData
     >
       {/* Top bar */}
       <div className="relative flex items-center px-3 py-2 pt-5">
+        {/* OG/ASC toggle — alleen voor dual-group gebruikers */}
+        {isDualGroup && (
+          <div className="flex rounded-full bg-[#1E1E1E] border border-[#333] p-0.5 gap-0.5">
+            {(['og', 'asc'] as const).map((g) => (
+              <button
+                key={g}
+                onClick={() => setActiveGroup(g)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                  activeGroup === g ? 'bg-[#FF6B00] text-white' : 'text-[#888] hover:text-white'
+                }`}
+              >
+                {g.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Matchday navigator — gecentreerd */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-xl px-2 py-1" style={{ border: '1px solid white' }}>
           <button

@@ -11,9 +11,10 @@ interface Props {
   name: string
   initials: string
   groupId?: GroupId
+  isDualGroup?: boolean
 }
 
-export function AppHeader({ name, initials, groupId }: Props) {
+export function AppHeader({ name, initials, groupId, isDualGroup }: Props) {
   const [compact, setCompact] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const setOnboardingOpen = useGameStore((s) => s.setOnboardingOpen)
@@ -69,7 +70,7 @@ export function AppHeader({ name, initials, groupId }: Props) {
             >
               <IconBeker className="w-7 h-7" />
             </button>
-            {groupId && <MatchdayButton group={groupId} />}
+            {groupId && <MatchdayButton group={groupId} isDualGroup={isDualGroup} />}
           </div>
           <div className="absolute right-4 flex items-center gap-1">
             <div id="header-chat-extras" className="flex items-center gap-1" />
