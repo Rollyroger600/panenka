@@ -41,7 +41,13 @@ const POT_REGELS: Record<string, PotRegel[]> = {
     { datum: '2026-06-11', omschrijving: 'Welkomstbonus inzet', bedrag: -1 },
     { datum: '2026-06-10', omschrijving: 'Beginbedrag', bedrag: 300 },
   ],
-  asc: [],
+  asc: [
+    // Nieuwste bovenaan
+    { datum: '2026-06-11', omschrijving: 'Toernooi weddenschappen', bedrag: -19 },
+    { datum: '2026-06-11', omschrijving: "Toto's en uitslagen matchday 01", bedrag: -5 },
+    { datum: '2026-06-11', omschrijving: 'Welkomstbonus inzet', bedrag: -1 },
+    { datum: '2026-06-10', omschrijving: 'Beginbedrag', bedrag: 280 },
+  ],
 }
 
 const WEDDENSCHAPPEN: Record<string, Weddenschap[]> = {
@@ -53,7 +59,17 @@ const WEDDENSCHAPPEN: Record<string, Weddenschap[]> = {
     { weddenschap: 'Kane Topscoorder WK', inzet: '€ 3,00', quotering: 7, maxWinst: '€ 21,00' },
     { weddenschap: 'Haaland Topscoorder WK', inzet: '€ 2,00', quotering: 15, maxWinst: '€ 30,00' },
   ],
-  asc: [],
+  asc: [
+    { weddenschap: 'Duitsland wint van Curacao', inzet: '€ 1,00', quotering: 100, maxWinst: '€ 100,00' },
+    { weddenschap: 'Spanje winnaar WK', inzet: '€ 5,00', quotering: 5.5, maxWinst: '€ 27,50' },
+    { weddenschap: 'Frankrijk winnaar WK', inzet: '€ 5,00', quotering: 6, maxWinst: '€ 30,00' },
+    { weddenschap: 'Nederland winnaar WK', inzet: '€ 1,00', quotering: 19, maxWinst: '€ 19,00' },
+    { weddenschap: 'Kane topscoorder WK', inzet: '€ 3,00', quotering: 7, maxWinst: '€ 21,00' },
+    { weddenschap: 'Messi topscoorder WK', inzet: '€ 2,00', quotering: 13, maxWinst: '€ 26,00' },
+    { weddenschap: 'Ødegaard assist koning WK', inzet: '€ 1,00', quotering: 51, maxWinst: '€ 51,00' },
+    { weddenschap: 'Ferran assist koning WK', inzet: '€ 1,00', quotering: 41, maxWinst: '€ 41,00' },
+    { weddenschap: 'Spanje wint WK en Oyarzabal topscoorder', inzet: '€ 1,00', quotering: 34, maxWinst: '€ 34,00' },
+  ],
 }
 
 const TABS: { label: string; value: Tab }[] = [

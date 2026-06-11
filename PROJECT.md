@@ -3494,6 +3494,16 @@ Bregt heeft besloten niet meer mee te doen. Verwijderd uit de deelnemerslijst. G
 
 Niels (NS), Peter (PN) en Wiger (WW) hadden nog 6 tokens over na de deadline. Via eenmalig Node.js-script (`scripts/add_tokens.mjs`) elk +2 tokens toegevoegd bij wedstrijden 10, 33 en 58.
 
+### 2026-06-11 — Stand pagina: ASC Inzet + Pot gevuld (Claude Code)
+
+#### ASC weddenschappen toegevoegd (`app/(app)/stand/StandClient.tsx`)
+
+9 toernooiweddenschappen ingevuld voor de ASC groep in `WEDDENSCHAPPEN.asc`: Duitsland wint van Curacao (100×), Spanje/Frankrijk/Nederland winnaar WK, Kane/Messi topscoorder, Ødegaard/Ferran assist koning, combi Spanje+Oyarzabal.
+
+#### ASC potregels toegevoegd (`app/(app)/stand/StandClient.tsx`)
+
+Beginbedrag €280 + aftrekposten (welkomstbonus -1, matchday 01 toto/uitslag -5, toernooi weddenschappen -19) ingevuld in `POT_REGELS.asc`. Huidige pot: €255,00.
+
 #### Chat: afbeelding uploaden repareerd op iOS (`components/chat/ChatInput.tsx`, `components/chat/ChatPage.tsx`)
 
 **Probleem:** Gebruikers konden op het camera-icoontje drukken en een afbeelding selecteren, maar er gebeurde daarna niets.
