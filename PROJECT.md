@@ -845,6 +845,10 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-11 — Poll max opties uitgebreid naar 6 (Claude Code)
+
+- `PollCreatorPanel.tsx`: limiet verhoogd van 4 naar 6 opties per poll
+
 ### 2026-06-10 — Oranje fase 2 UI, Overzicht-tabblad, ondertitels (Claude Code)
 
 **Oranje tabblad fase 2 — volledig herontworpen**

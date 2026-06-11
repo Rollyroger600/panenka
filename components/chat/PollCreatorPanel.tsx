@@ -84,7 +84,7 @@ export function PollCreatorPanel({ onSubmit, onClose }: Props) {
       </button>
 
       <div className="flex items-center gap-3">
-        {options.length < 4 && (
+        {options.length < 6 && (
           <button
             onClick={() => setOptions((prev) => [...prev, ''])}
             className="text-sm text-[#555] hover:text-[#888] transition-colors"
