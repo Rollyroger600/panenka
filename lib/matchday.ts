@@ -27,16 +27,16 @@ export interface MatchdayQuote {
 
 export function resolveTotoOdds(q: MatchdayQuote | undefined, toto: string | null): number {
   if (!q || !toto) return 1
-  if (toto === '1') return q.totoOdds1 ?? q.totoOdds ?? 1
-  if (toto === 'X') return q.totoOddsX ?? q.totoOdds ?? 1
-  if (toto === '2') return q.totoOdds2 ?? q.totoOdds ?? 1
-  return q.totoOdds ?? 1
+  if (toto === '1') return q.totoOdds1 || q.totoOdds || 1
+  if (toto === 'X') return q.totoOddsX || q.totoOdds || 1
+  if (toto === '2') return q.totoOdds2 || q.totoOdds || 1
+  return q.totoOdds || 1
 }
 
 export function resolveUitslagOdds(q: MatchdayQuote | undefined, uitslag: string | null): number {
   if (!q || !uitslag) return 1
-  if (q.uitslagOddsMap) return q.uitslagOddsMap[uitslag] ?? q.uitslagOddsFallback ?? 1
-  return q.uitslagOdds ?? 1
+  if (q.uitslagOddsMap) return q.uitslagOddsMap[uitslag] || q.uitslagOddsFallback || 1
+  return q.uitslagOdds || 1
 }
 
 export interface MatchdayConfig {

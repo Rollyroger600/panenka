@@ -790,11 +790,15 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
     setLoading(true)
     const payload = {
       group: groupId,
-      quotes: quotes.map((q) => ({
-        matchId: q.matchId,
-        totoOdds: parseFloat(q.totoOdds) || 0,
-        uitslagOdds: parseFloat(q.uitslagOdds) || 0,
-      })),
+      quotes: quotes.map((q) => {
+        const totoOddsVal = parseFloat(q.totoOdds)
+        const uitslagOddsVal = parseFloat(q.uitslagOdds)
+        return {
+          matchId: q.matchId,
+          ...(isNaN(totoOddsVal) ? {} : { totoOdds: totoOddsVal }),
+          ...(isNaN(uitslagOddsVal) ? {} : { uitslagOdds: uitslagOddsVal }),
+        }
+      }),
       potStand: parseFloat(potStand) || 0,
     }
     await fetch(`/api/matchday/${matchdayId}`, {

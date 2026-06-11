@@ -845,6 +845,24 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-11 — Live slide bugfixes: tokens, quoteringen, fantasy namen (Claude Code)
+
+#### 4 bugs opgelost in de live matchday slide
+
+**Bug 1 – Tokens toonden 0**
+- `app/api/matchday/live/route.ts`: fallback `pred?.tokens ?? 0` → `pred?.tokens ?? 1`.
+
+**Bug 2 – Uitslag-punten nooit correct (Laurens 1-0 kreeg geen virtuele punten)**
+- `app/api/matchday/live/route.ts`: `uitslagNow` format gecorrigeerd: `"1-0"` → `"1 - 0"` (spaties, conform ScorePicker opslag).
+- `lib/matchday.ts`: `resolveUitslagOdds` en `resolveTotoOdds`: `?? 1` → `|| 1` zodat opgeslagen 0 (lege admin-velden) correct terugvalt naar 1 in plaats van 0 te gebruiken.
+- `app/admin/AdminClient.tsx`: admin-save slaat geen `0` meer op voor lege odds-velden (via `isNaN` check).
+
+**Bug 3 – Iedereen zag dezelfde quoteringen (4.70 toto, 20.00 uitslag)**
+- `app/api/matchday/live/route.ts`: `MATCH_ODDS` (statische data) geïmporteerd. `effectiveQuote` opgebouwd per wedstrijd: combineert admin-quote (Redis) met statische odds als fallback. Per-uitkomst toto-odds (1/X/2) en per-uitslag uitslagOddsMap worden nu correct per deelnemer gebruikt.
+
+**Bug 4 – Fantasy-spelers niet herkend (Quiñones scoorde, geen vinkje)**
+- `app/api/matchday/live/route.ts`: namen van ESPN API (bijv. "Julian Quiñones") matchen niet altijd met onze players.ts (`name`: "J. Quiñones", `middleName`: "Julian Quiñones"). Oplossing: 4-niveau fallback via `lookupGoals`/`lookupAssists`: middleName exact → name exact → genormaliseerde middleName (diacrieten gestript) → genormaliseerde name. `normName` helper met `\p{M}` Unicode regex.
+
 ### 2026-06-11 — Matchday slides OG/ASC toggle (Claude Code)
 
 #### Matchday drawer: groep-toggle voor Robert en Wouter

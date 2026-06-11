@@ -6,9 +6,11 @@ import { GROUP_MEMBERS } from '@/lib/groups'
 import { loadMatchdayConfig, resolveTotoOdds, resolveUitslagOdds, getGroupQuotes } from '@/lib/matchday'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { ESPN_MATCH_IDS } from '@/lib/data/espnMatchIds'
+import { MATCH_ODDS } from '@/lib/data/odds'
 import { computePlayerQuote } from '@/lib/helpers'
 import { ALL_SLOTS } from '@/lib/data/slots'
 import type { GroupId } from '@/lib/groups'
+import type { MatchdayQuote } from '@/lib/matchday'
 import type { Prediction, FantasySquad } from '@/store/gameStore'
 import type { LiveMatchData, LiveParticipantRow, LiveGoalEvent, LiveBookingEvent, LiveSubstitutionEvent, LivePlayer, LiveMatchStats } from '@/lib/types/matchday'
 
@@ -89,6 +91,10 @@ interface EspnSummary {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function normName(s: string): string {
+  return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim()
+}
 
 function espnStatusToInternal(description: string): 'IN_PLAY' | 'PAUSED' | 'FINISHED' | null {
   switch (description) {
@@ -443,15 +449,51 @@ export async function GET(req: NextRequest) {
     const substitutions = extractSubs(rosters)
     const { homeLineup, awayLineup, homeBench, awayBench } = extractLineups(rosters)
 
+    // Normalized lookup: strip accents + lowercase so "Quiñones" matches "Quinones" etc.
+    const normGoals:   Record<string, number> = {}
+    const normAssists: Record<string, number> = {}
+    for (const [k, v] of Object.entries(goalsByScorer))   normGoals[normName(k)]   = v
+    for (const [k, v] of Object.entries(assistsByScorer)) normAssists[normName(k)] = v
+
+    function lookupGoals(player: { name: string; middleName: string }): number {
+      return goalsByScorer[player.middleName]
+        ?? goalsByScorer[player.name]
+        ?? normGoals[normName(player.middleName)]
+        ?? normGoals[normName(player.name)]
+        ?? 0
+    }
+    function lookupAssists(player: { name: string; middleName: string }): number {
+      return assistsByScorer[player.middleName]
+        ?? assistsByScorer[player.name]
+        ?? normAssists[normName(player.middleName)]
+        ?? normAssists[normName(player.name)]
+        ?? 0
+    }
+
     const totoNow    = currentToto(scoreHome, scoreAway)
-    const uitslagNow = `${scoreHome}-${scoreAway}`
+    const uitslagNow = `${scoreHome} - ${scoreAway}`
     const match      = MATCHES.find((m) => m.id === matchId)
 
     const quoteEntry = config ? getGroupQuotes(config, group).find((q) => q.matchId === matchId) : undefined
+    const staticOdds = MATCH_ODDS[matchId]
+
+    // Merge MATCH_ODDS (per-outcome toto + per-score uitslag) with admin config.
+    // Admin per-outcome values override MATCH_ODDS when explicitly set.
+    const effectiveQuote: MatchdayQuote | undefined = (() => {
+      if (!staticOdds && !quoteEntry) return undefined
+      return {
+        matchId,
+        totoOdds1: quoteEntry?.totoOdds1 || staticOdds?.home,
+        totoOddsX: quoteEntry?.totoOddsX || staticOdds?.draw,
+        totoOdds2: quoteEntry?.totoOdds2 || staticOdds?.away,
+        uitslagOddsMap: quoteEntry?.uitslagOddsMap ?? staticOdds?.scores,
+        uitslagOddsFallback: quoteEntry?.uitslagOddsFallback,
+      }
+    })()
 
     const participantRows: LiveParticipantRow[] = groupParticipants.map((p) => {
       const pred   = predsByInitials[p.initials]?.[matchId]
-      const tokens = pred?.tokens ?? 0
+      const tokens = pred?.tokens ?? 1
       const toto   = pred?.toto   ?? null
       const uitslag = pred?.uitslag ?? null
 
@@ -460,8 +502,8 @@ export async function GET(req: NextRequest) {
       const { impossible: uitslagImpossible, possible: uitslagPossible } =
         computeUitslagState(uitslag, scoreHome, scoreAway, internalStatus)
 
-      const totoOdds    = resolveTotoOdds(quoteEntry, toto)
-      const uitslagOdds = resolveUitslagOdds(quoteEntry, uitslag)
+      const totoOdds    = resolveTotoOdds(effectiveQuote, toto)
+      const uitslagOdds = resolveUitslagOdds(effectiveQuote, uitslag)
 
       const potentialTotoPoints    = totoCorrect    ? Math.round(tokens * totoOdds    * 100) / 100 : 0
       const potentialUitslagPoints = uitslagCorrect ? Math.round(tokens * uitslagOdds * 100) / 100 : 0
@@ -477,14 +519,14 @@ export async function GET(req: NextRequest) {
           if (player.country === match.home && !fantasyHomePlayer) {
             fantasyHomePlayer = {
               name: player.name,
-              goals:   goalsByScorer[player.name]   ?? 0,
-              assists: assistsByScorer[player.name] ?? 0,
+              goals:   lookupGoals(player),
+              assists: lookupAssists(player),
             }
           } else if (player.country === match.away && !fantasyAwayPlayer) {
             fantasyAwayPlayer = {
               name: player.name,
-              goals:   goalsByScorer[player.name]   ?? 0,
-              assists: assistsByScorer[player.name] ?? 0,
+              goals:   lookupGoals(player),
+              assists: lookupAssists(player),
             }
           }
         }
