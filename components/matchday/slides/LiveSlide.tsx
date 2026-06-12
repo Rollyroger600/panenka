@@ -6,6 +6,7 @@ import { COUNTRY_ABB } from '@/lib/data/countries'
 import { MATCHES } from '@/lib/data/matches'
 import type { LiveMatchData, LiveGoalEvent, LiveBookingEvent, LiveSubstitutionEvent, LivePenaltyEvent, LivePlayer, LiveMatchStats } from '@/lib/types/matchday'
 import type { Match } from '@/lib/data/matches'
+import { normalizeUitslag } from '@/lib/helpers'
 
 interface Props {
   matchdayId: number
@@ -552,7 +553,7 @@ function LiveMatchPanel({ lm, match, exporting }: { lm: LiveMatchData; match: Ma
 
                   {/* Uitslag voorspelling */}
                   <span className="font-heading text-[12px]" style={{ color: uitslagColor, borderLeft: VL, alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {uitslagPrefix}{row.uitslag ?? ''}
+                    {uitslagPrefix}{row.uitslag ? normalizeUitslag(row.uitslag) : ''}
                   </span>
 
                   {/* Uitslag odds */}

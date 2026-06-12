@@ -2,7 +2,7 @@ import { MATCH_ODDS } from './data/odds'
 import { KO_MATCH_ODDS } from './data/koMatchOdds'
 import { KO_QUOTES } from './data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from './data/knockoutRounds'
-import { computePlayerQuote } from './helpers'
+import { computePlayerQuote, normalizeUitslag } from './helpers'
 import type { Player } from './data/players'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
 import type { OranjeCorrectMap, OranjeAntwoordenMap, OranjeBeoordeling } from '@/lib/types/oranjeVragen'
@@ -134,8 +134,9 @@ export function scoreParticipant(
       matchScore += effectiveTokens * totoOdd
       totoCorrect++
     }
-    if (pred.uitslag && pred.uitslag === actual.uitslag) {
-      const scoreOdd = odds.scores[pred.uitslag] ?? 0
+    const normPredUitslag = pred.uitslag ? normalizeUitslag(pred.uitslag) : null
+    if (normPredUitslag && normPredUitslag === normalizeUitslag(actual.uitslag)) {
+      const scoreOdd = odds.scores[normPredUitslag] ?? 0
       matchScore += effectiveTokens * scoreOdd
       uitslagCorrect++
     }

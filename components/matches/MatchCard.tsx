@@ -5,7 +5,7 @@ import { useTokenBudget } from '@/hooks/useTokenBudget'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { ODDS_TRENDS } from '@/lib/data/odds_trends'
 import type { OddsTrend } from '@/lib/data/odds_trends'
-import { abbrevCountry } from '@/lib/helpers'
+import { abbrevCountry, normalizeUitslag } from '@/lib/helpers'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { TotoButtons } from './TotoButtons'
 import { ScorePicker } from './ScorePicker'
@@ -63,8 +63,10 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
           const tOdd = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
           s += effectiveTokens * tOdd
         }
-        if (pred.uitslag && pred.uitslag === result.uitslag) {
-          s += effectiveTokens * (odds.scores[pred.uitslag] ?? 0)
+        const normPred = pred.uitslag ? normalizeUitslag(pred.uitslag) : null
+        const normResult = result.uitslag ? normalizeUitslag(result.uitslag) : null
+        if (normPred && normPred === normResult) {
+          s += effectiveTokens * (odds.scores[normPred] ?? 0)
         }
         return Math.round(s * 100) / 100
       })()
@@ -160,7 +162,7 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
               }`}
               style={pred.uitslag === null ? { color: MUTED } : undefined}
             >
-              {pred.uitslag ?? 'Kies'}
+              {pred.uitslag ? normalizeUitslag(pred.uitslag) : 'Kies'}
             </button>
           </div>
           <div className="flex flex-col items-center gap-1">
@@ -201,7 +203,7 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
           <div className="flex items-center gap-1">
             <div className="w-14 flex justify-center pt-1.5">
               <span className={`font-heading text-sm font-bold ${
-                pred.uitslag === result.uitslag ? 'text-emerald-400' : 'text-white'
+                pred.uitslag && normalizeUitslag(pred.uitslag) === normalizeUitslag(result.uitslag) ? 'text-emerald-400' : 'text-white'
               }`}>
                 {result.uitslag}
               </span>

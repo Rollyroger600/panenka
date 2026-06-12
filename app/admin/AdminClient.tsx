@@ -1162,7 +1162,7 @@ function MatchResultRow({ match, result, saving, onSave, onDelete, onEspnImport 
           }`}
           style={!uitslag ? { color: MUTED } : undefined}
         >
-          {uitslag || 'Uitslag'}
+          {uitslag ? uitslag.trim().replace(/\s*-\s*/, ' - ') : 'Uitslag'}
         </button>
 
         {/* ESPN knop */}

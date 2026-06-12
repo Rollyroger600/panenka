@@ -5,6 +5,7 @@ import { MATCH_ODDS } from '@/lib/data/odds'
 import { PARTICIPANTS } from '@/lib/participants'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
+import { normalizeUitslag } from '@/lib/helpers'
 import {
   loadMatchdayConfig,
   getOrCreateRotation,
@@ -100,8 +101,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           name: p.name,
           tokens: pred?.tokens ?? 1,
           toto: pred?.toto ?? null,
-          uitslag: pred?.uitslag ?? null,
-          uitslagQuote: pred?.uitslag && odds ? (odds.scores[pred.uitslag] ?? null) : null,
+          uitslag: pred?.uitslag ? normalizeUitslag(pred.uitslag) : null,
+          uitslagQuote: pred?.uitslag && odds ? (odds.scores[normalizeUitslag(pred.uitslag)] ?? null) : null,
           fantasyHome,
           fantasyAway,
         }

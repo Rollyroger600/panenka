@@ -7,7 +7,7 @@ import { loadMatchdayConfig, resolveTotoOdds, resolveUitslagOdds, getGroupQuotes
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { ESPN_MATCH_IDS } from '@/lib/data/espnMatchIds'
 import { MATCH_ODDS } from '@/lib/data/odds'
-import { computePlayerQuote } from '@/lib/helpers'
+import { computePlayerQuote, normalizeUitslag } from '@/lib/helpers'
 import { ALL_SLOTS } from '@/lib/data/slots'
 import type { GroupId } from '@/lib/groups'
 import type { MatchdayQuote } from '@/lib/matchday'
@@ -495,7 +495,7 @@ export async function GET(req: NextRequest) {
       const pred   = predsByInitials[p.initials]?.[matchId]
       const tokens = pred?.tokens ?? 1
       const toto   = pred?.toto   ?? null
-      const uitslag = pred?.uitslag ?? null
+      const uitslag = pred?.uitslag ? normalizeUitslag(pred.uitslag) : null
 
       const totoCorrect    = toto === totoNow
       const uitslagCorrect = uitslag === uitslagNow

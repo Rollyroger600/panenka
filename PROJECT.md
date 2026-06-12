@@ -845,6 +845,21 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-12 — Uitslag normalisatie + score-berekening fix + stand layout (Claude Code)
+
+#### Score-berekening: uitslag met/zonder spaties worden nu als gelijk herkend
+- `lib/helpers.ts`: nieuwe `normalizeUitslag(s)` helper — normaliseert `"2-0"`, `"2- 0"`, `"2 - 0"` allemaal naar `"2 - 0"` (odds-key formaat).
+- `lib/scoring.ts`: `scoreParticipant` normaliseert beide kanten vóór vergelijking en gebruikt genormaliseerde uitslag voor de odds-lookup.
+- `components/matches/MatchCard.tsx`: `earnedScore` berekening, uitslag-knop label, resultaatrij-tekst en groen/wit kleurcheck — alles genormaliseerd.
+- `app/admin/AdminClient.tsx`: uitslag-knop in MatchResultRow normaliseert display.
+- `components/matchday/slides/LiveSlide.tsx`: `row.uitslag` genormaliseerd in display.
+- `components/matchday/slides/MatchSlide.tsx`: `fmtUitslag()` herschreven via `normalizeUitslag` (ook bug gerepareerd: dubbele spaties bij al-genormaliseerde input).
+- `app/api/matchday/[id]/full/route.ts`: `uitslag` + `uitslagQuote` lookup genormaliseerd.
+- `app/api/matchday/live/route.ts`: `uitslag` genormaliseerd vóór `uitslagCorrect` vergelijking.
+
+#### /stand pagina: top 3 in tabel (geen apart podiumblok)
+- `app/(app)/stand/StandClient.tsx`: `<Podium>` component verwijderd; `<RankList>` toont nu alle deelnemers (incl. #1–3) met `startRank={1}`.
+
 ### 2026-06-11 — Live slide bugfixes: tokens, quoteringen, fantasy namen (Claude Code)
 
 #### 4 bugs opgelost in de live matchday slide

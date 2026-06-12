@@ -5,6 +5,7 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import { COUNTRY_ABB } from '@/lib/data/countries'
 import { WK_PLAYERS } from '@/lib/data/players'
 import type { MatchSlideData } from '@/lib/types/matchday'
+import { normalizeUitslag } from '@/lib/helpers'
 
 const MUTED = '#7e7667'
 const VLINE = '1px solid rgba(255,255,255,0.14)'
@@ -27,7 +28,7 @@ function fmt(val: number | null | undefined): string {
 
 function fmtUitslag(uitslag: string | null | undefined): string {
   if (!uitslag) return ''
-  return uitslag.replace('-', ' - ')
+  return normalizeUitslag(uitslag)
 }
 
 function middleName(name: string): string {

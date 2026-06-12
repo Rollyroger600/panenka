@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { loadScoresForGroup } from '@/app/actions/scores'
-import { Podium } from '@/components/leaderboard/Podium'
 import { RankList } from '@/components/leaderboard/RankList'
 import { DUAL_GROUP_INITIALS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
@@ -117,8 +116,6 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
   const hasScores = scores.some((s) => s.total > 0)
   const activeView = STAND_VIEWS.find((v) => v.value === standView)!
   const sortedScores = [...scores].sort((a, b) => (b[activeView.scoreKey] as number) - (a[activeView.scoreKey] as number))
-  const top3 = sortedScores.slice(0, 3)
-  const rest = sortedScores.slice(3)
 
   return (
     <>
@@ -185,13 +182,11 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
               </div>
             )}
 
-{isLoaded && hasScores && <Podium top3={top3} scoreKey={activeView.scoreKey} />}
-
-            {isLoaded && (
+{isLoaded && (
               <RankList
-                participants={hasScores ? rest : sortedScores}
+                participants={sortedScores}
                 currentInitials={mijnInitials}
-                startRank={hasScores ? 4 : 1}
+                startRank={1}
                 scoreKey={standView !== 'totaal' ? activeView.scoreKey : undefined}
                 scoreLabel={activeView.scoreLabel}
               />

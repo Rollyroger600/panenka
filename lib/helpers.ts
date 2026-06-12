@@ -4,6 +4,11 @@ import { KO_QUOTES } from './data/knockoutQuotes'
 import { KO_TRENDS } from './data/knockoutQuotes_trends'
 import type { OddsTrend } from './data/knockoutQuotes_trends'
 
+// Normaliseert "2-0", "2 -0", "2- 0" → "2 - 0" (odds-key formaat)
+export function normalizeUitslag(s: string): string {
+  return s.trim().replace(/\s*-\s*/, ' - ')
+}
+
 export function computePlayerQuote(player: Player): number {
   const tq = TEAM_QUOTES[player.country] ?? { teamQuote: 3.0 }
   const r16 = KO_QUOTES[player.country]?.r16
