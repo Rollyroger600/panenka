@@ -15,7 +15,7 @@ Initials in parentheses are the internal short codes used in the Excel master.
 | Naam | Ref | Basis | Extra | Totaal |
 |------|-----|-------|-------|--------|
 | Michiel | MG | 335 | +9 | 344 |
-| Bob | BH | 335 | +5 | 340 |
+| Bob | BH | 335 | +5 | 340 [|
 | Thom | TW | 335 | +4 | 339 |
 | Henk Jan | HP | 335 | +2 | 337 |
 | Rogier | RH | 335 | +10 | 345 |
@@ -3533,6 +3533,22 @@ Bregt heeft besloten niet meer mee te doen. Verwijderd uit de deelnemerslijst. G
 #### Tokens handmatig opgehoogd via script (KV)
 
 Niels (NS), Peter (PN) en Wiger (WW) hadden nog 6 tokens over na de deadline. Via eenmalig Node.js-script (`scripts/add_tokens.mjs`) elk +2 tokens toegevoegd bij wedstrijden 10, 33 en 58.
+
+### 2026-06-12 — Stand scores decimalen & matchday slide centering (Claude Code)
+
+#### Stand pagina: scores altijd met 2 decimalen (`components/leaderboard/RankList.tsx`)
+
+- Totaal-kolom (`p.total`) en sub-view scores (`p[scoreKey]`) tonen nu `.toFixed(2)`
+- Poule-kolom (`p.poulefase`) toont ook 2 decimalen
+- Uitzondering: TOTO en UITSL sub-views tonen integers (geen decimalen), omdat dit tellers zijn
+
+#### Matchday slides: centering fix op smalle smartphones (`components/matchday/MatchdayDrawer.tsx`)
+
+**Probleem:** Op smartphones smaller dan 390px (b.v. 360–375px viewport) leek de slide-content naar rechts verschoven. De oorzaak: de slide is gefixeerd op 390px breed; `flex justify-center` + `overflow: auto` probeert de slide te centreren maar klipt de LINKERKANT af (negatief scrollen is niet mogelijk), zodat de rechterkant domineert.
+
+**Fix:** `slideScale` state berekend uit `document.documentElement.clientWidth`. Op schermen < 390px wordt `transform: scale(w/390)` toegepast op de slide-wrapper, gecombineerd met negatieve side-margins (`-(390 × (1−scale) / 2)` aan beide kanten) zodat de flex-container de visuele breedte correct ziet en geen overflow meer optreedt. Op ≥ 390px: geen transform.
+
+---
 
 ### 2026-06-11 — Stand pagina: ASC Inzet + Pot gevuld (Claude Code)
 

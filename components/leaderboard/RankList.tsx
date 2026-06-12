@@ -35,7 +35,9 @@ export function RankList({ participants, currentInitials, startRank = 4, scoreKe
                   {p.name}
                 </span>
                 <span className={`text-sm font-bold text-right ${isCurrent ? 'text-[#FF6B00]' : 'text-white'}`}>
-                  {p[scoreKey] as number}
+                  {scoreKey === 'totoCorrect' || scoreKey === 'uitslagCorrect'
+                    ? (p[scoreKey] as number)
+                    : (p[scoreKey] as number).toFixed(2)}
                 </span>
               </div>
             )
@@ -65,11 +67,11 @@ export function RankList({ participants, currentInitials, startRank = 4, scoreKe
                 <span className={`text-sm font-bold truncate ${isCurrent ? 'text-[#FF6B00]' : 'text-white'}`}>
                   {p.name}
                 </span>
-                <span className="text-xs text-[#888] text-right">{p.poulefase ?? '—'}</span>
+                <span className="text-xs text-[#888] text-right">{p.poulefase != null ? p.poulefase.toFixed(2) : '—'}</span>
                 <span className="text-xs text-[#888] text-right">{p.knockout ?? '—'}</span>
                 <span className="text-xs text-[#888] text-right">{p.fantasy ?? '—'}</span>
                 <span className={`text-sm font-bold text-right ${isCurrent ? 'text-[#FF6B00]' : 'text-white'}`}>
-                  {p.total}
+                  {p.total.toFixed(2)}
                 </span>
               </div>
             )

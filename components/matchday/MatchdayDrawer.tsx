@@ -28,6 +28,17 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
   const [error, setError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
   const [liveMatches, setLiveMatches] = useState<LiveMatchData[]>(mockLiveData ?? [])
+  const [slideScale, setSlideScale] = useState(1)
+
+  useEffect(() => {
+    const update = () => {
+      const w = document.documentElement.clientWidth
+      setSlideScale(w >= 390 ? 1 : w / 390)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
 
   useEffect(() => {
     if (fdoLiveEnabled) return  // FDO polling overrides mock
@@ -323,7 +334,15 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
           const inzetIdx = (has2MatchSlides ? 2 : 1) + off
 
           return (
-            <div className="relative" style={{ overflow: 'hidden' }}>
+            <div className="relative" style={{
+              overflow: 'hidden',
+              ...(slideScale < 1 ? {
+                transform: `scale(${slideScale})`,
+                transformOrigin: 'top center',
+                marginLeft:  `${-(390 * (1 - slideScale) / 2)}px`,
+                marginRight: `${-(390 * (1 - slideScale) / 2)}px`,
+              } : {}),
+            }}>
               {/* LiveSlide — only when live matches active */}
               {hasLive && (
                 <div style={slideIndex === 0 ? {} : { position: 'absolute', left: -9999, width: 390 }}>
