@@ -205,7 +205,7 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
               <span className={`font-heading text-sm font-bold ${
                 pred.uitslag && normalizeUitslag(pred.uitslag) === normalizeUitslag(result.uitslag) ? 'text-emerald-400' : 'text-white'
               }`}>
-                {result.uitslag}
+                {result.uitslag.replace('-', ' - ')}
               </span>
             </div>
             <div className="w-9" />

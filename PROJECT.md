@@ -845,6 +845,11 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-12 — Uitslag opmaak in resultaatrij (Claude Code)
+
+#### Poulefase: werkelijke uitslag getoond met spaties
+- `components/matches/MatchCard.tsx`: `result.uitslag` in de resultaatrij toont nu `2 - 0` i.p.v. `2-0` (`.replace('-', ' - ')`).
+
 ### 2026-06-12 — Uitslag normalisatie + score-berekening fix + stand layout (Claude Code)
 
 #### Score-berekening: uitslag met/zonder spaties worden nu als gelijk herkend
