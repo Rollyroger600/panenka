@@ -20,7 +20,7 @@ interface Props {
 }
 
 export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatchday, mockData, mockLiveData, showExport, fdoLiveEnabled }: Props) {
-  const [matchdayId, setMatchdayId] = useState(initialMatchday ?? 1)
+  const [matchdayId, setMatchdayId] = useState(initialMatchday ?? 2)
   const [activeGroup, setActiveGroup] = useState<'og' | 'asc'>(group)
   const [slideIndex, setSlideIndex] = useState(0)
   const [data, setData] = useState<FullMatchdayData | null>(mockData ?? null)

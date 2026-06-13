@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-13 — Pot OG: Winst Matchday 01 + drawer default matchday 02 (Claude Code)
+
+#### Stand pagina — Pot tab OG groep
+- `app/(app)/stand/StandClient.tsx`: regel toegevoegd aan `POT_REGELS.og`: `Winst Matchday 01, +9.50` (datum 2026-06-13).
+
+#### Matchday drawer — standaard matchday 02
+- `components/matchday/MatchdayDrawer.tsx`: default matchday bij openen gewijzigd van 1 naar 2.
+
 ### 2026-06-12 — Uitslag opmaak in resultaatrij (Claude Code)
 
 #### Poulefase: werkelijke uitslag getoond met spaties
