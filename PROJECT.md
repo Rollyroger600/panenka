@@ -3539,6 +3539,14 @@ Bregt heeft besloten niet meer mee te doen. Verwijderd uit de deelnemerslijst. G
 
 Niels (NS), Peter (PN) en Wiger (WW) hadden nog 6 tokens over na de deadline. Via eenmalig Node.js-script (`scripts/add_tokens.mjs`) elk +2 tokens toegevoegd bij wedstrijden 10, 33 en 58.
 
+### 2026-06-13 — Admin ESPN import gebruikt dezelfde speler-naam mapping (Claude Code)
+
+#### Admin ESPN import: ESPN_PLAYER_MAP als primaire lookup (`app/api/admin/espn-import/route.ts`)
+
+De admin ESPN import route had zijn eigen matching (via middleName/fullName). Nu wordt eerst `ESPN_PLAYER_MAP` geraadpleegd — dezelfde map als de live route — zodat doelpuntenmakers en assistgevers consistent gematcht worden bij handmatig invullen via de ESPN-koppeling in admin.
+
+---
+
 ### 2026-06-13 — ESPN speler-naam mapping voor Fantasy XV live scoring (Claude Code)
 
 #### Expliciete mapping player ID → ESPN displayName (`lib/data/espnPlayerMap.ts`, `app/api/matchday/live/route.ts`)
