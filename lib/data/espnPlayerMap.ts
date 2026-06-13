@@ -1,0 +1,216 @@
+// Mapping: app player ID → ESPN displayName
+// Gegenereerd door: node scripts/build_espn_player_map.mjs
+// Handmatige aanvullingen onderaan toevoegen (zie scripts/espn_unmatched.txt)
+export const ESPN_PLAYER_MAP: Record<number, string> = {
+  71259: "Lukás Cerv",
+  72360: "Samed Bazdar",
+  73070: "Promise David",
+  73325: "Raúl Rangel",
+  73456: "Stepán Chaloupek",
+  74419: "Alexandr Sojka",
+  75209: "Jovo Lukic",
+  75533: "Kerim Alajbegovic",
+  76602: "Amar Memic",
+  77951: "Samukele Kabini",
+  77972: "Alexandro Maidana",
+  78784: "Mateo Chávez",
+  79280: "Ime Okon",
+  79399: "Gilberto Mora",
+  80073: "Denis Visinský",
+  82294: "Oswin Appollis",
+  82308: "Mbekezeli Mbokazi",
+  82487: "Thabang Matuludi",
+  82493: "Khulumani Ndamane",
+  82497: "Thalente Mbatha",
+  82507: "Tshepang Moremi",
+  82509: "Relebohile Mofokeng",
+  82883: "Iqraam Rayners",
+  84039: "Martin Zlomislic",
+  84041: "Ivan Basic",
+  84061: "Armando González",
+  84684: "Jayden Adams",
+  84685: "Thapelo Maseko",
+  85688: "Ermin Mahmic",
+  86128: "Kamogelo Sebelebele",
+  86210: "Hugo Sochurek",
+  140233: "Guillermo Ochoa",
+  180930: "Edin Dzeko",
+  191655: "Kim Seung-Gyu",  // was: "Seung Gyu Kim"
+  198261: "Tim Ream",
+  199323: "Jaroslav Zelený",
+  200104: "Son Heung-Min",  // was: "Heung Min Son"
+  201262: "Vladimír Darida",
+  204838: "Raúl Jiménez",
+  207993: "Sead Kolasinac",
+  212002: "Haris Tabakovic",
+  212432: "Jo Hyeon-Woo",  // was: "Hyeon Woo Jo"
+  213439: "Jonathan Osorio",
+  213536: "Maxime Crépeau",
+  213615: "Ronwen Williams",
+  218191: "Gustavo Gómez",
+  219932: "Antonio Sanabria",
+  220337: "Júnior Alonso",
+  221293: "Guillermo Martínez",
+  221671: "Lee Jae-Sung",  // was: "Jae Sung Lee"
+  221909: "Jindrich Stanek",
+  222382: "Luis Chávez",
+  222429: "Andrés Cubas",
+  222560: "Themba Zwane",
+  224574: "Orbelín Pineda",
+  226045: "Jesús Gallardo",
+  226286: "Gabriel Ávalos",
+  226380: "Hwang Hee-Chan",  // was: "Hee Chan Hwang"
+  226579: "Alejandro Zendejas",
+  226777: "Cyle Larin",
+  226807: "Cristian Roldan",
+  227659: "Kim Jin-Gyu",  // was: "Jin Gyu Kim"
+  227796: "Christian Pulisic",
+  228010: "Hwang In-Beom",  // was: "In Beom Hwang"
+  228082: "Dzenis Burnic",
+  228229: "Fabián Balbuena",
+  229348: "Antonee Robinson",
+  229980: "César Montes",
+  230977: "Miguel Almirón",
+  232081: "Richie Laryea",
+  232999: "Tyler Adams",
+  233053: "Amir Hadziahmetovic",
+  233260: "Alexis Vega",
+  233267: "Matt Turner",
+  233493: "Jorge Sánchez",
+  234236: "Patrik Schick",
+  234396: "Alphonso Davies",
+  234579: "Julián Quiñones",
+  235183: "Carlos Acevedo",
+  235755: "Auston Trusty",
+  235844: "Edson Álvarez",
+  236315: "Alfie Jones",
+  236541: "Dennis Hadzikadunic",
+  236792: "Tomás Soucek",
+  237043: "Roberto Alvarado",
+  237086: "Kim Min-Jae",  // was: "Min Jae Kim"
+  237255: "Miles Robinson",
+  237424: "Paik Seung-Ho",  // was: "Seung Ho Paik"
+  238570: "Song Bum-Keun",  // was: "Bum Keun Song"
+  238743: "Haji Wright",
+  238744: "Weston McKennie",
+  238900: "Ermedin Demirovic",
+  240359: "Omar Alderete",
+  240925: "Liam Millar",
+  241173: "Lyle Foster",
+  241496: "Timothy Weah",
+  242195: "Mark McKenzie",
+  242380: "Stephen Eustáquio",  // was: "Stephen Antunes Eustáquio"
+  242935: "Aubrey Modiba",
+  242936: "Teboho Mokoena",
+  242948: "Matej Kovár",
+  243009: "Derek Cornelius",
+  243015: "Luis Romo",
+  243133: "Joe Scally",
+  243630: "Jonathan David",
+  243780: "Lee Kang-In",  // was: "Kang In Lee"
+  244204: "Nikola Katic",
+  244271: "Ivan Sunjic",
+  244349: "Johan Vásquez",
+  244470: "Vladimír Coufal",
+  244680: "Mathieu Choinière",
+  244793: "Tomás Chorý",
+  244800: "Kim Moon-Hwan",  // was: "Moon Hwan Kim"
+  245054: "Lee Dong-Gyeong",  // was: "Dong Gyeong Lee"
+  245152: "Santiago Gimenez",
+  245209: "Michal Sadílek",
+  245541: "Giovanni Reyna",
+  246289: "César Huerta",
+  246618: "Adam Hlozek",
+  246696: "Gustavo Velázquez",
+  246800: "Tajon Buchanan",
+  247050: "Pavel Sulc",
+  247228: "Dayne St. Clair",
+  247361: "Brenden Aaronson",
+  247463: "Folarin Balogun",
+  247506: "Matt Freese",
+  247686: "Cho Gue-Sung",  // was: "Gue Sung Cho"
+  248712: "Oh Hyeon-Gyu",  // was: "Hyeon Gyu Oh"
+  248870: "Braian Ojeda",
+  250954: "Chris Richards",
+  251116: "Tomás Holes",
+  251168: "Nihad Mujakic",
+  251223: "Ricardo Pepi",
+  251352: "Jacob Shaffelburg",
+  251613: "Juan Jose Cáceres",
+  251617: "Armin Gigovic",
+  251804: "Sergiño Dest",
+  252008: "Israel Reyes",
+  252064: "Ladislav Krejcí",
+  252198: "Kim Tae-Hyeon",  // was: "Tae Hyeon Kim"
+  253238: "José Canale",
+  253727: "Lukás Provod",
+  253949: "Ricardo Goss",
+  254601: "Gastón Olveira",
+  254952: "Isidro Pitta",
+  254980: "Seol Young-Woo",  // was: "Young Woo Seol"
+  255205: "Sebastian Berhalter",
+  255339: "Jayden Nelson",
+  255687: "David Zima",
+  255718: "Ramón Sosa",
+  255956: "Joel Waterman",
+  256107: "Alistair Johnston",
+  256853: "Malik Tillman",
+  257293: "Sphephelo Sithole",
+  257345: "Amar Dedic",
+  257536: "Jan Kuchta",
+  257784: "Érik Lira",
+  258936: "Lukás Hornícek",
+  259293: "Bradley Cross",
+  260397: "Yang Hyun-Jun",  // was: "Hyun Jun Yang"
+  260492: "Eom Ji-Sung",  // was: "Ji Sung Eom"
+  260982: "Chris Brady",
+  260984: "Brian Gutiérrez",
+  261062: "Lee Han-Beom",  // was: "Han Beom Lee"
+  261063: "Lee Tae-Seok",  // was: "Tae Seok Lee"
+  262027: "Tarik Muharemovic",
+  262638: "Evidence Makgopa",
+  262956: "Nikola Vasilj",
+  263701: "Obed Vargas",
+  264194: "Jens Castrop",
+  264207: "Ismaël Koné",
+  266774: "Bae Jun-Ho",  // was: "Jun Ho Bae"
+  267401: "Cho Wi-Je",  // was: "Wi Je Cho"
+  267594: "David Jurásek",
+  267626: "Matías Galarza",
+  267920: "Alex Freeman",
+  268482: "Damián Bobadilla",
+  269278: "Diego Gómez",
+  269509: "David Doudera",
+  269625: "Nkosinathi Sibisi",
+  269823: "Esmir Bajraktarevic",
+  270844: "Gustavo Caballero",
+  270951: "Khuliso Mudau",
+  271108: "Tani Oluwaseyi",
+  271875: "Sipho Chaine",
+  272596: "Benjamin Tahirovic",
+  272604: "Ali Ahmed",
+  273843: "Alex Arce",
+  274535: "Max Arfsten",
+  274536: "Moïse Bombito",
+  274906: "Mojmír Chytil",
+  275238: "Niko Sigur",
+  276646: "Robin Hranác",
+  276806: "Owen Goodman",
+  278688: "Olwethu Makhanya",
+  279008: "Luc de Fougerolles",
+  16319104: "Stjepan Radeljic",
+  16347239: "Mladen Jurkas",
+
+  // ─── Handmatige aanvullingen ──────────────────────────────────────────────
+  // ESPN gebruikt volledige naam, app gebruikt bijnaam of kortere variant
+  226376: "Alejandro Romero Gamarra",  // Kaku (Paraguay)
+  83924:  "Maurício",                   // Mauricio Magalhães Prado (Paraguay)
+  // ESPN laat middelnaam weg
+  246608: "Álvaro Fidalgo",            // Álvaro Fidalgo Fernández (Mexico)
+  255434: "Julio Enciso",              // Julio César Enciso (Paraguay)
+  // Romanisering verschilt
+  261128: "Lee Gi-Hyuk",               // Gi Hyeok Lee (Zuid-Korea)
+  243673: "Park Jin-Seop",             // Jin Seob Park (Zuid-Korea)
+  // Spelfout in players.ts (Gill vs Gil)
+  75260:  "Orlando Gil",               // Orlando Gill (Paraguay)
+}

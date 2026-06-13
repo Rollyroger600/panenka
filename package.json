@@ -10,7 +10,8 @@
     "scrape-match-odds": "node scripts/scrape-odds.mjs",
     "scrape-ko-odds": "node scripts/scrape-ko-odds.mjs",
     "scrape": "npm run scrape-match-odds && npm run scrape-ko-odds",
-    "update_quoteringen": "npm run scrape-match-odds && npm run scrape-ko-odds"
+    "update_quoteringen": "npm run scrape-match-odds && npm run scrape-ko-odds",
+    "build-espn-player-map": "node scripts/build_espn_player_map.mjs"
   },
   "dependencies": {
     "@types/web-push": "^3.6.4",

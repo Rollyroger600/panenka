@@ -6,6 +6,7 @@ import { GROUP_MEMBERS } from '@/lib/groups'
 import { loadMatchdayConfig, resolveTotoOdds, resolveUitslagOdds, getGroupQuotes } from '@/lib/matchday'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { ESPN_MATCH_IDS } from '@/lib/data/espnMatchIds'
+import { ESPN_PLAYER_MAP } from '@/lib/data/espnPlayerMap'
 import { MATCH_ODDS } from '@/lib/data/odds'
 import { computePlayerQuote, normalizeUitslag } from '@/lib/helpers'
 import { ALL_SLOTS } from '@/lib/data/slots'
@@ -455,15 +456,19 @@ export async function GET(req: NextRequest) {
     for (const [k, v] of Object.entries(goalsByScorer))   normGoals[normName(k)]   = v
     for (const [k, v] of Object.entries(assistsByScorer)) normAssists[normName(k)] = v
 
-    function lookupGoals(player: { name: string; middleName: string }): number {
-      return goalsByScorer[player.middleName]
+    function lookupGoals(player: { id: number; name: string; middleName: string }): number {
+      const espnName = ESPN_PLAYER_MAP[player.id]
+      return (espnName != null ? goalsByScorer[espnName] ?? null : null)
+        ?? goalsByScorer[player.middleName]
         ?? goalsByScorer[player.name]
         ?? normGoals[normName(player.middleName)]
         ?? normGoals[normName(player.name)]
         ?? 0
     }
-    function lookupAssists(player: { name: string; middleName: string }): number {
-      return assistsByScorer[player.middleName]
+    function lookupAssists(player: { id: number; name: string; middleName: string }): number {
+      const espnName = ESPN_PLAYER_MAP[player.id]
+      return (espnName != null ? assistsByScorer[espnName] ?? null : null)
+        ?? assistsByScorer[player.middleName]
         ?? assistsByScorer[player.name]
         ?? normAssists[normName(player.middleName)]
         ?? normAssists[normName(player.name)]

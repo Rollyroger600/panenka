@@ -1,0 +1,13 @@
+Niet-gematchte ESPN spelers (10) — handmatig toevoegen aan espnPlayerMap.ts
+Land                      ESPN displayName
+─────────────────────────────────────────────────────
+Bosnia-Herzegovina        Arjan Malic
+Canada                    Nathan Saliba
+Mexico                    Álvaro Fidalgo
+Paraguay                  Alejandro Romero Gamarra
+Paraguay                  Gatito Fernández
+Paraguay                  Julio Enciso
+Paraguay                  Maurício
+Paraguay                  Orlando Gil
+South Korea               Lee Gi-Hyuk
+South Korea               Park Jin-Seop
