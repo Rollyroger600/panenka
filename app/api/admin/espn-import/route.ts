@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { ESPN_MATCH_IDS } from '@/lib/data/espnMatchIds'
+import { ESPN_PLAYER_MAP } from '@/lib/data/espnPlayerMap'
 import { WK_PLAYERS } from '@/lib/data/players'
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer'
@@ -77,13 +78,19 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ESPN displayName → interne spelersnaam (via middleName / fullName in WK_PLAYERS)
+  // ESPN displayName → interne spelersnaam
+  // 1. Expliciete map (ESPN_PLAYER_MAP omgekeerd: ESPN name → player)
   const espnToPlayer = new Map<string, { name: string; country: string }>()
   for (const p of WK_PLAYERS) {
-    const mid = p.middleName.toLowerCase().trim()
+    const espnName = ESPN_PLAYER_MAP[p.id]
+    if (espnName) espnToPlayer.set(espnName.toLowerCase().trim(), { name: p.name, country: p.country })
+  }
+  // 2. Fallback: middleName / fullName (voor spelers niet in de expliciete map)
+  for (const p of WK_PLAYERS) {
+    const mid  = p.middleName.toLowerCase().trim()
     const full = p.fullName.toLowerCase().trim()
-    if (mid) espnToPlayer.set(mid, { name: p.name, country: p.country })
-    if (full && full !== mid) espnToPlayer.set(full, { name: p.name, country: p.country })
+    if (mid  && !espnToPlayer.has(mid))  espnToPlayer.set(mid,  { name: p.name, country: p.country })
+    if (full && !espnToPlayer.has(full)) espnToPlayer.set(full, { name: p.name, country: p.country })
   }
 
   const allNames = new Set([...Object.keys(goalsByScorer), ...Object.keys(assistsByScorer)])
