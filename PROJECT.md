@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-13 — MatchCard details dropdown: uitslag + doelpunten on click (Claude Code)
+
+#### Poulefase: resultaatrij vervangen door klikbare dropdown
+
+- `components/matches/MatchCard.tsx`: resultaatrij (pijl + score) verwijderd. Zodra de admin een uitslag bevestigt, wordt de header klikbaar (cursor-pointer + ▼ chevron rechts). Klik opent `MatchDetailsDropdown`: toont bevestigde uitslag (groen als correct), Toto ✓ badge, en ESPN-doelpunten chronologisch (thuisteam links, uitteam rechts; penalty/eigen doel gelabeld; assist ingesprongen).
+- `app/api/match/[id]/goals/route.ts`: nieuwe GET endpoint — haalt ESPN wedstrijddata op voor één wedstrijd via `ESPN_MATCH_IDS`, extraheert doelpunten + assists, retourneert `{ goals: LiveGoalEvent[] }`. Next.js cache 1 uur (afgespeelde wedstrijden veranderen niet meer).
+
 ### 2026-06-13 — Aanvangstijden toegevoegd aan match cards (Claude Code)
 
 #### Poulefase: aanvangstijd zichtbaar in ondertitel match card

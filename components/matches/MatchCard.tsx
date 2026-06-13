@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { useTokenBudget } from '@/hooks/useTokenBudget'
 import { MATCH_ODDS } from '@/lib/data/odds'
@@ -11,9 +11,10 @@ import { TotoButtons } from './TotoButtons'
 import { ScorePicker } from './ScorePicker'
 import type { Match } from '@/lib/data/matches'
 import type { MatchResult } from '@/lib/scoring'
+import type { LiveGoalEvent } from '@/lib/types/matchday'
 
 interface Props { match: Match; readOnly?: boolean; result?: MatchResult }
-type Panel = 'score' | null
+type Panel = 'score' | 'details' | null
 
 const MUTED = '#7e7667'
 const LABEL = 'font-heading text-sm font-bold uppercase tracking-wider text-center'
@@ -37,7 +38,6 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
   const pred = predictions[match.id] ?? { toto: null, uitslag: null, tokens: null }
   const effectiveTokens = pred.tokens ?? 1
   const [openPanel, setOpenPanel] = useState<Panel>(null)
-  const isComplete = pred.toto !== null && pred.uitslag !== null
 
   const odds   = MATCH_ODDS[match.id]
   const trends = ODDS_TRENDS[match.id]
@@ -76,17 +76,22 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
     <div className={`rounded-xl border overflow-hidden ${result ? 'border-[#FF6B00]' : 'border-[#2a2a2a]'}`} style={{ background: 'rgba(22,22,22,0.82)' }}>
 
       {/* Header */}
-      <div className="relative flex flex-col items-center px-3 py-2.5" style={{ background: 'rgba(10,10,10,0.75)' }}>
+      <div
+        className={`relative flex flex-col items-center px-3 py-2.5 ${result ? 'cursor-pointer select-none' : ''}`}
+        style={{ background: 'rgba(10,10,10,0.75)' }}
+        onClick={result ? () => setOpenPanel((p) => (p === 'details' ? null : 'details')) : undefined}
+      >
         {/* Match number — square badge */}
         <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center rounded-lg border border-[#3a3a3a] font-heading text-sm font-bold text-white"
           style={{ background: 'rgba(37,37,37,0.8)' }}>
           # {match.id}
         </div>
 
-        {/* Wis-knop — gespiegeld rechts */}
+        {/* Wis-knop — gespiegeld rechts (alleen in edit-modus) */}
         {!readOnly && (pred.toto !== null || pred.uitslag !== null) && (
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation()
               setPrediction(match.id, { toto: null, uitslag: null, tokens: 1 })
               setOpenPanel(null)
             }}
@@ -96,6 +101,16 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
           >
             wis
           </button>
+        )}
+
+        {/* Chevron — zichtbaar zodra admin uitslag bevestigd heeft */}
+        {result && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-9 flex items-center justify-center pointer-events-none">
+            <span
+              className={`text-[10px] font-bold transition-transform duration-200 ${openPanel === 'details' ? 'rotate-180' : ''}`}
+              style={{ color: MUTED }}
+            >▼</span>
+          </div>
         )}
 
         {/* Teams */}
@@ -179,40 +194,6 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
         </div>
       </div>
 
-      {/* Resultaatrij */}
-      {result && (
-        <div className="flex justify-between items-center px-2 pb-2 border-t border-[#222]">
-          {/* Tokens spacer */}
-          <div className="w-10" />
-
-          {/* Toto pijl + Quote spacer */}
-          <div className="flex items-center gap-1">
-            <div className="flex gap-1">
-              {(['1', 'X', '2'] as const).map((t) => (
-                <div key={t} className="w-9 flex justify-center pt-1.5">
-                  {result.toto === t && (
-                    <span className={`text-base leading-none font-bold ${pred.toto === result.toto ? 'text-emerald-400' : 'text-white'}`}>↑</span>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="w-9" />
-          </div>
-
-          {/* Werkelijke uitslag + Quote spacer */}
-          <div className="flex items-center gap-1">
-            <div className="w-14 flex justify-center pt-1.5">
-              <span className={`font-heading text-sm font-bold ${
-                pred.uitslag && normalizeUitslag(pred.uitslag) === normalizeUitslag(result.uitslag) ? 'text-emerald-400' : 'text-white'
-              }`}>
-                {result.uitslag.replace('-', ' - ')}
-              </span>
-            </div>
-            <div className="w-9" />
-          </div>
-        </div>
-      )}
-
       {/* Steppers + Score */}
       <div className={`px-2 pb-2 flex items-center ${readOnly ? 'justify-end' : 'justify-between'}`}>
         {!readOnly && (
@@ -259,6 +240,94 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
           />
         </div>
       )}
+
+      {/* Wedstrijddetails dropdown */}
+      {openPanel === 'details' && result && (
+        <MatchDetailsDropdown
+          matchId={match.id}
+          result={result}
+          predToto={pred.toto}
+          predUitslag={pred.uitslag}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── MatchDetailsDropdown ───────────────────────────────────────────────────────
+
+interface DropdownProps {
+  matchId: number
+  result: MatchResult
+  predToto: string | null
+  predUitslag: string | null
+}
+
+function MatchDetailsDropdown({ matchId, result, predToto, predUitslag }: DropdownProps) {
+  const [goals, setGoals] = useState<LiveGoalEvent[] | null>(null)
+
+  useEffect(() => {
+    fetch(`/api/match/${matchId}/goals`)
+      .then((r) => r.ok ? r.json() : { goals: [] })
+      .then((data) => setGoals(data.goals ?? []))
+      .catch(() => setGoals([]))
+  }, [matchId])
+
+  const totoCorrect = predToto === result.toto
+  const uitslagCorrect = predUitslag != null && normalizeUitslag(predUitslag) === normalizeUitslag(result.uitslag)
+  const scoreDisplay = result.uitslag.replace('-', ' - ')
+
+  return (
+    <div className="border-t border-[#222] px-3 py-3">
+      {/* Uitslag */}
+      <div className="flex items-center justify-center gap-2 mb-3">
+        <span className={`font-heading text-xl font-bold ${uitslagCorrect ? 'text-emerald-400' : 'text-white'}`}>
+          {scoreDisplay}
+        </span>
+        {totoCorrect && (
+          <span className="font-heading text-[10px] font-bold uppercase tracking-widest text-emerald-400 border border-emerald-400/30 rounded px-1.5 py-0.5">
+            Toto ✓
+          </span>
+        )}
+      </div>
+
+      {/* Doelpunten */}
+      {goals === null ? (
+        <p className="text-center font-heading text-xs uppercase tracking-widest" style={{ color: MUTED }}>
+          Laden…
+        </p>
+      ) : goals.length > 0 ? (
+        <div className="flex flex-col gap-1.5">
+          {goals.map((g, i) => {
+            const label = `${g.minute}' ${g.scorer}${g.type === 'PENALTY' ? ' (P)' : g.type === 'OWN' ? ' (OG)' : ''}`
+            return (
+              <div key={i} className="flex items-start text-xs">
+                {g.team === 'home' ? (
+                  <>
+                    <div className="flex-1 flex flex-col">
+                      <span className="text-white font-medium">⚽ {label}</span>
+                      {g.assister && (
+                        <span className="pl-4" style={{ color: MUTED }}>↳ {g.assister}</span>
+                      )}
+                    </div>
+                    <div className="flex-1" />
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-1" />
+                    <div className="flex-1 flex flex-col items-end">
+                      <span className="text-white font-medium">{label} ⚽</span>
+                      {g.assister && (
+                        <span className="pr-4" style={{ color: MUTED }}>{g.assister} ↲</span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ) : null}
     </div>
   )
 }
