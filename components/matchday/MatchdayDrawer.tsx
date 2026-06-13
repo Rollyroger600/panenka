@@ -203,6 +203,7 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
   if (!open) return null
 
   const hasLive = liveMatches.some((m) => m.status === 'IN_PLAY' || m.status === 'PAUSED')
+  const activeLiveMatches = liveMatches.filter((m) => m.status === 'IN_PLAY' || m.status === 'PAUSED')
   const liveOffset = hasLive ? 1 : 0
   const totalSlides = data ? (data.matchSlides.length === 1 ? 2 : 3) + liveOffset : 3 + liveOffset
 
@@ -349,7 +350,7 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
                   <LiveSlide
                     ref={slideRefs[0]}
                     matchdayId={matchdayId}
-                    liveMatches={liveMatches}
+                    liveMatches={activeLiveMatches}
                     exporting={exporting}
                   />
                 </div>

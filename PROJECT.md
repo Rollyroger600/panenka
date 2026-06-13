@@ -3539,6 +3539,20 @@ Bregt heeft besloten niet meer mee te doen. Verwijderd uit de deelnemerslijst. G
 
 Niels (NS), Peter (PN) en Wiger (WW) hadden nog 6 tokens over na de deadline. Via eenmalig Node.js-script (`scripts/add_tokens.mjs`) elk +2 tokens toegevoegd bij wedstrijden 10, 33 en 58.
 
+### 2026-06-13 — Live slide bug: gegevens vorige wedstrijd zichtbaar tijdens nieuwe wedstrijd (Claude Code)
+
+#### Live slide toont nu alleen actieve (IN_PLAY/PAUSED) wedstrijden (`components/matchday/MatchdayDrawer.tsx`)
+
+**Probleem:** Bij de 2e t/m 4e wedstrijd van een matchday toonde de live slide de gegevens van wedstrijd 1. Oorzaak: de ESPN API geeft FINISHED terug voor afgesloten wedstrijden; de `liveMatches` array bevatte daardoor zowel de afgelopen (FINISHED) als de lopende wedstrijd. `hasLive` detecteerde de lopende wedstrijd correct, maar LiveSlide renderde alle items in de array — met wedstrijd 1 bovenaan.
+
+**Fix:** In `MatchdayDrawer` wordt vóór het doorgeven aan `<LiveSlide>` gefilterd op `IN_PLAY | PAUSED`:
+```ts
+const activeLiveMatches = liveMatches.filter((m) => m.status === 'IN_PLAY' || m.status === 'PAUSED')
+```
+`hasLive` (de trigger voor het tonen van de slide) bleef ongewijzigd.
+
+---
+
 ### 2026-06-12 — Stand scores decimalen & matchday slide centering (Claude Code)
 
 #### Stand pagina: scores altijd met 2 decimalen (`components/leaderboard/RankList.tsx`)
