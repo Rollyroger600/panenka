@@ -845,6 +845,12 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-13 — Aanvangstijden toegevoegd aan match cards (Claude Code)
+
+#### Poulefase: aanvangstijd zichtbaar in ondertitel match card
+- `lib/data/matches.ts`: `time?: string` veld toegevoegd aan `Match` interface; alle 72 groepsfase-wedstrijden (id 1–72) voorzien van aanvangstijd in Nederlandse tijd (CEST) op basis van officieel WK-schema.
+- `components/matches/MatchCard.tsx`: ondertitel toont nu `{datum} · {tijd} · {stadion}` wanneer `match.time` aanwezig is.
+
 ### 2026-06-13 — Pot OG + ASC: Toto's en uitslagen matchday 02 (Claude Code)
 
 #### Stand pagina — Pot tab OG en ASC

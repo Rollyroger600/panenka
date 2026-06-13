@@ -107,7 +107,7 @@ export function MatchCard({ match, readOnly = false, result }: Props) {
           <FlagImage country={match.away} size={24} />
         </div>
         <p className="font-heading font-light text-xs uppercase tracking-widest mt-0.5" style={{ color: MUTED }}>
-          {match.date} · {match.stadium}
+          {match.date}{match.time ? ` · ${match.time}` : ''} · {match.stadium}
         </p>
       </div>
 
