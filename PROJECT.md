@@ -845,6 +845,11 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-13 — Pot OG + ASC: Toto's en uitslagen matchday 02 (Claude Code)
+
+#### Stand pagina — Pot tab OG en ASC
+- `app/(app)/stand/StandClient.tsx`: regel toegevoegd aan `POT_REGELS.og` én `POT_REGELS.asc`: `Toto's en uitslagen matchday 02, -5.00` (datum 2026-06-13).
+
 ### 2026-06-13 — Pot OG: Winst Matchday 01 + drawer default matchday 02 (Claude Code)
 
 #### Stand pagina — Pot tab OG groep
