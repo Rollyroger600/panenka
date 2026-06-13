@@ -3539,6 +3539,20 @@ Bregt heeft besloten niet meer mee te doen. Verwijderd uit de deelnemerslijst. G
 
 Niels (NS), Peter (PN) en Wiger (WW) hadden nog 6 tokens over na de deadline. Via eenmalig Node.js-script (`scripts/add_tokens.mjs`) elk +2 tokens toegevoegd bij wedstrijden 10, 33 en 58.
 
+### 2026-06-13 — ESPN speler-naam mapping voor Fantasy XV live scoring (Claude Code)
+
+#### Expliciete mapping player ID → ESPN displayName (`lib/data/espnPlayerMap.ts`, `app/api/matchday/live/route.ts`)
+
+**Probleem:** Fantasy XV punten tijdens live wedstrijden konden mislopen als ESPN een andere spelernaam gebruikt dan de app (bv. `"Son Heung-Min"` vs `"Heung Min Son"`, `"Julio Enciso"` vs `"Julio César Enciso"`).
+
+**Oplossing:** Statisch mapping-bestand `lib/data/espnPlayerMap.ts` met 205 entries (`Record<number, string>`: player ID → ESPN displayName). De live route gebruikt dit als eerste lookup vóór de bestaande string-fallbacks.
+
+**Script:** `scripts/build_espn_player_map.mjs` (`npm run build-espn-player-map`) haalt alle ESPN WK-rosters op, matcht automatisch via normName + sorted-words fallback (voor Koreaanse naamsorde), en schrijft de map + `scripts/espn_unmatched.txt` voor handmatige review. Resultaat eerste run: 198 auto-gematcht, 7 handmatig aangevuld, 3 niet in players.ts (irrelevant voor Fantasy XV).
+
+**Opnieuw draaien:** alleen nodig bij blessure-vervangingen mid-toernooi.
+
+---
+
 ### 2026-06-13 — Live slide bug: gegevens vorige wedstrijd zichtbaar tijdens nieuwe wedstrijd (Claude Code)
 
 #### Live slide toont nu alleen actieve (IN_PLAY/PAUSED) wedstrijden (`components/matchday/MatchdayDrawer.tsx`)
