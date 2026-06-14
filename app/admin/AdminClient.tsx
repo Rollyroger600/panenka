@@ -752,6 +752,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
   const [quotes, setQuotes] = useState<Array<{ matchId: number; totoOdds: string; uitslagOdds: string }>>([])
   const [potStand, setPotStand] = useState('')
   const [rotations, setRotations] = useState<{ og: string[]; asc: string[] } | null>(null)
+  const [rotationDirty, setRotationDirty] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -801,20 +802,35 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
       }),
       potStand: parseFloat(potStand) || 0,
     }
-    await fetch(`/api/matchday/${matchdayId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
+    const saves: Promise<unknown>[] = [
+      fetch(`/api/matchday/${matchdayId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    ]
+    if (rotationDirty && rotations) {
+      saves.push(
+        fetch('/api/matchday/rotation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ group: groupId, rotation: rotations[groupId] }),
+        })
+      )
+    }
+    await Promise.all(saves)
+    setRotationDirty(false)
     setSaved(true)
     setLoading(false)
   }
 
   const matchIds = getMatchesForMatchday(matchdayId)
 
-  const totoName = rotations
-    ? (PARTICIPANTS.find((p) => p.initials === rotations[groupId][matchdayId - 1])?.name ?? '–')
-    : '...'
+  const totoInitials = rotations ? (rotations[groupId][matchdayId - 1] ?? '') : ''
+  const totoName = totoInitials
+    ? (PARTICIPANTS.find((p) => p.initials === totoInitials)?.name ?? '–')
+    : '–'
+  const groupParticipants = PARTICIPANTS.filter((p) => GROUP_MEMBERS[groupId].includes(p.initials))
 
   return (
     <div className="flex flex-col gap-4">
@@ -836,10 +852,25 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
 
       {/* Toto van de dag */}
       <div className="rounded-xl border border-[#2a2a2a] p-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
-        <p className="text-xs text-[#555] uppercase font-heading tracking-wide mb-1">Toto van de dag</p>
-        <span className="text-white text-sm font-bold">{totoName}</span>
+        <p className="text-xs text-[#555] uppercase font-heading tracking-wide mb-2">Toto van de dag</p>
+        <select
+          value={totoInitials}
+          disabled={!rotations}
+          onChange={(e) => {
+            if (!rotations) return
+            const updated = [...rotations[groupId]]
+            updated[matchdayId - 1] = e.target.value
+            setRotations({ ...rotations, [groupId]: updated })
+            setRotationDirty(true)
+          }}
+          className="bg-[#252525] border border-[#2a2a2a] text-white text-sm font-bold rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] w-full"
+        >
+          {groupParticipants.map((p) => (
+            <option key={p.initials} value={p.initials}>{p.name}</option>
+          ))}
+        </select>
         <p className="text-[10px] text-[#444] mt-1.5">
-          Rotatie wordt automatisch gegenereerd. Zet de bets op Unibet op basis van de voorspellingen van deze deelnemer.
+          Zet de bets op Unibet op basis van de voorspellingen van deze deelnemer.
         </p>
       </div>
 

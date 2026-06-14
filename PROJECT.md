@@ -845,6 +845,11 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-14 — Admin: "Toto van de dag" dropdown editeerbaar per matchday (Claude Code)
+
+#### Admin — Matchday tab
+- `app/admin/AdminClient.tsx`: "Toto van de dag" blok is nu een dropdown (ipv statische tekst). Je kunt per matchday kiezen wie de toto van de dag is. Bij opslaan wordt de volledige rotatie-array voor de groep (OG of ASC) opgeslagen in Redis via `POST /api/matchday/rotation`. Wijzigingen worden alleen opgeslagen als er daadwerkelijk iets is aangepast (`rotationDirty` state).
+
 ### 2026-06-13 — MatchCard details dropdown: uitslag + doelpunten on click (Claude Code)
 
 #### Poulefase: resultaatrij vervangen door klikbare dropdown
