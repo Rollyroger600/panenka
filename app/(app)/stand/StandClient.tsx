@@ -24,6 +24,7 @@ interface Weddenschap {
   inzet: string
   quotering: number
   maxWinst: string
+  gewonnen?: boolean
 }
 
 interface PotRegel {
@@ -35,6 +36,9 @@ interface PotRegel {
 const POT_REGELS: Record<string, PotRegel[]> = {
   og: [
     // Nieuwste bovenaan
+    { datum: '2026-06-14', omschrijving: "Toto's en uitslagen matchday 03", bedrag: -5 },
+    { datum: '2026-06-14', omschrijving: 'Winst welkomstbonus', bedrag: 100 },
+    { datum: '2026-06-14', omschrijving: 'Winst Matchday 02', bedrag: 19.50 },
     { datum: '2026-06-13', omschrijving: "Toto's en uitslagen matchday 02", bedrag: -5 },
     { datum: '2026-06-13', omschrijving: 'Winst Matchday 01', bedrag: 9.50 },
     { datum: '2026-06-11', omschrijving: 'Toernooi weddenschappen', bedrag: -20 },
@@ -44,6 +48,8 @@ const POT_REGELS: Record<string, PotRegel[]> = {
   ],
   asc: [
     // Nieuwste bovenaan
+    { datum: '2026-06-14', omschrijving: "Toto's en uitslagen matchday 03", bedrag: -5 },
+    { datum: '2026-06-14', omschrijving: 'Winst Matchday 02', bedrag: 6.75 },
     { datum: '2026-06-13', omschrijving: "Toto's en uitslagen matchday 02", bedrag: -5 },
     { datum: '2026-06-11', omschrijving: 'Toernooi weddenschappen', bedrag: -19 },
     { datum: '2026-06-11', omschrijving: "Toto's en uitslagen matchday 01", bedrag: -5 },
@@ -54,7 +60,7 @@ const POT_REGELS: Record<string, PotRegel[]> = {
 
 const WEDDENSCHAPPEN: Record<string, Weddenschap[]> = {
   og: [
-    { weddenschap: 'Brazilië scoort tegen Marokko', inzet: '€ 1,00', quotering: 100, maxWinst: '€ 100,00' },
+    { weddenschap: 'Brazilië scoort tegen Marokko', inzet: '€ 1,00', quotering: 100, maxWinst: '€ 100,00', gewonnen: true },
     { weddenschap: 'Frankrijk winnaar WK', inzet: '€ 5,00', quotering: 6, maxWinst: '€ 30,00' },
     { weddenschap: 'Brazilië winnaar WK', inzet: '€ 5,00', quotering: 10, maxWinst: '€ 50,00' },
     { weddenschap: 'Nederland winnaar WK', inzet: '€ 5,00', quotering: 19, maxWinst: '€ 95,00' },
@@ -206,11 +212,14 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
                 <div className="text-[#888] text-sm">Geen weddenschappen voor deze groep</div>
               </div>
             ) : (WEDDENSCHAPPEN[activeGroup] ?? []).map((w, i) => (
-              <div key={i} className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-4">
+              <div key={i} className={`rounded-xl bg-[#161616] border p-4 ${w.gewonnen ? 'border-[#FF6B00]' : 'border-[#2a2a2a]'}`}>
                 <div className="flex items-start gap-3">
                   <span className="font-heading font-bold text-[#FF6B00] text-sm mt-0.5 shrink-0">#{i + 1}</span>
                   <div className="flex-1">
-                    <div className="font-heading font-semibold text-white text-sm mb-3">{w.weddenschap}</div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="font-heading font-semibold text-white text-sm">{w.weddenschap}</span>
+                      {w.gewonnen && <span className="text-[#FF6B00] text-sm font-bold">✓</span>}
+                    </div>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="flex flex-col">
                         <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-0.5">Inzet</span>

@@ -845,6 +845,20 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-14 — Matchday 03 updates: pot/inzet regels + auto-scroll poulefase + drawer default (Claude Code)
+
+#### Pot — OG en ASC bijgewerkt
+- `app/(app)/stand/StandClient.tsx`: OG pot: toegevoegd Winst Matchday 02 (+19,50), Winst welkomstbonus (+100,00), Toto's en uitslagen matchday 03 (-5,00). ASC pot: toegevoegd Winst Matchday 02 (+6,75), Toto's en uitslagen matchday 03 (-5,00).
+
+#### Inzet — gewonnen weddenschap markering
+- `app/(app)/stand/StandClient.tsx`: `gewonnen?: boolean` veld toegevoegd aan `Weddenschap` interface. Bij `gewonnen: true` krijgt de kaart een oranje rand en ✓ vinkje. "Brazilië scoort tegen Marokko" (OG) gemarkeerd als gewonnen.
+
+#### Poulefase — auto-scroll naar laatste afgeronde wedstrijd
+- `app/(app)/poulefase/PoulefaseClient.tsx`: Bij openen in fase 2 wordt automatisch de ronde-tab geselecteerd van de laatste afgeronde wedstrijd, en scrollt de pagina naar die match card (`scrollIntoView block: center`). Scroll gebeurt eenmalig per page load.
+
+#### Matchday drawer — standaard matchday 03
+- `components/matchday/MatchdayDrawer.tsx`: Default matchday bij openen gewijzigd van 2 naar 3.
+
 ### 2026-06-14 — Admin: "Toto van de dag" dropdown editeerbaar per matchday (Claude Code)
 
 #### Admin — Matchday tab

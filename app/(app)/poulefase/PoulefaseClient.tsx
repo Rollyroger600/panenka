@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePredictions } from '@/hooks/usePredictions'
 import { useDeadline } from '@/hooks/useDeadline'
 import { useGameStore } from '@/store/gameStore'
@@ -53,6 +53,13 @@ const POULE_FILTERS: { label: string; value: PouleFilter }[] = APP_PHASE >= 2
 
 const ROUND_LABEL: Record<number, string> = { 1: 'Ronde 1', 2: 'Ronde 2', 3: 'Ronde 3' }
 
+function getLastCompletedPouleMatch(results: Record<number, MatchResult>): typeof MATCHES[0] | null {
+  const completedPoule = MATCHES
+    .filter((m) => m.phase !== 'knockout' && results[m.id] != null)
+  if (completedPoule.length === 0) return null
+  return completedPoule.reduce((a, b) => (b.id > a.id ? b : a))
+}
+
 const KO_FILTERS: { label: string; rounds: KoRound[] }[] = [
   { label: 'R 32', rounds: ['rv32'] },
   { label: 'R 16', rounds: ['rv16'] },
@@ -68,9 +75,20 @@ export function PoulefaseClient({ initials, results }: Props) {
   const pouleRounds = groupPouleMatches()
   const koRounds = groupKoMatches()
 
+  const lastCompletedMatch = APP_PHASE >= 2 ? getLastCompletedPouleMatch(results) : null
+  const initialTab: PouleFilter = lastCompletedMatch?.round ?? 1
+
   const [phase, setPhase] = useState<Phase>('poule')
-  const [pouleTab, setPouleTab] = useState<PouleFilter>(1)
+  const [pouleTab, setPouleTab] = useState<PouleFilter>(initialTab)
   const [koTab, setKoTab] = useState(0)
+  const scrolledRef = useRef(false)
+
+  useEffect(() => {
+    if (!isLoaded || scrolledRef.current || !lastCompletedMatch) return
+    scrolledRef.current = true
+    const el = document.getElementById(`match-${lastCompletedMatch.id}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [isLoaded, lastCompletedMatch])
 
   const showStandings = phase === 'poule' && pouleTab === 'standen'
   const showTodo = phase === 'poule' && pouleTab === 'todo'
@@ -157,7 +175,9 @@ export function PoulefaseClient({ initials, results }: Props) {
               <div key={round} className="mb-6">
                 <div className="flex flex-col gap-2">
                   {(pouleRounds[round] ?? []).map((match) => (
-                    <MatchCard key={match.id} match={match} readOnly={isPast} result={results[match.id]} />
+                    <div key={match.id} id={`match-${match.id}`}>
+                      <MatchCard match={match} readOnly={isPast} result={results[match.id]} />
+                    </div>
                   ))}
                 </div>
               </div>
