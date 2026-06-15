@@ -36,6 +36,7 @@ interface PotRegel {
 const POT_REGELS: Record<string, PotRegel[]> = {
   og: [
     // Nieuwste bovenaan
+    { datum: '2026-06-15', omschrijving: "Toto's en uitslagen matchday 04", bedrag: -5 },
     { datum: '2026-06-14', omschrijving: "Toto's en uitslagen matchday 03", bedrag: -5 },
     { datum: '2026-06-14', omschrijving: 'Winst welkomstbonus', bedrag: 100 },
     { datum: '2026-06-14', omschrijving: 'Winst Matchday 02', bedrag: 19.50 },
@@ -48,6 +49,8 @@ const POT_REGELS: Record<string, PotRegel[]> = {
   ],
   asc: [
     // Nieuwste bovenaan
+    { datum: '2026-06-15', omschrijving: "Toto's en uitslagen matchday 04", bedrag: -5 },
+    { datum: '2026-06-15', omschrijving: 'Winst welkomstbonus', bedrag: 100 },
     { datum: '2026-06-14', omschrijving: "Toto's en uitslagen matchday 03", bedrag: -5 },
     { datum: '2026-06-14', omschrijving: 'Winst Matchday 02', bedrag: 6.75 },
     { datum: '2026-06-13', omschrijving: "Toto's en uitslagen matchday 02", bedrag: -5 },
@@ -68,7 +71,7 @@ const WEDDENSCHAPPEN: Record<string, Weddenschap[]> = {
     { weddenschap: 'Haaland Topscoorder WK', inzet: '€ 2,00', quotering: 15, maxWinst: '€ 30,00' },
   ],
   asc: [
-    { weddenschap: 'Duitsland wint van Curacao', inzet: '€ 1,00', quotering: 100, maxWinst: '€ 100,00' },
+    { weddenschap: 'Duitsland wint van Curacao', inzet: '€ 1,00', quotering: 100, maxWinst: '€ 100,00', gewonnen: true },
     { weddenschap: 'Spanje winnaar WK', inzet: '€ 5,00', quotering: 5.5, maxWinst: '€ 27,50' },
     { weddenschap: 'Frankrijk winnaar WK', inzet: '€ 5,00', quotering: 6, maxWinst: '€ 30,00' },
     { weddenschap: 'Nederland winnaar WK', inzet: '€ 1,00', quotering: 19, maxWinst: '€ 19,00' },

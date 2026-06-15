@@ -845,6 +845,17 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-15 — Matchday 04 updates: pot/inzet regels + drawer default (Claude Code)
+
+#### Pot — OG en ASC bijgewerkt
+- `app/(app)/stand/StandClient.tsx`: OG pot: toegevoegd Toto's en uitslagen matchday 04 (-5,00). ASC pot: toegevoegd Toto's en uitslagen matchday 04 (-5,00) en Winst welkomstbonus (+100,00).
+
+#### Inzet — gewonnen weddenschap ASC
+- `app/(app)/stand/StandClient.tsx`: "Duitsland wint van Curacao" (ASC) gemarkeerd als gewonnen (`gewonnen: true` → oranje rand + ✓ vinkje).
+
+#### Matchday drawer — standaard matchday 04
+- `components/matchday/MatchdayDrawer.tsx`: Default matchday bij openen gewijzigd van 3 naar 4.
+
 ### 2026-06-14 — Matchday 03 updates: pot/inzet regels + auto-scroll poulefase + drawer default (Claude Code)
 
 #### Pot — OG en ASC bijgewerkt
