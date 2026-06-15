@@ -845,6 +845,11 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-15 — Inzet slide MD04 ASC: Iran - Nieuw-Zeeland uitslag override (Claude Code)
+
+#### Inzet slide — eenmalige override MD04 ASC
+- `components/matchday/MatchdayDrawer.tsx`: `buildInzetMatchData()` aangepast. Voor MD04 ASC wordt de uitslag van Iran - Nieuw-Zeeland hardcoded overschreven naar `1-1` (ingezette weddenschap; de 2-4 voorspelling van NS was niet beschikbaar als bet). TOTO-voorspelling (`'2'` = NZ wint) blijft automatisch uit NS's pouledata komen. Geen effect op andere matchdays of groepen.
+
 ### 2026-06-15 — Stand: trend pijltjes bij positiewisselingen ranglijst (Claude Code)
 
 #### Stand — trend arrows op de ranglijst

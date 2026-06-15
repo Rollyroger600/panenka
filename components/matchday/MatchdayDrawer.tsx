@@ -214,11 +214,15 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
     return (data.config.quotes ?? []).map((q) => {
       const matchSlide = data.matchSlides.flat().find((ms) => ms.matchId === q.matchId)
       const participant = matchSlide?.participantRows.find((r) => r.initials === totoInitials)
+      const match = matchSlide?.match ?? { id: q.matchId, poule: '', round: 1, date: '', home: 'TBD', away: 'TBD', stadium: '' }
+      // MD04 ASC: NS voorspelling Iran - Nieuw-Zeeland (2-4) eenmalig overschreven naar 1-1
+      const isIranNZ = match.home === 'Iran' && match.away === 'Nieuw-Zeeland'
+      const uitslagOverride = matchdayId === 4 && activeGroup === 'asc' && isIranNZ ? '1-1' : null
       return {
-        match: matchSlide?.match ?? { id: q.matchId, poule: '', round: 1, date: '', home: 'TBD', away: 'TBD', stadium: '' },
+        match,
         quote: q,
         participantToto: participant?.toto ?? null,
-        participantUitslag: participant?.uitslag ?? null,
+        participantUitslag: uitslagOverride ?? participant?.uitslag ?? null,
       }
     })
   }
