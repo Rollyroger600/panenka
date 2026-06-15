@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-15 — Stand: trend pijltjes bij positiewisselingen ranglijst (Claude Code)
+
+#### Stand — trend arrows op de ranglijst
+
+- `components/leaderboard/RankList.tsx`: Nieuw `positionDeltas?: Record<string, number>` prop. `TrendArrow` component toegevoegd: ▲{n} groen (gestegen) of ▼{n} rood (gedaald), pijltje naast het rangnummer. Grid eerste kolom verbreed van `2rem` naar `3.5rem` voor beide views (single + multi).
+- `app/(app)/stand/StandClient.tsx`: `prevRanksRef` (ranks vóór laatste refresh) + `lastLoadedGroupRef` + `allDeltas` state toegevoegd. `load` callback berekent bij elke refresh per view (Totaal, Poule, FXV, Landen, TOTO, UITSL) de positiedelta's t.o.v. de vorige load. Eerste load: geen arrows (baseline opslaan). Tweede load+: arrows zichtbaar. Groepwissel reset de baseline. `positionDeltas` (voor huidige standView) doorgegeven aan `RankList`.
+
 ### 2026-06-15 — Matchday 04 updates: pot/inzet regels + drawer default (Claude Code)
 
 #### Pot — OG en ASC bijgewerkt

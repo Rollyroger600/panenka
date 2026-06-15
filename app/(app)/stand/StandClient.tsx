@@ -103,6 +103,9 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
   const [scores, setScores] = useState<ParticipantScore[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
   const [headerToggleEl, setHeaderToggleEl] = useState<Element | null>(null)
+  const prevRanksRef = useRef<Partial<Record<StandView, Record<string, number>>>>({})
+  const lastLoadedGroupRef = useRef<GroupId | null>(null)
+  const [allDeltas, setAllDeltas] = useState<Partial<Record<StandView, Record<string, number>>>>({})
 
   useEffect(() => {
     setHeaderToggleEl(document.getElementById('header-chat-toggle'))
@@ -110,8 +113,33 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
 
   const load = useCallback((group: GroupId) => {
     setIsLoaded(false)
-    loadScoresForGroup(group).then((s) => {
-      setScores(s)
+    loadScoresForGroup(group).then((newScores) => {
+      if (lastLoadedGroupRef.current !== group) {
+        prevRanksRef.current = {}
+        setAllDeltas({})
+        lastLoadedGroupRef.current = group
+      }
+
+      const newAllDeltas: Partial<Record<StandView, Record<string, number>>> = {}
+      for (const { value: view, scoreKey } of STAND_VIEWS) {
+        const sorted = [...newScores].sort((a, b) => (b[scoreKey] as number) - (a[scoreKey] as number))
+        const newRanks: Record<string, number> = {}
+        sorted.forEach((p, i) => { newRanks[p.initials] = i + 1 })
+
+        const prevRanks = prevRanksRef.current[view]
+        if (prevRanks && Object.keys(prevRanks).length > 0) {
+          const deltas: Record<string, number> = {}
+          sorted.forEach((p, i) => {
+            const prev = prevRanks[p.initials]
+            if (prev !== undefined) deltas[p.initials] = prev - (i + 1)
+          })
+          newAllDeltas[view] = deltas
+        }
+        prevRanksRef.current[view] = newRanks
+      }
+
+      if (Object.keys(newAllDeltas).length > 0) setAllDeltas(newAllDeltas)
+      setScores(newScores)
       setIsLoaded(true)
     })
   }, [])
@@ -128,6 +156,7 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
   const hasScores = scores.some((s) => s.total > 0)
   const activeView = STAND_VIEWS.find((v) => v.value === standView)!
   const sortedScores = [...scores].sort((a, b) => (b[activeView.scoreKey] as number) - (a[activeView.scoreKey] as number))
+  const positionDeltas = allDeltas[standView] ?? {}
 
   return (
     <>
@@ -201,6 +230,7 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
                 startRank={1}
                 scoreKey={standView !== 'totaal' ? activeView.scoreKey : undefined}
                 scoreLabel={activeView.scoreLabel}
+                positionDeltas={positionDeltas}
               />
             )}
           </>
