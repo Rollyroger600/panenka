@@ -2,22 +2,37 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { loadScoresForGroup } from '@/app/actions/scores'
+import { loadPotHistoryForGroup, loadScoreHistoryForGroup } from '@/app/actions/history'
+import type { MatchdayHistoryPoint } from '@/app/actions/history'
 import { RankList } from '@/components/leaderboard/RankList'
+import { ProgressChart } from '@/components/matchday/charts/ProgressChart'
+import { PotChart } from '@/components/matchday/charts/PotChart'
+import { MATCHDAY_COUNT } from '@/lib/data/matchdayMap'
 import { DUAL_GROUP_INITIALS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
 import type { ParticipantScore } from '@/app/leaderboard/types'
+import type { MatchdayScoreRow } from '@/lib/matchday'
+import type { PotPoint, ScoreHistoryPoint } from '@/lib/types/matchday'
 
 type Tab = 'stand' | 'inzet' | 'pot'
 type StandView = 'totaal' | 'poule' | 'fxv' | 'landen' | 'toto' | 'uitsl'
 
-const STAND_VIEWS: { label: string; value: StandView; scoreKey: keyof ParticipantScore; scoreLabel: string }[] = [
-  { label: 'Totaal', value: 'totaal', scoreKey: 'total',         scoreLabel: 'Tot.'   },
-  { label: 'Poule',  value: 'poule',  scoreKey: 'poulefase',     scoreLabel: 'Poule'  },
-  { label: 'FXV',    value: 'fxv',    scoreKey: 'fantasy',       scoreLabel: 'FXV'    },
-  { label: 'Landen', value: 'landen', scoreKey: 'knockout',      scoreLabel: 'Landen' },
-  { label: 'TOTO',   value: 'toto',   scoreKey: 'totoCorrect',   scoreLabel: 'TOTO'   },
-  { label: 'UITSL',  value: 'uitsl',  scoreKey: 'uitslagCorrect',scoreLabel: 'UITSL'  },
+const STAND_VIEWS: { label: string; value: StandView; scoreKey: keyof ParticipantScore; scoreLabel: string; historyKey: keyof MatchdayScoreRow }[] = [
+  { label: 'Totaal', value: 'totaal', scoreKey: 'total',         scoreLabel: 'Tot.',   historyKey: 'total'            },
+  { label: 'Poule',  value: 'poule',  scoreKey: 'poulefase',     scoreLabel: 'Poule',  historyKey: 'poulefase'        },
+  { label: 'FXV',    value: 'fxv',    scoreKey: 'fantasy',       scoreLabel: 'FXV',    historyKey: 'fantasy'          },
+  { label: 'Landen', value: 'landen', scoreKey: 'knockout',      scoreLabel: 'Landen', historyKey: 'doorgaandeLanden' },
+  { label: 'TOTO',   value: 'toto',   scoreKey: 'totoCorrect',   scoreLabel: 'TOTO',   historyKey: 'totoGoed'         },
+  { label: 'UITSL',  value: 'uitsl',  scoreKey: 'uitslagCorrect',scoreLabel: 'UITSL',  historyKey: 'uitslagGoed'      },
 ]
+
+// Reshape de ruwe per-matchday rows naar de Record<initials, waarde> vorm die ProgressChart verwacht
+function toScoreHistory(history: MatchdayHistoryPoint[], key: keyof MatchdayScoreRow): ScoreHistoryPoint[] {
+  return history.map((h) => ({
+    matchdayId: h.matchdayId,
+    scores: Object.fromEntries(h.rows.map((r) => [r.initials, r[key] as number])),
+  }))
+}
 
 interface Weddenschap {
   weddenschap: string
@@ -36,6 +51,8 @@ interface PotRegel {
 const POT_REGELS: Record<string, PotRegel[]> = {
   og: [
     // Nieuwste bovenaan
+    { datum: '2026-06-16', omschrijving: "Toto's en uitslagen matchday 05", bedrag: -5 },
+    { datum: '2026-06-16', omschrijving: 'Winst Matchday 04', bedrag: 7.00 },
     { datum: '2026-06-15', omschrijving: "Toto's en uitslagen matchday 04", bedrag: -5 },
     { datum: '2026-06-14', omschrijving: "Toto's en uitslagen matchday 03", bedrag: -5 },
     { datum: '2026-06-14', omschrijving: 'Winst welkomstbonus', bedrag: 100 },
@@ -49,6 +66,7 @@ const POT_REGELS: Record<string, PotRegel[]> = {
   ],
   asc: [
     // Nieuwste bovenaan
+    { datum: '2026-06-16', omschrijving: "Toto's en uitslagen matchday 05", bedrag: -5 },
     { datum: '2026-06-15', omschrijving: "Toto's en uitslagen matchday 04", bedrag: -5 },
     { datum: '2026-06-15', omschrijving: 'Winst welkomstbonus', bedrag: 100 },
     { datum: '2026-06-14', omschrijving: "Toto's en uitslagen matchday 03", bedrag: -5 },
@@ -94,6 +112,29 @@ interface Props {
   defaultGroup: GroupId
 }
 
+type RanksByView = Partial<Record<StandView, Record<string, number>>>
+
+const ranksStorageKey = (group: GroupId) => `panenka:stand:ranks:${group}`
+
+function loadStoredRanks(group: GroupId): RanksByView {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(ranksStorageKey(group))
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function saveStoredRanks(group: GroupId, ranks: RanksByView) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(ranksStorageKey(group), JSON.stringify(ranks))
+  } catch {
+    // localStorage kan ontbreken/vol zijn — trend pijltjes zijn dan niet kritiek
+  }
+}
+
 export function StandClient({ mijnInitials, defaultGroup }: Props) {
   const isDualGroup = DUAL_GROUP_INITIALS.includes(mijnInitials.toUpperCase())
   const [activeGroup, setActiveGroup] = useState<GroupId>(defaultGroup)
@@ -103,9 +144,11 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
   const [scores, setScores] = useState<ParticipantScore[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
   const [headerToggleEl, setHeaderToggleEl] = useState<Element | null>(null)
-  const prevRanksRef = useRef<Partial<Record<StandView, Record<string, number>>>>({})
+  const prevRanksRef = useRef<RanksByView>({})
   const lastLoadedGroupRef = useRef<GroupId | null>(null)
-  const [allDeltas, setAllDeltas] = useState<Partial<Record<StandView, Record<string, number>>>>({})
+  const [allDeltas, setAllDeltas] = useState<RanksByView>({})
+  const [scoreHistory, setScoreHistory] = useState<MatchdayHistoryPoint[]>([])
+  const [potHistory, setPotHistory] = useState<PotPoint[]>([])
 
   useEffect(() => {
     setHeaderToggleEl(document.getElementById('header-chat-toggle'))
@@ -113,14 +156,20 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
 
   const load = useCallback((group: GroupId) => {
     setIsLoaded(false)
-    loadScoresForGroup(group).then((newScores) => {
+    Promise.all([
+      loadScoresForGroup(group),
+      loadScoreHistoryForGroup(group),
+      loadPotHistoryForGroup(group),
+    ]).then(([newScores, newScoreHistory, newPotHistory]) => {
+      setScoreHistory(newScoreHistory)
+      setPotHistory(newPotHistory)
       if (lastLoadedGroupRef.current !== group) {
-        prevRanksRef.current = {}
-        setAllDeltas({})
+        prevRanksRef.current = loadStoredRanks(group)
         lastLoadedGroupRef.current = group
       }
 
-      const newAllDeltas: Partial<Record<StandView, Record<string, number>>> = {}
+      const newAllDeltas: RanksByView = {}
+      const newAllRanks: RanksByView = {}
       for (const { value: view, scoreKey } of STAND_VIEWS) {
         const sorted = [...newScores].sort((a, b) => (b[scoreKey] as number) - (a[scoreKey] as number))
         const newRanks: Record<string, number> = {}
@@ -131,14 +180,16 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
           const deltas: Record<string, number> = {}
           sorted.forEach((p, i) => {
             const prev = prevRanks[p.initials]
-            if (prev !== undefined) deltas[p.initials] = prev - (i + 1)
+            if (prev !== undefined && prev !== i + 1) deltas[p.initials] = prev - (i + 1)
           })
           newAllDeltas[view] = deltas
         }
-        prevRanksRef.current[view] = newRanks
+        newAllRanks[view] = newRanks
       }
 
-      if (Object.keys(newAllDeltas).length > 0) setAllDeltas(newAllDeltas)
+      prevRanksRef.current = newAllRanks
+      saveStoredRanks(group, newAllRanks)
+      setAllDeltas(newAllDeltas)
       setScores(newScores)
       setIsLoaded(true)
     })
@@ -153,10 +204,11 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
     return () => clearInterval(id)
   }, [activeGroup, load])
 
-  const hasScores = scores.some((s) => s.total > 0)
   const activeView = STAND_VIEWS.find((v) => v.value === standView)!
   const sortedScores = [...scores].sort((a, b) => (b[activeView.scoreKey] as number) - (a[activeView.scoreKey] as number))
   const positionDeltas = allDeltas[standView] ?? {}
+  const chartParticipants = scores.map((s) => ({ initials: s.initials, name: s.name }))
+  const chartHistory = toScoreHistory(scoreHistory, activeView.historyKey)
 
   return (
     <>
@@ -224,14 +276,34 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
             )}
 
 {isLoaded && (
-              <RankList
-                participants={sortedScores}
-                currentInitials={mijnInitials}
-                startRank={1}
-                scoreKey={standView !== 'totaal' ? activeView.scoreKey : undefined}
-                scoreLabel={activeView.scoreLabel}
-                positionDeltas={positionDeltas}
-              />
+              <>
+                <RankList
+                  participants={sortedScores}
+                  currentInitials={mijnInitials}
+                  startRank={1}
+                  scoreKey={standView !== 'totaal' ? activeView.scoreKey : undefined}
+                  scoreLabel={activeView.scoreLabel}
+                  positionDeltas={positionDeltas}
+                />
+
+                {chartHistory.length > 0 && (
+                  <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-3 mt-3">
+                    <div className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-1 text-center">
+                      Verloop per matchday
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <ProgressChart
+                        history={chartHistory}
+                        participants={chartParticipants}
+                        totalMatchdays={MATCHDAY_COUNT}
+                        height={160}
+                        width={330}
+                        highlightInitials={mijnInitials}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
@@ -287,6 +359,16 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
                 <div className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-1">Huidige pot</div>
                 <div className="font-accent font-bold text-4xl text-[#FF6B00]">{fmt(totaal)}</div>
               </div>
+
+              {/* Verloop pot per matchday */}
+              {potHistory.length > 0 && (
+                <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-3">
+                  <div className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-1 text-center">
+                    Verloop per matchday
+                  </div>
+                  <PotChart data={potHistory} totalMatchdays={MATCHDAY_COUNT} width={330} />
+                </div>
+              )}
 
               {/* Balans */}
               <div className="flex flex-col gap-2">

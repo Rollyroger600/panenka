@@ -845,6 +845,30 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-16 — Stand: lijngrafieken + matchday 05 updates + score-bugfix (Claude Code)
+
+#### Stand — lijngrafiek ranglijst + pot
+- `app/actions/history.ts` — nieuw: `loadScoreHistoryForGroup()` (score per deelnemer per matchday, alle metrics tegelijk via `computeMatchdayScores`) en `loadPotHistoryForGroup()` (pot-stand per matchday uit het admin-`potStand`-veld, dezelfde bron als de bestaande drawer-`PotChart`).
+- `app/(app)/stand/StandClient.tsx`: Stand-tab krijgt een lijngrafiek onderaan (hergebruikt `ProgressChart`), gekoppeld aan de actieve filter (Totaal/Poule/FXV/Landen/TOTO/UITSL) via een `historyKey`-mapping per `STAND_VIEWS`-entry. Pot-tab krijgt een lijngrafiek (hergebruikt `PotChart`) tussen "Huidige pot" en de eerste regel. `load()` haalt nu ook score- en pot-historie op (parallel aan de scores).
+- `components/matchday/charts/ProgressChart.tsx`: nieuwe `highlightInitials?` prop — wanneer gezet, worden alle lijnen behalve die van de meegegeven deelnemer dun/grijs, en die ene lijn oranje/dik en op de voorgrond. Bestaand gedrag (regenboogkleuren, voor de matchday-export) blijft ongewijzigd wanneer de prop niet gezet is.
+- Pot-ledger (`POT_REGELS`) en grafiek-databron (admin-`potStand`) zijn twee gescheiden systemen die handmatig synchroon gehouden moeten worden.
+
+#### Bugfix — `computeMatchdayScores` weken af van de officiële scoreberekening
+- `lib/matchday.ts`: `computeMatchdayScores()` (gebruikt door matchday-drawer én de nieuwe Stand-grafiek) week op 3 punten af van `scoreParticipant()` (de officiële, live score-berekening in `lib/scoring.ts`):
+  1. Uitslag-vergelijking gebeurde zonder `normalizeUitslag()` — `"2 - 0"` (voorspelling) vs `"2-0"` (opgeslagen uitslag) telde niet als match, terwijl de officiële score dit wél normaliseert. Was de hoofdoorzaak van een geconstateerd verschil (Robert: 94.99 officieel vs 51.3 in de grafiek).
+  2. Quoteringen voor knockout-wedstrijden (matchId ≥ 73) kwamen altijd uit `MATCH_ODDS` i.p.v. `KO_MATCH_ODDS`.
+  3. ASC-bonustokens (`ascBonusTokens` per deelnemer/wedstrijd) telden niet mee in de tokenberekening.
+  Alle drie gefixt zodat `computeMatchdayScores` exact dezelfde logica volgt als `scoreParticipant`. Geverifieerd tegen live data: grafiekscore = officiële score.
+
+#### Matchday drawer — standaard matchday 05
+- `components/matchday/MatchdayDrawer.tsx`: Default matchday bij openen gewijzigd van 4 naar 5.
+
+#### Trend pijltjes — baseline nu persistent
+- `app/(app)/stand/StandClient.tsx`: De rank-baseline voor de trend-pijltjes (matchday 04 feature) stond alleen in een `useRef` en reset bij elke page-load, waardoor pijltjes in de praktijk nooit zichtbaar werden. Nu opgeslagen in `localStorage` per groep (`panenka:stand:ranks:<group>`), zodat vergeleken wordt met de laatst bekende stand i.p.v. alleen binnen de huidige sessie.
+
+#### Pot — OG en ASC bijgewerkt
+- `app/(app)/stand/StandClient.tsx`: OG pot: toegevoegd Winst Matchday 04 (+7,00) en Toto's en uitslagen matchday 05 (-5,00). ASC pot: toegevoegd Toto's en uitslagen matchday 05 (-5,00).
+
 ### 2026-06-15 — Inzet slide MD04 ASC: Iran - Nieuw-Zeeland uitslag override (Claude Code)
 
 #### Inzet slide — eenmalige override MD04 ASC

@@ -12,6 +12,8 @@ interface Props {
   height?: number
   showLegend?: boolean
   showLineLabels?: boolean
+  // Wanneer gezet: alle lijnen dun/grijs, behalve deze initials (opvallende kleur, op de voorgrond)
+  highlightInitials?: string
 }
 
 const LINE_COLORS = [
@@ -20,7 +22,7 @@ const LINE_COLORS = [
   '#2980B9', '#8E44AD', '#C0392B', '#16A085', '#F1C40F',
 ]
 
-export function ProgressChart({ history, participants, totalMatchdays, height = 180, showLegend = false, showLineLabels = false, style, width = 350 }: Props & { style?: React.CSSProperties; width?: number }) {
+export function ProgressChart({ history, participants, totalMatchdays, height = 180, showLegend = false, showLineLabels = false, style, width = 350, highlightInitials }: Props & { style?: React.CSSProperties; width?: number }) {
   const chartData = Array.from({ length: totalMatchdays }, (_, i) => {
     const md = i + 1
     const point = history.find((h) => h.matchdayId === md)
@@ -54,8 +56,14 @@ export function ProgressChart({ history, participants, totalMatchdays, height = 
             labelFormatter={(l) => `MD ${l}`}
             formatter={(v, name) => [(v as number)?.toFixed(1) ?? '–', name as string]}
           />
-          {participants.map((p, i) => {
-            const color     = LINE_COLORS[i % LINE_COLORS.length]
+          {(highlightInitials
+            ? [...participants.filter((p) => p.initials !== highlightInitials), ...participants.filter((p) => p.initials === highlightInitials)]
+            : participants
+          ).map((p, i) => {
+            const isHighlighted = highlightInitials === p.initials
+            const color = highlightInitials
+              ? (isHighlighted ? '#FF6B00' : 'rgba(255,255,255,0.18)')
+              : LINE_COLORS[i % LINE_COLORS.length]
             const firstName = p.name.split(' ')[0]
             const lastIdx   = lastNonNullIdx[p.initials] ?? -1
             return (
@@ -64,7 +72,7 @@ export function ProgressChart({ history, participants, totalMatchdays, height = 
                 type="monotone"
                 dataKey={p.initials}
                 stroke={color}
-                strokeWidth={1.5}
+                strokeWidth={isHighlighted ? 2.5 : 1.5}
                 dot={false}
                 connectNulls={false}
                 name={firstName}

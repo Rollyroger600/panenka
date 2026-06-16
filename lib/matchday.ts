@@ -2,6 +2,8 @@ import { kvGet, kvSet, participantKey } from '@/lib/kv/kv'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import { PARTICIPANTS } from '@/lib/participants'
 import { MATCH_ODDS } from '@/lib/data/odds'
+import { KO_MATCH_ODDS } from '@/lib/data/koMatchOdds'
+import { normalizeUitslag } from '@/lib/helpers'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
 import { ALL_SLOTS } from '@/lib/data/slots'
@@ -232,11 +234,10 @@ export async function computeMatchdayScores(
         if (matchId > cutoff) continue
         const actual = results[matchId]
         if (!actual) continue
-        const odds = MATCH_ODDS[matchId]
-        if (!odds) continue
-        const tokens = pred.tokens ?? 1
-
         const isGroup = matchId <= 72
+        const odds = isGroup ? MATCH_ODDS[matchId] : KO_MATCH_ODDS[matchId]
+        if (!odds) continue
+        const tokens = (pred.tokens ?? 1) + (group === 'asc' ? (p.ascBonusTokens?.[matchId] ?? 0) : 0)
 
         if (pred.toto && pred.toto === actual.toto) {
           const totoOdd = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
@@ -244,8 +245,9 @@ export async function computeMatchdayScores(
           if (isGroup) poulefase += pts; else kofase += pts
           totoGoed++
         }
-        if (pred.uitslag && pred.uitslag === actual.uitslag) {
-          const scoreOdd = odds.scores[pred.uitslag] ?? 0
+        const normPredUitslag = pred.uitslag ? normalizeUitslag(pred.uitslag) : null
+        if (normPredUitslag && normPredUitslag === normalizeUitslag(actual.uitslag)) {
+          const scoreOdd = odds.scores[normPredUitslag] ?? 0
           const pts = tokens * scoreOdd
           if (isGroup) poulefase += pts; else kofase += pts
           uitslagGoed++
