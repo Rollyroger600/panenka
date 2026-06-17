@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-17 — Pot MD06 + drawer default matchday 06 (Claude Code)
+
+#### Stand pagina — Pot tab OG en ASC
+- `app\(app)\stand\StandClient.tsx`: voor beide groepen toegevoegd: Winst Matchday 05 (+3,45) en Toto's en uitslagen matchday 06 (-5,00).
+
+#### Matchday drawer — default matchday
+- `components\matchday\MatchdayDrawer.tsx`: default matchday bij openen gewijzigd van 5 naar 6.
+
+---
+
 ### 2026-06-17 — Admin matchday: voorspellingen toto-van-de-dag per wedstrijd (Claude Code)
 
 #### Admin matchday tab — toto/uitslag deelnemer zichtbaar per wedstrijd
