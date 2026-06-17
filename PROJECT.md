@@ -845,6 +845,12 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-17 — Admin matchday: voorspellingen toto-van-de-dag per wedstrijd (Claude Code)
+
+#### Admin matchday tab — toto/uitslag deelnemer zichtbaar per wedstrijd
+- `app/actions/admin.ts`: nieuwe server action `loadParticipantPredictions(initials)` — haalt `Record<number, Prediction>` op uit Redis voor een opgegeven deelnemer.
+- `app/admin/AdminClient.tsx` (`MatchdayAdminTab`): bij het laden van matchday-data worden meteen ook de voorspellingen van de "toto van de dag"-deelnemer opgehaald. Per wedstrijd in de "Unibet quoteringen" lijst verschijnen nu het toto-badge (1/X/2) en de voorspelde uitslag naast de wedstrijdnaam, zodat direct zichtbaar is waarop ingezet moet worden.
+
 ### 2026-06-16 — Stand: lijngrafieken + matchday 05 updates + score-bugfix (Claude Code)
 
 #### Stand — lijngrafiek ranglijst + pot

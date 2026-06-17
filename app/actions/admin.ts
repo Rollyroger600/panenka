@@ -399,3 +399,9 @@ export async function loadAllTokenUsage(groupId: GroupId = 'og'): Promise<TokenU
   )
   return entries.sort((a, b) => b.over - a.over)
 }
+
+// ── Voorspellingen van één deelnemer laden (voor matchday admin) ──────────────
+
+export async function loadParticipantPredictions(initials: string): Promise<Record<number, Prediction>> {
+  return (await kvGet<Record<number, Prediction>>(participantKey('predictions', initials))) ?? {}
+}

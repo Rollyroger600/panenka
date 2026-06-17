@@ -11,8 +11,10 @@ import {
   saveOranjeResults, computeAndSaveScores,
   updateOranjeVraag, saveOranjeCorrect, saveOranjeBeoordeling,
   saveFantasyStats, setAdminGroup, loadAllTokenUsage, loadVoortgang,
+  loadParticipantPredictions,
 } from '@/app/actions/admin'
 import type { KoMatchTeams, TokenUsageEntry, VoortgangEntry } from '@/app/actions/admin'
+import type { Prediction } from '@/store/gameStore'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
@@ -755,6 +757,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
   const [rotationDirty, setRotationDirty] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [totoPredictions, setTotoPredictions] = useState<Record<number, Prediction>>({})
 
   useEffect(() => {
     setLoading(true)
@@ -783,6 +786,12 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
       } else {
         setQuotes(matchIds.map((id) => ({ matchId: id, totoOdds: '', uitslagOdds: '' })))
         setPotStand('')
+      }
+      const totoInit = rotData?.[groupId]?.[matchdayId - 1] ?? ''
+      if (totoInit) {
+        loadParticipantPredictions(totoInit).then(setTotoPredictions)
+      } else {
+        setTotoPredictions({})
       }
     }).finally(() => setLoading(false))
   }, [matchdayId, groupId])
@@ -883,6 +892,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
         <div className="divide-y divide-[#1e1e1e]">
           {quotes.map((q, idx) => {
             const match = MATCHES.find((m) => m.id === q.matchId)
+            const pred = totoPredictions[q.matchId] ?? null
             return (
               <div key={q.matchId} className="px-3 py-2.5 flex flex-col gap-2">
                 <div className="flex items-center gap-2">
@@ -890,6 +900,16 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
                   <span className="text-white text-sm font-bold">
                     {match ? `${match.home} – ${match.away}` : `Wedstrijd ${q.matchId}`}
                   </span>
+                  {pred?.toto && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30">
+                      {pred.toto}
+                    </span>
+                  )}
+                  {pred?.uitslag && (
+                    <span className="text-[10px] font-heading font-bold text-white">
+                      {pred.uitslag}
+                    </span>
+                  )}
                   {match && <span className="text-[#555] text-[10px] ml-auto">{match.date}</span>}
                 </div>
                 <div className="flex gap-3">
