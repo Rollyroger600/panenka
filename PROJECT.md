@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-20 — Pot MD09 + drawer default matchday 09 (Claude Code)
+
+#### Stand pagina — Pot tab OG en ASC
+- `app\(app)\stand\StandClient.tsx`: OG en ASC: Toto's en uitslagen matchday 09 (-5,00).
+
+#### Matchday drawer — default matchday
+- `components\matchday\MatchdayDrawer.tsx`: default matchday bij openen gewijzigd van 8 naar 9.
+
+---
+
 ### 2026-06-19 — Pot MD08 + drawer default matchday 08 (Claude Code)
 
 #### Stand pagina — Pot tab OG en ASC
