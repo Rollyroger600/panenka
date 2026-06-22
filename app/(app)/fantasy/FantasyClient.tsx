@@ -56,7 +56,7 @@ function EyesIcon({ className, style }: { className?: string; style?: React.CSSP
 function Phase2PlayerRow({ slotIndex, player, stats, counts }: { slotIndex: number; player: Player; stats: FantasyStats; counts: Record<string, number> }) {
   const [isOpen, setIsOpen] = useState(false)
   const quote = computePlayerQuote(player)
-  const s = stats[player.name] ?? { goals: 0, assists: 0 }
+  const s = stats[String(player.id)] ?? { goals: 0, assists: 0 }
   const pts = (s.goals + s.assists) * quote
   const count = counts[player.name] ?? 0
 
@@ -89,7 +89,7 @@ function Phase2PlayerRow({ slotIndex, player, stats, counts }: { slotIndex: numb
 
 function Phase2ScratchpadRow({ player, stats, counts }: { player: Player; stats: FantasyStats; counts: Record<string, number> }) {
   const quote = computePlayerQuote(player)
-  const s = stats[player.name] ?? { goals: 0, assists: 0 }
+  const s = stats[String(player.id)] ?? { goals: 0, assists: 0 }
   const pts = (s.goals + s.assists) * quote
   const count = counts[player.name] ?? 0
 
@@ -131,7 +131,7 @@ function TotalScoreBar({ squad, stats }: { squad: Record<string, Player | null>;
   const total = [...REGULAR_SLOTS, ...TALENT_SLOTS].reduce((sum, key) => {
     const player = squad[key]
     if (!player) return sum
-    const s = stats[player.name] ?? { goals: 0, assists: 0 }
+    const s = stats[String(player.id)] ?? { goals: 0, assists: 0 }
     return sum + (s.goals + s.assists) * computePlayerQuote(player)
   }, 0)
 

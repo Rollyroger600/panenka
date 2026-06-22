@@ -131,25 +131,25 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     await saveOranjeResults(updated as Record<number, OranjeResult>)
   }
 
-  async function handleFantasyStat(playerName: string, field: 'goals' | 'assists', value: number) {
-    const current = fantasyStats[playerName] ?? { goals: 0, assists: 0 }
-    const updated = { ...fantasyStats, [playerName]: { ...current, [field]: value } }
+  async function handleFantasyStat(playerId: string, field: 'goals' | 'assists', value: number) {
+    const current = fantasyStats[playerId] ?? { goals: 0, assists: 0 }
+    const updated = { ...fantasyStats, [playerId]: { ...current, [field]: value } }
     setFantasyStats(updated)
     await saveFantasyStats(updated)
   }
 
-  async function handleFantasyRemove(playerName: string) {
+  async function handleFantasyRemove(playerId: string) {
     const updated = { ...fantasyStats }
-    delete updated[playerName]
+    delete updated[playerId]
     setFantasyStats(updated)
     await saveFantasyStats(updated)
   }
 
   async function handleEspnImport(delta: Record<string, { goals: number; assists: number }>) {
     const merged = { ...fantasyStats }
-    for (const [name, stats] of Object.entries(delta)) {
-      const existing = merged[name] ?? { goals: 0, assists: 0 }
-      merged[name] = { goals: existing.goals + stats.goals, assists: existing.assists + stats.assists }
+    for (const [id, stats] of Object.entries(delta)) {
+      const existing = merged[id] ?? { goals: 0, assists: 0 }
+      merged[id] = { goals: existing.goals + stats.goals, assists: existing.assists + stats.assists }
     }
     setFantasyStats(merged)
     await saveFantasyStats(merged)
@@ -1135,7 +1135,7 @@ function MatchResultRow({ match, result, saving, onSave, onDelete, onEspnImport 
     if (!espnData || !onEspnImport) return
     const delta: Record<string, { goals: number; assists: number }> = {}
     for (const p of espnData.matched) {
-      delta[p.internalName] = { goals: p.goals, assists: p.assists }
+      delta[String(p.internalId)] = { goals: p.goals, assists: p.assists }
     }
     setImporting(true)
     await onEspnImport(delta)
@@ -1556,8 +1556,8 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
   stats: FantasyStats
   search: string
   onSearchChange: (v: string) => void
-  onStatChange: (name: string, field: 'goals' | 'assists', value: number) => void
-  onRemove: (name: string) => void
+  onStatChange: (playerId: string, field: 'goals' | 'assists', value: number) => void
+  onRemove: (playerId: string) => void
 }) {
   const [sortKey, setSortKey] = useState<FantasySortKey>('goals')
   const [sortDir, setSortDir] = useState<FantasySortDir>('desc')
@@ -1572,17 +1572,21 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
     ? WK_PLAYERS.filter((p) => p.name.toLowerCase().includes(q) || p.fullName.toLowerCase().includes(q) || p.country.toLowerCase().includes(q)).slice(0, 20)
     : []
 
+  const playerById = useMemo(() => {
+    const map = new Map<string, typeof WK_PLAYERS[0]>()
+    for (const p of WK_PLAYERS) map.set(String(p.id), p)
+    return map
+  }, [])
+
   const withStats = Object.entries(stats)
     .filter(([, s]) => s.goals > 0 || s.assists > 0)
     .sort((a, b) => {
       const dir = sortDir === 'asc' ? 1 : -1
+      const pa = playerById.get(a[0])
+      const pb = playerById.get(b[0])
       switch (sortKey) {
-        case 'name': return dir * a[0].localeCompare(b[0])
-        case 'country': {
-          const ca = WK_PLAYERS.find(p => p.name === a[0])?.country ?? ''
-          const cb = WK_PLAYERS.find(p => p.name === b[0])?.country ?? ''
-          return dir * ca.localeCompare(cb)
-        }
+        case 'name': return dir * (pa?.name ?? a[0]).localeCompare(pb?.name ?? b[0])
+        case 'country': return dir * (pa?.country ?? '').localeCompare(pb?.country ?? '')
         case 'goals': return dir * (a[1].goals - b[1].goals)
         case 'assists': return dir * (a[1].assists - b[1].assists)
       }
@@ -1605,16 +1609,17 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
         <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
           <div className="divide-y divide-[#1e1e1e]">
             {filtered.map((player) => {
-              const s = stats[player.name] ?? { goals: 0, assists: 0 }
+              const pid = String(player.id)
+              const s = stats[pid] ?? { goals: 0, assists: 0 }
               return (
-                <div key={player.name} className="flex items-center gap-3 px-4 py-2.5">
+                <div key={player.id} className="flex items-center gap-3 px-4 py-2.5">
                   <FlagImage country={player.country} size={16} />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-white truncate">{player.name}</div>
                     <div className="text-[10px] text-[#555]">{player.country} · {player.club}</div>
                   </div>
-                  <StatStepper label="⚽" value={s.goals} onChange={(v) => onStatChange(player.name, 'goals', v)} />
-                  <StatStepper label="🅰" value={s.assists} onChange={(v) => onStatChange(player.name, 'assists', v)} />
+                  <StatStepper label="⚽" value={s.goals} onChange={(v) => onStatChange(pid, 'goals', v)} />
+                  <StatStepper label="🅰" value={s.assists} onChange={(v) => onStatChange(pid, 'assists', v)} />
                 </div>
               )
             })}
@@ -1645,16 +1650,16 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
             <span className="w-4" />
           </div>
           <div className="divide-y divide-[#1e1e1e]">
-            {withStats.map(([name, s]) => {
-              const player = WK_PLAYERS.find((p) => p.name === name)
+            {withStats.map(([id, s]) => {
+              const player = playerById.get(id)
               return (
-                <div key={name} className="flex items-center gap-3 px-4 py-2.5">
+                <div key={id} className="flex items-center gap-3 px-4 py-2.5">
                   {player && <FlagImage country={player.country} size={16} />}
-                  <span className="text-sm font-bold text-white flex-1 truncate">{name}</span>
+                  <span className="text-sm font-bold text-white flex-1 truncate">{player?.name ?? id}</span>
                   {player && <span className="text-xs text-[#555] w-16 text-right">{player.country}</span>}
                   <span className="text-xs text-[#888] w-10 text-right">⚽ {s.goals}</span>
                   <span className="text-xs text-[#888] w-10 text-right">🅰 {s.assists}</span>
-                  <button onClick={() => onRemove(name)} className="text-[10px] text-[#E74C3C] hover:text-[#E74C3C]/80 w-4 text-center">✕</button>
+                  <button onClick={() => onRemove(id)} className="text-[10px] text-[#E74C3C] hover:text-[#E74C3C]/80 w-4 text-center">✕</button>
                 </div>
               )
             })}

@@ -845,7 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
-### 2026-06-22 — Pot MD11 + drawer default + admin fantasy sortering (Claude Code)
+### 2026-06-22 — Fantasy stats player-ID keys + pot MD11 + admin fantasy sortering (Claude Code)
+
+#### Fix: Fantasy stats duplicate spelernaam (M. Galarza bug)
+- `FantasyStats` gebruikt nu speler-ID als key i.p.v. spelernaam. Hierdoor worden spelers met dezelfde naam (bv. M. Galarza van Argentinië en Paraguay) correct onderscheiden.
+- `lib\scoring.ts`: `scoreFantasy` lookup op `player.id` i.p.v. `player.name`.
+- `app\(app)\fantasy\FantasyClient.tsx`: alle stats-lookups op `player.id`.
+- `app\admin\AdminClient.tsx`: `handleFantasyStat`, `handleFantasyRemove`, ESPN import, zoekresultaten en stats-tabel allemaal op player-ID.
+- `app\api\admin\espn-import\route.ts`: retourneert nu ook `internalId` per gematchte speler.
+- `app\actions\admin.ts`: `loadFantasyStats` migreert automatisch bestaande naam-keys naar ID-keys bij eerste load.
 
 #### Stand pagina — Pot tab OG en ASC
 - `app\(app)\stand\StandClient.tsx`: OG en ASC: Toto's en uitslagen matchday 11 (-5,00).

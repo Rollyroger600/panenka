@@ -166,7 +166,25 @@ export async function saveKoMatchTeams(data: KoMatchTeams): Promise<void> {
 // ── Fantasy statistieken ──────────────────────────────────────────────────
 
 export async function loadFantasyStats(): Promise<FantasyStats> {
-  return (await kvGet<FantasyStats>('fantasy_stats')) ?? {}
+  const raw = (await kvGet<FantasyStats>('fantasy_stats')) ?? {}
+  // Migrate name-based keys → id-based keys
+  let migrated = false
+  const result: FantasyStats = {}
+  for (const [key, val] of Object.entries(raw)) {
+    if (/^\d+$/.test(key)) {
+      result[key] = val
+    } else {
+      const player = WK_PLAYERS.find((p) => p.name === key)
+      if (player) {
+        result[String(player.id)] = val
+        migrated = true
+      } else {
+        result[key] = val
+      }
+    }
+  }
+  if (migrated) await kvSet('fantasy_stats', result)
+  return result
 }
 
 export async function saveFantasyStats(data: FantasyStats): Promise<void> {

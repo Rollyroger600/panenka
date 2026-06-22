@@ -219,7 +219,7 @@ export function scoreFantasy(
   let total = 0
   for (const player of Object.values(squad)) {
     if (!player) continue
-    const s = stats[player.name]
+    const s = stats[String(player.id)]
     if (!s || (s.goals === 0 && s.assists === 0)) continue
     total += (s.goals + s.assists) * computePlayerQuote(player)
   }

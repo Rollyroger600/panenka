@@ -13,6 +13,7 @@ export interface EspnImportPreview {
   matched: Array<{
     espnName: string
     internalName: string
+    internalId: number
     country: string
     goals: number
     assists: number
@@ -80,17 +81,17 @@ export async function GET(req: NextRequest) {
 
   // ESPN displayName → interne spelersnaam
   // 1. Expliciete map (ESPN_PLAYER_MAP omgekeerd: ESPN name → player)
-  const espnToPlayer = new Map<string, { name: string; country: string }>()
+  const espnToPlayer = new Map<string, { id: number; name: string; country: string }>()
   for (const p of WK_PLAYERS) {
     const espnName = ESPN_PLAYER_MAP[p.id]
-    if (espnName) espnToPlayer.set(espnName.toLowerCase().trim(), { name: p.name, country: p.country })
+    if (espnName) espnToPlayer.set(espnName.toLowerCase().trim(), { id: p.id, name: p.name, country: p.country })
   }
   // 2. Fallback: middleName / fullName (voor spelers niet in de expliciete map)
   for (const p of WK_PLAYERS) {
     const mid  = p.middleName.toLowerCase().trim()
     const full = p.fullName.toLowerCase().trim()
-    if (mid  && !espnToPlayer.has(mid))  espnToPlayer.set(mid,  { name: p.name, country: p.country })
-    if (full && !espnToPlayer.has(full)) espnToPlayer.set(full, { name: p.name, country: p.country })
+    if (mid  && !espnToPlayer.has(mid))  espnToPlayer.set(mid,  { id: p.id, name: p.name, country: p.country })
+    if (full && !espnToPlayer.has(full)) espnToPlayer.set(full, { id: p.id, name: p.name, country: p.country })
   }
 
   const allNames = new Set([...Object.keys(goalsByScorer), ...Object.keys(assistsByScorer)])
@@ -104,7 +105,7 @@ export async function GET(req: NextRequest) {
 
     const found = espnToPlayer.get(espnName.toLowerCase().trim())
     if (found) {
-      matched.push({ espnName, internalName: found.name, country: found.country, goals, assists })
+      matched.push({ espnName, internalName: found.name, internalId: found.id, country: found.country, goals, assists })
     } else {
       unmatched.push({ espnName, goals, assists })
     }
