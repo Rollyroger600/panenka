@@ -854,7 +854,7 @@ The following decisions were made during implementation that deviate from or ext
 - `components\matchday\MatchdayDrawer.tsx`: default matchday bij openen gewijzigd van 10 naar 11.
 
 #### Admin — Fantasy tab
-- `app\admin\AdminClient.tsx`: zoekbalk verplaatst naar bovenaan. Sorteerbare kolomkoppen (naam, land, goals, assists) toegevoegd aan de ingevoerde-statistieken lijst.
+- `app\admin\AdminClient.tsx`: zoekbalk verplaatst naar bovenaan. Zoekresultaten direct onder zoekbalk geplaatst (was onderaan). Sorteerbare kolomkoppen (naam, land, goals, assists) toegevoegd aan de ingevoerde-statistieken lijst.
 
 ---
 

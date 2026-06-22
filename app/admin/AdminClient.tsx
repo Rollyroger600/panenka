@@ -1597,6 +1597,31 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
       />
 
+      {q && filtered.length === 0 && (
+        <p className="text-xs text-[#555] text-center py-2">Geen spelers gevonden</p>
+      )}
+
+      {filtered.length > 0 && (
+        <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+          <div className="divide-y divide-[#1e1e1e]">
+            {filtered.map((player) => {
+              const s = stats[player.name] ?? { goals: 0, assists: 0 }
+              return (
+                <div key={player.name} className="flex items-center gap-3 px-4 py-2.5">
+                  <FlagImage country={player.country} size={16} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-white truncate">{player.name}</div>
+                    <div className="text-[10px] text-[#555]">{player.country} · {player.club}</div>
+                  </div>
+                  <StatStepper label="⚽" value={s.goals} onChange={(v) => onStatChange(player.name, 'goals', v)} />
+                  <StatStepper label="🅰" value={s.assists} onChange={(v) => onStatChange(player.name, 'assists', v)} />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {withStats.length > 0 && (
         <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
           <div className="px-4 py-2.5 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
@@ -1630,31 +1655,6 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
                   <span className="text-xs text-[#888] w-10 text-right">⚽ {s.goals}</span>
                   <span className="text-xs text-[#888] w-10 text-right">🅰 {s.assists}</span>
                   <button onClick={() => onRemove(name)} className="text-[10px] text-[#E74C3C] hover:text-[#E74C3C]/80 w-4 text-center">✕</button>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {q && filtered.length === 0 && (
-        <p className="text-xs text-[#555] text-center py-2">Geen spelers gevonden</p>
-      )}
-
-      {filtered.length > 0 && (
-        <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
-          <div className="divide-y divide-[#1e1e1e]">
-            {filtered.map((player) => {
-              const s = stats[player.name] ?? { goals: 0, assists: 0 }
-              return (
-                <div key={player.name} className="flex items-center gap-3 px-4 py-2.5">
-                  <FlagImage country={player.country} size={16} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-white truncate">{player.name}</div>
-                    <div className="text-[10px] text-[#555]">{player.country} · {player.club}</div>
-                  </div>
-                  <StatStepper label="⚽" value={s.goals} onChange={(v) => onStatChange(player.name, 'goals', v)} />
-                  <StatStepper label="🅰" value={s.assists} onChange={(v) => onStatChange(player.name, 'assists', v)} />
                 </div>
               )
             })}
