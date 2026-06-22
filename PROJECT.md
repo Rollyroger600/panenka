@@ -845,6 +845,19 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-22 — Pot MD11 + drawer default + admin fantasy sortering (Claude Code)
+
+#### Stand pagina — Pot tab OG en ASC
+- `app\(app)\stand\StandClient.tsx`: OG en ASC: Toto's en uitslagen matchday 11 (-5,00).
+
+#### Matchday drawer — default matchday
+- `components\matchday\MatchdayDrawer.tsx`: default matchday bij openen gewijzigd van 10 naar 11.
+
+#### Admin — Fantasy tab
+- `app\admin\AdminClient.tsx`: zoekbalk verplaatst naar bovenaan. Sorteerbare kolomkoppen (naam, land, goals, assists) toegevoegd aan de ingevoerde-statistieken lijst.
+
+---
+
 ### 2026-06-21 — Pot MD10 + drawer default matchday 10 (Claude Code)
 
 #### Stand pagina — Pot tab OG en ASC

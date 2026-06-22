@@ -1549,6 +1549,9 @@ function StatStepper({ label, value, onChange }: { label: string; value: number;
 
 // ── FantasyStatsTab ────────────────────────────────────────────────────────────
 
+type FantasySortKey = 'name' | 'country' | 'goals' | 'assists'
+type FantasySortDir = 'asc' | 'desc'
+
 function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove }: {
   stats: FantasyStats
   search: string
@@ -1556,6 +1559,14 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
   onStatChange: (name: string, field: 'goals' | 'assists', value: number) => void
   onRemove: (name: string) => void
 }) {
+  const [sortKey, setSortKey] = useState<FantasySortKey>('goals')
+  const [sortDir, setSortDir] = useState<FantasySortDir>('desc')
+
+  function toggleSort(key: FantasySortKey) {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir(key === 'name' || key === 'country' ? 'asc' : 'desc') }
+  }
+
   const q = search.toLowerCase()
   const filtered = q
     ? WK_PLAYERS.filter((p) => p.name.toLowerCase().includes(q) || p.fullName.toLowerCase().includes(q) || p.country.toLowerCase().includes(q)).slice(0, 20)
@@ -1563,15 +1574,50 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
 
   const withStats = Object.entries(stats)
     .filter(([, s]) => s.goals > 0 || s.assists > 0)
-    .sort((a, b) => (b[1].goals + b[1].assists) - (a[1].goals + a[1].assists))
+    .sort((a, b) => {
+      const dir = sortDir === 'asc' ? 1 : -1
+      switch (sortKey) {
+        case 'name': return dir * a[0].localeCompare(b[0])
+        case 'country': {
+          const ca = WK_PLAYERS.find(p => p.name === a[0])?.country ?? ''
+          const cb = WK_PLAYERS.find(p => p.name === b[0])?.country ?? ''
+          return dir * ca.localeCompare(cb)
+        }
+        case 'goals': return dir * (a[1].goals - b[1].goals)
+        case 'assists': return dir * (a[1].assists - b[1].assists)
+      }
+    })
 
   return (
     <div className="flex flex-col gap-4">
+      <input
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Zoek speler op naam of land…"
+        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
+      />
+
       {withStats.length > 0 && (
         <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
           <div className="px-4 py-2.5 flex items-center justify-between" style={{ background: 'rgba(10,10,10,0.75)' }}>
             <span className="font-heading text-sm font-bold text-white">Statistieken ingevoerd</span>
             <span className="text-xs text-[#FF6B00] font-bold">{withStats.length} speler{withStats.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="flex items-center gap-3 px-4 py-2 border-b border-[#2a2a2a]" style={{ background: 'rgba(10,10,10,0.5)' }}>
+            <span className="w-4" />
+            <button onClick={() => toggleSort('name')} className="flex-1 text-left text-[10px] font-bold uppercase tracking-wider text-[#555] hover:text-[#FF6B00]">
+              Naam {sortKey === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
+            </button>
+            <button onClick={() => toggleSort('country')} className="text-[10px] font-bold uppercase tracking-wider text-[#555] hover:text-[#FF6B00] w-16 text-right">
+              Land {sortKey === 'country' && (sortDir === 'asc' ? '↑' : '↓')}
+            </button>
+            <button onClick={() => toggleSort('goals')} className="text-[10px] font-bold uppercase tracking-wider text-[#555] hover:text-[#FF6B00] w-10 text-right">
+              ⚽ {sortKey === 'goals' && (sortDir === 'asc' ? '↑' : '↓')}
+            </button>
+            <button onClick={() => toggleSort('assists')} className="text-[10px] font-bold uppercase tracking-wider text-[#555] hover:text-[#FF6B00] w-10 text-right">
+              🅰 {sortKey === 'assists' && (sortDir === 'asc' ? '↑' : '↓')}
+            </button>
+            <span className="w-4" />
           </div>
           <div className="divide-y divide-[#1e1e1e]">
             {withStats.map(([name, s]) => {
@@ -1580,23 +1626,16 @@ function FantasyStatsTab({ stats, search, onSearchChange, onStatChange, onRemove
                 <div key={name} className="flex items-center gap-3 px-4 py-2.5">
                   {player && <FlagImage country={player.country} size={16} />}
                   <span className="text-sm font-bold text-white flex-1 truncate">{name}</span>
-                  {player && <span className="text-xs text-[#555]">{player.country}</span>}
-                  <span className="text-xs text-[#888]">⚽ {s.goals}</span>
-                  <span className="text-xs text-[#888]">🅰 {s.assists}</span>
-                  <button onClick={() => onRemove(name)} className="text-[10px] text-[#E74C3C] hover:text-[#E74C3C]/80 ml-1">✕</button>
+                  {player && <span className="text-xs text-[#555] w-16 text-right">{player.country}</span>}
+                  <span className="text-xs text-[#888] w-10 text-right">⚽ {s.goals}</span>
+                  <span className="text-xs text-[#888] w-10 text-right">🅰 {s.assists}</span>
+                  <button onClick={() => onRemove(name)} className="text-[10px] text-[#E74C3C] hover:text-[#E74C3C]/80 w-4 text-center">✕</button>
                 </div>
               )
             })}
           </div>
         </div>
       )}
-
-      <input
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Zoek speler op naam of land…"
-        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-2 text-sm text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
-      />
 
       {q && filtered.length === 0 && (
         <p className="text-xs text-[#555] text-center py-2">Geen spelers gevonden</p>
