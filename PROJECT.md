@@ -845,6 +845,19 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-23 — Pot MD12 + winst ASC MD11 + drawer default matchday 12 (Claude Code)
+
+#### Stand pagina — Pot tab OG en ASC
+- `app\(app)\stand\StandClient.tsx`: OG en ASC: Toto's en uitslagen matchday 12 (-5,00).
+
+#### Stand pagina — Pot tab ASC
+- `app\(app)\stand\StandClient.tsx`: ASC: Winst Matchday 11 (+12,00).
+
+#### Matchday drawer — default matchday
+- `components\matchday\MatchdayDrawer.tsx`: default matchday bij openen gewijzigd van 11 naar 12.
+
+---
+
 ### 2026-06-22 — Fantasy stats player-ID keys + pot MD11 + admin fantasy sortering (Claude Code)
 
 #### Fix: Fantasy stats duplicate spelernaam (M. Galarza bug)
