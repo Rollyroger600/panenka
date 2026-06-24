@@ -286,6 +286,17 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
       const fantasy = scoreFantasy(fantasyData?.squad ?? {}, fantasyStats)
       const total = Math.round((breakdown.poulefase + breakdown.knockout + breakdown.koWedstrijden + fantasy) * 100) / 100
 
+      let matchTokens = 0
+      for (const [idStr, pred] of Object.entries(predictions ?? {})) {
+        if (results[parseInt(idStr)]) matchTokens += pred.tokens ?? 1
+      }
+      let koTokens = 0
+      for (const [key, slot] of Object.entries(knockoutPicks ?? {})) {
+        if (!slot.country) continue
+        const roundId = key.split('_')[0]
+        if ((koResults[roundId] ?? []).length > 0) koTokens += slot.tok
+      }
+
       scores[p.initials.toLowerCase()] = {
         name: p.name,
         initials: p.initials,
@@ -298,6 +309,7 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
         total,
         totoCorrect: breakdown.totoCorrect,
         uitslagCorrect: breakdown.uitslagCorrect,
+        tokensUsed: matchTokens + koTokens,
       }
     }),
   )

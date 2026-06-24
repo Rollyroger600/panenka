@@ -10,4 +10,5 @@ export interface ParticipantScore {
   fantasy: number
   totoCorrect: number
   uitslagCorrect: number
+  tokensUsed: number
 }

@@ -845,6 +845,30 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-24 — Multi live slides + dynamische matchday + stand tokens + pot MD13/14 (Claude Code)
+
+#### Matchday drawer — meerdere gelijktijdige live wedstrijden
+- `components\matchday\slides\LiveSlide.tsx`: omgebouwd van array (`liveMatches`) naar enkelvoud (`liveMatch`) — één slide per wedstrijd.
+- `components\matchday\MatchdayDrawer.tsx`: rendert nu aparte LiveSlide per actieve wedstrijd. Slide refs dynamisch (Map i.p.v. 4 vaste refs). `liveOffset` = aantal actieve live wedstrijden i.p.v. vast 1. Dots en swipe werken correct met variabel aantal live slides.
+
+#### Matchday drawer — dynamische default matchday
+- `lib\data\matchdayMap.ts`: nieuwe functie `getCurrentMatchday()` — berekent de huidige matchday op basis van laatste aftrap + 120 min. Werkt automatisch voor het hele toernooi.
+- `components\matchday\MatchdayDrawer.tsx`: gebruikt `getCurrentMatchday()` als fallback i.p.v. hardcoded waarde.
+
+#### Stand pagina — Pot tab OG en ASC
+- `app\(app)\stand\StandClient.tsx`: OG en ASC: Toto's en uitslagen matchday 13 (-5,00) en matchday 14 (-5,00).
+
+#### Stand pagina — Pot tab ASC
+- `app\(app)\stand\StandClient.tsx`: ASC: Winst Matchday 12 (+5,50).
+
+#### Stand pagina — Totaal overzicht (tokens & punten per token)
+- `app\leaderboard\types.ts`: `tokensUsed` veld toegevoegd aan `ParticipantScore`.
+- `app\actions\admin.ts`: `computeAndSaveScores()` berekent `tokensUsed` — alleen tokens van verwerkte wedstrijden (met resultaat) en verwerkte landenslots (met doorgestuurde landen).
+- `app\actions\scores.ts`, `app\leaderboard\page.tsx`: `tokensUsed: 0` als default.
+- `components\leaderboard\RankList.tsx`: Totaal-overzicht: kolommen Poule/Landen/Fantasy verwijderd (staan in eigen tabbladen). Nieuwe kolommen: Tokens (gebruikte tokens) en P/T (punten per token).
+
+---
+
 ### 2026-06-23 — Pot MD12 + winst ASC MD11 + drawer default matchday 12 (Claude Code)
 
 #### Stand pagina — Pot tab OG en ASC

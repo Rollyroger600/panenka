@@ -11,7 +11,7 @@ import { LeaderboardRefresh } from './LeaderboardRefresh'
 const SCORE_DEFAULTS: ParticipantScore = {
   name: '', initials: '', total: 0, poulefase: 0, knockout: 0,
   koWedstrijden: 0, oranje: 0, oranjeTokens: 0, fantasy: 0,
-  totoCorrect: 0, uitslagCorrect: 0,
+  totoCorrect: 0, uitslagCorrect: 0, tokensUsed: 0,
 }
 
 async function getScores(groupId: GroupId): Promise<ParticipantScore[]> {

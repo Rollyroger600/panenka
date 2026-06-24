@@ -4,7 +4,7 @@ import { toPng } from 'html-to-image'
 import { MatchSlide } from '@/components/matchday/slides/MatchSlide'
 import { InzetSlide } from '@/components/matchday/slides/InzetSlide'
 import { LiveSlide } from '@/components/matchday/slides/LiveSlide'
-import { MATCHDAY_COUNT } from '@/lib/data/matchdayMap'
+import { MATCHDAY_COUNT, getCurrentMatchday } from '@/lib/data/matchdayMap'
 import type { FullMatchdayData, LiveMatchData } from '@/lib/types/matchday'
 
 interface Props {
@@ -20,7 +20,7 @@ interface Props {
 }
 
 export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatchday, mockData, mockLiveData, showExport, fdoLiveEnabled }: Props) {
-  const [matchdayId, setMatchdayId] = useState(initialMatchday ?? 12)
+  const [matchdayId, setMatchdayId] = useState(initialMatchday ?? getCurrentMatchday())
   const [activeGroup, setActiveGroup] = useState<'og' | 'asc'>(group)
   const [slideIndex, setSlideIndex] = useState(0)
   const [data, setData] = useState<FullMatchdayData | null>(mockData ?? null)
@@ -50,11 +50,11 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
     }
   }, [mockLiveData, fdoLiveEnabled])
 
-  const slide0Ref = useRef<HTMLDivElement>(null)
-  const slide1Ref = useRef<HTMLDivElement>(null)
-  const slide2Ref = useRef<HTMLDivElement>(null)
-  const slide3Ref = useRef<HTMLDivElement>(null)
-  const slideRefs = [slide0Ref, slide1Ref, slide2Ref, slide3Ref]
+  const slideRefMap = useRef<Map<number, HTMLDivElement>>(new Map())
+  const getSlideRef = useCallback((idx: number) => (el: HTMLDivElement | null) => {
+    if (el) slideRefMap.current.set(idx, el)
+    else slideRefMap.current.delete(idx)
+  }, [])
   const touchStartX = useRef<number | null>(null)
 
   const loadData = useCallback(async (md: number) => {
@@ -154,12 +154,11 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
   }
 
   async function handleExportSlide(idx: number) {
-    if (hasLive && idx === 0) return
-    const ref = slideRefs[idx]
-    if (!ref.current || !data) return
+    if (idx < liveOffset) return
+    const el = slideRefMap.current.get(idx)
+    if (!el || !data) return
     setExporting(true)
     await new Promise((r) => setTimeout(r, 120))
-    const el = ref.current
     applyExportBackground(el)
     addExportLogo(el)
     try {
@@ -181,9 +180,8 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
     await new Promise((r) => setTimeout(r, 120))
     try {
       for (let i = liveOffset; i < totalSlides; i++) {
-        const ref = slideRefs[i]
-        if (!ref.current) continue
-        const el = ref.current
+        const el = slideRefMap.current.get(i)
+        if (!el) continue
         applyExportBackground(el)
         addExportLogo(el)
         const dataUrl = await captureSlide(el)
@@ -202,9 +200,8 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
 
   if (!open) return null
 
-  const hasLive = liveMatches.some((m) => m.status === 'IN_PLAY' || m.status === 'PAUSED')
   const activeLiveMatches = liveMatches.filter((m) => m.status === 'IN_PLAY' || m.status === 'PAUSED')
-  const liveOffset = hasLive ? 1 : 0
+  const liveOffset = activeLiveMatches.length
   const totalSlides = data ? (data.matchSlides.length === 1 ? 2 : 3) + liveOffset : 3 + liveOffset
 
   // Build totoVanDeDag per-match prediction data for InzetSlide
@@ -282,7 +279,7 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
             <>
               <button
                 onClick={() => handleExportSlide(slideIndex)}
-                disabled={exporting || (hasLive && slideIndex === 0)}
+                disabled={exporting || slideIndex < liveOffset}
                 className="font-heading text-[10px] px-2 py-1 rounded"
                 style={{ background: 'rgba(255,107,0,0.15)', border: '1px solid #FF6B00', color: '#FF6B00' }}
               >
@@ -348,23 +345,23 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
                 marginRight: `${-(390 * (1 - slideScale) / 2)}px`,
               } : {}),
             }}>
-              {/* LiveSlide — only when live matches active */}
-              {hasLive && (
-                <div style={slideIndex === 0 ? {} : { position: 'absolute', left: -9999, width: 390 }}>
+              {/* LiveSlides — one per active live match */}
+              {activeLiveMatches.map((lm, i) => (
+                <div key={`live-${lm.matchId}`} style={slideIndex === i ? {} : { position: 'absolute', left: -9999, width: 390 }}>
                   <LiveSlide
-                    ref={slideRefs[0]}
+                    ref={getSlideRef(i)}
                     matchdayId={matchdayId}
-                    liveMatches={activeLiveMatches}
+                    liveMatch={lm}
                     exporting={exporting}
                   />
                 </div>
-              )}
+              ))}
 
               {/* Match slides */}
               {data.matchSlides.map((matchesInSlide, i) => (
                 <div key={i} style={slideIndex === i + off ? {} : { position: 'absolute', left: -9999, width: 390 }}>
                   <MatchSlide
-                    ref={slideRefs[i + off]}
+                    ref={getSlideRef(i + off)}
                     matchdayId={matchdayId}
                     slideIndex={(i + 1) as 1 | 2}
                     matches={matchesInSlide}
@@ -375,7 +372,7 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
 
               <div style={slideIndex === inzetIdx ? {} : { position: 'absolute', left: -9999, width: 390 }}>
                 <InzetSlide
-                  ref={slideRefs[inzetIdx]}
+                  ref={getSlideRef(inzetIdx)}
                   matchdayId={matchdayId}
                   totoVanDeDagName={data.totoVanDeDagName}
                   matchData={buildInzetMatchData()}

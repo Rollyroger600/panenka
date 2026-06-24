@@ -10,7 +10,7 @@ import { normalizeUitslag } from '@/lib/helpers'
 
 interface Props {
   matchdayId: number
-  liveMatches: LiveMatchData[]
+  liveMatch: LiveMatchData
   exporting?: boolean
 }
 
@@ -590,8 +590,10 @@ function LiveMatchPanel({ lm, match, exporting }: { lm: LiveMatchData; match: Ma
 // ─── LiveSlide ────────────────────────────────────────────────────────────────
 
 export const LiveSlide = forwardRef<HTMLDivElement, Props>(
-  ({ matchdayId, liveMatches, exporting = false }, ref) => {
+  ({ matchdayId, liveMatch, exporting = false }, ref) => {
     void String(matchdayId).padStart(2, '0')
+
+    const match = MATCHES.find((m) => m.id === liveMatch.matchId)
 
     return (
       <SlideWrapper
@@ -601,16 +603,12 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
         titleDecoration={<span className="live-pulse-dot" />}
         minHeight={720}
       >
-        {liveMatches.map((lm) => {
-          const match = MATCHES.find((m) => m.id === lm.matchId)
-          if (!match) return null
-          return <LiveMatchPanel key={lm.matchId} lm={lm} match={match} exporting={exporting} />
-        })}
-
-        {liveMatches.length === 0 && (
+        {match ? (
+          <LiveMatchPanel lm={liveMatch} match={match} exporting={exporting} />
+        ) : (
           <div className="flex items-center justify-center flex-1">
             <span className="font-heading text-[12px]" style={{ color: MUTED }}>
-              Geen live wedstrijden
+              Wedstrijd niet gevonden
             </span>
           </div>
         )}

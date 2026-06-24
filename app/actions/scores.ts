@@ -8,7 +8,7 @@ import type { ParticipantScore } from '@/app/leaderboard/types'
 const SCORE_DEFAULTS: ParticipantScore = {
   name: '', initials: '', total: 0, poulefase: 0, knockout: 0,
   koWedstrijden: 0, oranje: 0, oranjeTokens: 0, fantasy: 0,
-  totoCorrect: 0, uitslagCorrect: 0,
+  totoCorrect: 0, uitslagCorrect: 0, tokensUsed: 0,
 }
 
 export async function loadScoresForGroup(groupId: GroupId): Promise<ParticipantScore[]> {
