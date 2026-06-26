@@ -43,6 +43,17 @@ export async function chatGetRecent(group: GroupId, limit: number = 60): Promise
   return (raw as unknown[]).map(parseMember)
 }
 
+export async function chatGetOlder(group: GroupId, before: number, limit: number = 50): Promise<ChatMessage[]> {
+  const key = messagesKey(group)
+  const raw = await redis.zrange(key, before - 1, 0, {
+    byScore: true,
+    rev: true,
+    offset: 0,
+    count: limit,
+  })
+  return (raw as unknown[]).map(parseMember).reverse()
+}
+
 export async function chatAddMessage(group: GroupId, msg: ChatMessage): Promise<void> {
   const key = messagesKey(group)
   await redis.zadd(key, { score: msg.ts, member: JSON.stringify(msg) })

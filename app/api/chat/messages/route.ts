@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import {
-  chatGetMessages, chatGetRecent, chatAddMessage,
+  chatGetMessages, chatGetRecent, chatGetOlder, chatAddMessage,
   chatUpdateMessage, chatDeleteMessage, chatSetPinned,
   chatGetPinned, chatGetReadMap,
 } from '@/lib/kv/chat'
@@ -21,12 +21,18 @@ export async function GET(req: NextRequest) {
     if (!group) return NextResponse.json({ error: 'Ontbrekende group parameter', messages: [] }, { status: 400 })
 
     const since = parseInt(req.nextUrl.searchParams.get('since') ?? '0', 10)
+    const before = parseInt(req.nextUrl.searchParams.get('before') ?? '0', 10)
     const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '50', 10), 100)
 
+    const isInitialLoad = since === 0 && before === 0
     const [messages, pinnedMsgId, readMap] = await Promise.all([
-      since > 0 ? chatGetMessages(group, since, limit) : chatGetRecent(group, limit),
-      since === 0 ? chatGetPinned(group) : Promise.resolve(undefined),
-      since === 0 ? chatGetReadMap(group) : Promise.resolve(undefined),
+      before > 0
+        ? chatGetOlder(group, before, limit)
+        : since > 0
+          ? chatGetMessages(group, since, limit)
+          : chatGetRecent(group, limit),
+      isInitialLoad ? chatGetPinned(group) : Promise.resolve(undefined),
+      isInitialLoad ? chatGetReadMap(group) : Promise.resolve(undefined),
     ])
 
     return NextResponse.json({

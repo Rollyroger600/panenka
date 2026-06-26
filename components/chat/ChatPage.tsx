@@ -51,10 +51,16 @@ export function ChatPage({ initials, defaultGroup, isDualGroup, isAdmin }: Props
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [showIosHint, setShowIosHint] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [loadingOlder, setLoadingOlder] = useState(false)
   const [headerToggleEl, setHeaderToggleEl] = useState<Element | null>(null)
   const [headerBellEl, setHeaderBellEl] = useState<Element | null>(null)
   const lastTsRef = useRef(0)
   const lastReadTsRef = useRef(0)
+  const hasMoreRef = useRef(true)
+  const loadingOlderRef = useRef(false)
+  const oldestTsRef = useRef(0)
+  const activeGroupRef = useRef(activeGroup)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const newMsgsDividerRef = useRef<HTMLDivElement>(null)
   const isAtBottomRef = useRef(true)
@@ -84,6 +90,47 @@ export function ChatPage({ initials, defaultGroup, isDualGroup, isAdmin }: Props
       return prev
     })
   }
+
+  useEffect(() => { activeGroupRef.current = activeGroup }, [activeGroup])
+  useEffect(() => {
+    oldestTsRef.current = messages.length > 0 ? messages[0].ts : 0
+  }, [messages])
+
+  const loadOlderMessages = useCallback(async () => {
+    if (loadingOlderRef.current || !hasMoreRef.current || oldestTsRef.current === 0) return
+    loadingOlderRef.current = true
+    setLoadingOlder(true)
+
+    const container = scrollContainerRef.current
+    const prevScrollHeight = container?.scrollHeight ?? 0
+    const prevScrollTop = container?.scrollTop ?? 0
+
+    try {
+      const res = await fetch(
+        `/api/chat/messages?before=${oldestTsRef.current}&limit=50&group=${activeGroupRef.current}`,
+      )
+      const d = await res.json()
+      const olderMsgs: ChatMessage[] = d.messages ?? []
+
+      if (olderMsgs.length < 50) hasMoreRef.current = false
+
+      if (olderMsgs.length > 0) {
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id))
+          const unique = olderMsgs.filter((m) => !existingIds.has(m.id))
+          return [...unique, ...prev]
+        })
+        requestAnimationFrame(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - prevScrollHeight + prevScrollTop
+          }
+        })
+      }
+    } catch { /* ignore */ } finally {
+      loadingOlderRef.current = false
+      setLoadingOlder(false)
+    }
+  }, [])
 
   // Vergrendel body-scroll + volg toetsenbordhoogte via visualViewport
   useEffect(() => {
@@ -147,8 +194,10 @@ export function ChatPage({ initials, defaultGroup, isDualGroup, isAdmin }: Props
   useEffect(() => {
     setMessages([])
     lastTsRef.current = 0
+    hasMoreRef.current = true
     setFirstUnreadId(null)
     setUnreadCount(0)
+    setLoadingOlder(false)
     setError(null)
 
     let lastRead = 0
@@ -249,7 +298,10 @@ export function ChatPage({ initials, defaultGroup, isDualGroup, isAdmin }: Props
         return prev
       })
     }
-  }, [])
+    if (el.scrollTop < 100) {
+      loadOlderMessages()
+    }
+  }, [loadOlderMessages])
 
   async function handleSendText(text: string) {
     if (editingMsg) {
@@ -538,12 +590,18 @@ export function ChatPage({ initials, defaultGroup, isDualGroup, isAdmin }: Props
       {/* Messages + scroll-naar-beneden knop */}
       <div className="flex-1 relative overflow-hidden">
         <div
+          ref={scrollContainerRef}
           className="h-full overflow-y-auto py-3"
           onScroll={handleScroll}
           onClick={() => { (document.activeElement as HTMLElement)?.blur() }}
         >
+          {loadingOlder && (
+            <div className="flex justify-center py-3">
+              <div className="w-5 h-5 border-2 border-[#333] border-t-[#FF6B00] rounded-full animate-spin" />
+            </div>
+          )}
           {error && <p className="text-center text-red-400 text-sm py-8">{error}</p>}
-          {!error && messages.length === 0 && (
+          {!error && messages.length === 0 && !loadingOlder && (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-[#555]">
               <p className="text-sm">Nog geen berichten. Wees de eerste!</p>
             </div>

@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-26 — Chat infinite scroll (Claude Code)
+
+#### Chat — oudere berichten laden bij omhoog scrollen
+- `lib\kv\chat.ts`: nieuwe `chatGetOlder()` functie — haalt berichten op vóór een timestamp via Redis ZRANGE REV, retourneert in chronologische volgorde.
+- `app\api\chat\messages\route.ts`: GET accepteert nu `before` parameter naast bestaande `since`. `before > 0` roept `chatGetOlder()` aan voor het laden van historie.
+- `components\chat\ChatPage.tsx`: infinite scroll naar boven — als gebruiker binnen 100px van bovenkant scrollt, worden automatisch 50 oudere berichten geladen. Scrollpositie behouden na prepend. Oranje spinner bovenaan tijdens laden. Stopt automatisch als er geen oudere berichten meer zijn. Reset bij groepswisseling.
+
+---
+
 ### 2026-06-26 — Token fix PN + MD17 rotation fix + pot updates (Claude Code)
 
 #### Redis data fix — PN tokens wedstrijd 58/61
