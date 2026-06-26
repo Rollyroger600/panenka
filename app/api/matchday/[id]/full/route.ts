@@ -13,6 +13,7 @@ import {
   computeMatchdayScores,
   getFantasyPlayersForMatch,
   getGroupQuotes,
+  FIRST_CUSTOM_BET_MATCHDAY,
 } from '@/lib/matchday'
 import { getMatchesForMatchday, MATCHDAY_COUNT } from '@/lib/data/matchdayMap'
 import type { Prediction, KnockoutPicks, FantasySquad } from '@/store/gameStore'
@@ -143,15 +144,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const resolvedConfig = { ...config, quotes: getGroupQuotes(config, group) }
 
+  const useCustomBets = group === 'og' && matchdayId >= FIRST_CUSTOM_BET_MATCHDAY
+  const customBets = useCustomBets ? (config.og.customBets ?? []) : undefined
+
   const data: FullMatchdayData = {
     matchdayId,
     config: resolvedConfig,
-    totoVanDeDagInitials: totoParticipant?.initials ?? null,
-    totoVanDeDagName: totoParticipant?.name ?? null,
+    totoVanDeDagInitials: useCustomBets ? null : (totoParticipant?.initials ?? null),
+    totoVanDeDagName: useCustomBets ? null : (totoParticipant?.name ?? null),
     matchSlides,
     scores,
     potHistory,
     scoreHistory,
+    ...(customBets ? { customBets } : {}),
   }
 
   return NextResponse.json(data)

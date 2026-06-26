@@ -845,6 +845,30 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-26 — Custom bets (OG MD15+) + pot MD15 + winst MD13/14 (Claude Code)
+
+#### Matchday slides — custom weddenschappen (OG, MD15+)
+- `lib\matchday.ts`: nieuw `CustomBet` interface (`description`, `matchIds?`, `inzet`, `quotering`) + `FIRST_CUSTOM_BET_MATCHDAY = 15` constante. `MatchdayConfig.og` uitgebreid met optioneel `customBets` veld.
+- `lib\types\matchday.ts`: `FullMatchdayData` uitgebreid met optioneel `customBets` veld.
+- `app\api\matchday\[id]\route.ts`: POST accepteert en persisteert `customBets` in matchday config.
+- `app\api\matchday\[id]\full\route.ts`: stuurt `customBets` mee in response voor OG MD≥15, zet `totoVanDeDag` op null.
+- `components\matchday\slides\InzetSlide.tsx`: cards-variant voor custom bets met beschrijving, gekoppelde wedstrijden (vlaggen + 3-letter landcodes), inzet en quotering. Backward-compatibel met oud `matchId` formaat.
+- `components\matchday\MatchdayDrawer.tsx`: geeft `data.customBets` door aan InzetSlide.
+
+#### Admin — custom bets invoer (OG, MD15+)
+- `app\admin\AdminClient.tsx`: voor OG + MD≥15 toont "Weddenschappen" sectie i.p.v. "Toto van de dag" + "Unibet quoteringen". Per weddenschap: beschrijving (vrije tekst), wedstrijd-toggle-buttons (meerdere selecteerbaar), inzet (€), quotering. Max 2 weddenschappen.
+
+#### Stand pagina — Pot tab OG en ASC
+- `app\(app)\stand\StandClient.tsx`: OG en ASC: Toto's en uitslagen matchday 15 (-5,00).
+
+#### Stand pagina — Pot tab OG
+- `app\(app)\stand\StandClient.tsx`: OG: Winst Matchday 14 (+8,00).
+
+#### Stand pagina — Pot tab ASC
+- `app\(app)\stand\StandClient.tsx`: ASC: Winst Matchday 13 (+5,24) en Winst Matchday 14 (+13,80).
+
+---
+
 ### 2026-06-24 — Multi live slides + dynamische matchday + stand tokens + pot MD13/14 (Claude Code)
 
 #### Matchday drawer — meerdere gelijktijdige live wedstrijden

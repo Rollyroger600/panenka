@@ -376,6 +376,7 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
                   matchdayId={matchdayId}
                   totoVanDeDagName={data.totoVanDeDagName}
                   matchData={buildInzetMatchData()}
+                  customBets={data.customBets}
                   exporting={exporting}
                 />
               </div>

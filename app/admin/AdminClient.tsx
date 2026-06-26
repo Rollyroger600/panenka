@@ -18,6 +18,8 @@ import type { Prediction } from '@/store/gameStore'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
+import { FIRST_CUSTOM_BET_MATCHDAY } from '@/lib/matchday'
+import type { CustomBet } from '@/lib/matchday'
 import type { FantasyStats } from '@/lib/scoring'
 import type { MatchResult, OranjeResult } from '@/lib/scoring'
 import type { ParticipantScore } from '@/app/leaderboard/types'
@@ -758,6 +760,9 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [totoPredictions, setTotoPredictions] = useState<Record<number, Prediction>>({})
+  const [customBets, setCustomBets] = useState<Array<{ description: string; matchIds: number[]; inzet: string; quotering: string }>>([])
+
+  const useCustomBets = groupId === 'og' && matchdayId >= FIRST_CUSTOM_BET_MATCHDAY
 
   useEffect(() => {
     setLoading(true)
@@ -783,9 +788,21 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
           })
         )
         setPotStand(String(cfg[groupId]?.potStand ?? ''))
+        const existingBets: CustomBet[] = cfg.og?.customBets ?? []
+        setCustomBets(
+          existingBets.length > 0
+            ? existingBets.map((b) => ({
+                description: b.description,
+                matchIds: b.matchIds ?? [],
+                inzet: String(b.inzet),
+                quotering: String(b.quotering),
+              }))
+            : [{ description: '', matchIds: [], inzet: '', quotering: '' }]
+        )
       } else {
         setQuotes(matchIds.map((id) => ({ matchId: id, totoOdds: '', uitslagOdds: '' })))
         setPotStand('')
+        setCustomBets([{ description: '', matchIds: [], inzet: '', quotering: '' }])
       }
       const totoInit = rotData?.[groupId]?.[matchdayId - 1] ?? ''
       if (totoInit) {
@@ -798,7 +815,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
 
   async function handleSave() {
     setLoading(true)
-    const payload = {
+    const payload: Record<string, unknown> = {
       group: groupId,
       quotes: quotes.map((q) => {
         const totoOddsVal = parseFloat(q.totoOdds)
@@ -810,6 +827,16 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
         }
       }),
       potStand: parseFloat(potStand) || 0,
+    }
+    if (useCustomBets) {
+      payload.customBets = customBets
+        .filter((b) => b.description.trim() !== '')
+        .map((b) => ({
+          description: b.description,
+          ...(b.matchIds.length > 0 ? { matchIds: b.matchIds } : {}),
+          inzet: parseFloat(b.inzet) || 0,
+          quotering: parseFloat(b.quotering) || 0,
+        }))
     }
     const saves: Promise<unknown>[] = [
       fetch(`/api/matchday/${matchdayId}`, {
@@ -859,90 +886,189 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
         </select>
       </div>
 
-      {/* Toto van de dag */}
-      <div className="rounded-xl border border-[#2a2a2a] p-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
-        <p className="text-xs text-[#555] uppercase font-heading tracking-wide mb-2">Toto van de dag</p>
-        <select
-          value={totoInitials}
-          disabled={!rotations}
-          onChange={(e) => {
-            if (!rotations) return
-            const updated = [...rotations[groupId]]
-            updated[matchdayId - 1] = e.target.value
-            setRotations({ ...rotations, [groupId]: updated })
-            setRotationDirty(true)
-          }}
-          className="bg-[#252525] border border-[#2a2a2a] text-white text-sm font-bold rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] w-full"
-        >
-          {groupParticipants.map((p) => (
-            <option key={p.initials} value={p.initials}>{p.name}</option>
-          ))}
-        </select>
-        <p className="text-[10px] text-[#444] mt-1.5">
-          Zet de bets op Unibet op basis van de voorspellingen van deze deelnemer.
-        </p>
-      </div>
-
-      {/* Matches + quotes */}
-      <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
-        <div className="px-3 py-2" style={{ background: 'rgba(10,10,10,0.75)' }}>
-          <p className="font-heading text-sm font-bold text-white">Unibet quoteringen</p>
-          <p className="text-[10px] text-[#555] mt-0.5">Voer de live odds in op het moment van inzetten.</p>
-        </div>
-        <div className="divide-y divide-[#1e1e1e]">
-          {quotes.map((q, idx) => {
-            const match = MATCHES.find((m) => m.id === q.matchId)
-            const pred = totoPredictions[q.matchId] ?? null
-            return (
-              <div key={q.matchId} className="px-3 py-2.5 flex flex-col gap-2">
+      {useCustomBets ? (
+        /* ── Custom bets (OG, MD15+) ── */
+        <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+          <div className="px-3 py-2" style={{ background: 'rgba(10,10,10,0.75)' }}>
+            <p className="font-heading text-sm font-bold text-white">Weddenschappen</p>
+            <p className="text-[10px] text-[#555] mt-0.5">Voer 1 of 2 weddenschappen in voor deze matchday.</p>
+          </div>
+          <div className="divide-y divide-[#1e1e1e]">
+            {customBets.map((bet, idx) => (
+              <div key={idx} className="px-3 py-3 flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-[#555] text-[10px] w-5">#{q.matchId}</span>
-                  <span className="text-white text-sm font-bold">
-                    {match ? `${match.home} – ${match.away}` : `Wedstrijd ${q.matchId}`}
-                  </span>
-                  {pred?.toto && (
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30">
-                      {pred.toto}
-                    </span>
+                  <span className="text-[#FF6B00] text-xs font-bold">#{idx + 1}</span>
+                  {customBets.length > 1 && (
+                    <button
+                      onClick={() => setCustomBets((prev) => prev.filter((_, i) => i !== idx))}
+                      className="ml-auto text-[10px] text-red-400 hover:text-red-300"
+                    >
+                      Verwijder
+                    </button>
                   )}
-                  {pred?.uitslag && (
-                    <span className="text-[10px] font-heading font-bold text-white">
-                      {pred.uitslag}
-                    </span>
-                  )}
-                  {match && <span className="text-[#555] text-[10px] ml-auto">{match.date}</span>}
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-[10px] text-[#555]">Beschrijving</label>
+                  <input
+                    type="text"
+                    value={bet.description}
+                    onChange={(e) => setCustomBets((prev) => prev.map((b, i) => i === idx ? { ...b, description: e.target.value } : b))}
+                    placeholder="bv. Duitsland wint van Brazilië"
+                    className="bg-[#252525] border border-[#2a2a2a] text-white text-xs rounded-lg px-2 py-1.5 w-full outline-none focus:border-[#FF6B00]"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] text-[#555]">Wedstrijd(en)</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {matchIds.map((id) => {
+                      const m = MATCHES.find((x) => x.id === id)
+                      const selected = bet.matchIds.includes(id)
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setCustomBets((prev) => prev.map((b, i) => i === idx ? {
+                            ...b,
+                            matchIds: selected ? b.matchIds.filter((mid) => mid !== id) : [...b.matchIds, id],
+                          } : b))}
+                          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold border transition-colors ${
+                            selected
+                              ? 'bg-[#FF6B00]/20 border-[#FF6B00]/50 text-[#FF6B00]'
+                              : 'bg-[#252525] border-[#2a2a2a] text-[#888] hover:border-[#444]'
+                          }`}
+                        >
+                          {m ? `${m.home} – ${m.away}` : `#${id}`}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-[10px] text-[#555]">Toto odds</label>
+                    <label className="text-[10px] text-[#555]">Inzet (€)</label>
                     <input
                       type="number"
                       step="0.01"
-                      min="1"
-                      value={q.totoOdds}
-                      onChange={(e) => setQuotes((prev) => prev.map((x, i) => i === idx ? { ...x, totoOdds: e.target.value } : x))}
-                      placeholder="bv. 3.50"
+                      min="0"
+                      value={bet.inzet}
+                      onChange={(e) => setCustomBets((prev) => prev.map((b, i) => i === idx ? { ...b, inzet: e.target.value } : b))}
+                      placeholder="1.00"
                       className="bg-[#252525] border border-[#2a2a2a] text-white text-xs rounded-lg px-2 py-1.5 w-24 outline-none focus:border-[#FF6B00] [appearance:textfield]"
                     />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-[10px] text-[#555]">Uitslag odds</label>
+                    <label className="text-[10px] text-[#555]">Quotering</label>
                     <input
                       type="number"
                       step="0.01"
                       min="1"
-                      value={q.uitslagOdds}
-                      onChange={(e) => setQuotes((prev) => prev.map((x, i) => i === idx ? { ...x, uitslagOdds: e.target.value } : x))}
-                      placeholder="bv. 8.00"
+                      value={bet.quotering}
+                      onChange={(e) => setCustomBets((prev) => prev.map((b, i) => i === idx ? { ...b, quotering: e.target.value } : b))}
+                      placeholder="bv. 3.50"
                       className="bg-[#252525] border border-[#2a2a2a] text-white text-xs rounded-lg px-2 py-1.5 w-24 outline-none focus:border-[#FF6B00] [appearance:textfield]"
                     />
                   </div>
                 </div>
               </div>
-            )
-          })}
+            ))}
+          </div>
+          {customBets.length < 2 && (
+            <button
+              onClick={() => setCustomBets((prev) => [...prev, { description: '', matchIds: [], inzet: '', quotering: '' }])}
+              className="w-full py-2 text-xs text-[#FF6B00] hover:text-[#FF8C33] font-bold border-t border-[#1e1e1e]"
+            >
+              + Weddenschap toevoegen
+            </button>
+          )}
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Toto van de dag */}
+          <div className="rounded-xl border border-[#2a2a2a] p-3" style={{ background: 'rgba(22,22,22,0.82)' }}>
+            <p className="text-xs text-[#555] uppercase font-heading tracking-wide mb-2">Toto van de dag</p>
+            <select
+              value={totoInitials}
+              disabled={!rotations}
+              onChange={(e) => {
+                if (!rotations) return
+                const updated = [...rotations[groupId]]
+                updated[matchdayId - 1] = e.target.value
+                setRotations({ ...rotations, [groupId]: updated })
+                setRotationDirty(true)
+              }}
+              className="bg-[#252525] border border-[#2a2a2a] text-white text-sm font-bold rounded-lg px-2 py-1.5 outline-none focus:border-[#FF6B00] w-full"
+            >
+              {groupParticipants.map((p) => (
+                <option key={p.initials} value={p.initials}>{p.name}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-[#444] mt-1.5">
+              Zet de bets op Unibet op basis van de voorspellingen van deze deelnemer.
+            </p>
+          </div>
+
+          {/* Matches + quotes */}
+          <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+            <div className="px-3 py-2" style={{ background: 'rgba(10,10,10,0.75)' }}>
+              <p className="font-heading text-sm font-bold text-white">Unibet quoteringen</p>
+              <p className="text-[10px] text-[#555] mt-0.5">Voer de live odds in op het moment van inzetten.</p>
+            </div>
+            <div className="divide-y divide-[#1e1e1e]">
+              {quotes.map((q, idx) => {
+                const match = MATCHES.find((m) => m.id === q.matchId)
+                const pred = totoPredictions[q.matchId] ?? null
+                return (
+                  <div key={q.matchId} className="px-3 py-2.5 flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#555] text-[10px] w-5">#{q.matchId}</span>
+                      <span className="text-white text-sm font-bold">
+                        {match ? `${match.home} – ${match.away}` : `Wedstrijd ${q.matchId}`}
+                      </span>
+                      {pred?.toto && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30">
+                          {pred.toto}
+                        </span>
+                      )}
+                      {pred?.uitslag && (
+                        <span className="text-[10px] font-heading font-bold text-white">
+                          {pred.uitslag}
+                        </span>
+                      )}
+                      {match && <span className="text-[#555] text-[10px] ml-auto">{match.date}</span>}
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] text-[#555]">Toto odds</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="1"
+                          value={q.totoOdds}
+                          onChange={(e) => setQuotes((prev) => prev.map((x, i) => i === idx ? { ...x, totoOdds: e.target.value } : x))}
+                          placeholder="bv. 3.50"
+                          className="bg-[#252525] border border-[#2a2a2a] text-white text-xs rounded-lg px-2 py-1.5 w-24 outline-none focus:border-[#FF6B00] [appearance:textfield]"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] text-[#555]">Uitslag odds</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="1"
+                          value={q.uitslagOdds}
+                          onChange={(e) => setQuotes((prev) => prev.map((x, i) => i === idx ? { ...x, uitslagOdds: e.target.value } : x))}
+                          placeholder="bv. 8.00"
+                          className="bg-[#252525] border border-[#2a2a2a] text-white text-xs rounded-lg px-2 py-1.5 w-24 outline-none focus:border-[#FF6B00] [appearance:textfield]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Pot stand */}
       <div className="rounded-xl border border-[#2a2a2a] p-3" style={{ background: 'rgba(22,22,22,0.82)' }}>

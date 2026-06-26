@@ -3,8 +3,10 @@ import { forwardRef } from 'react'
 import { SlideWrapper } from '@/components/matchday/SlideWrapper'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { resolveTotoOdds, resolveUitslagOdds } from '@/lib/matchday'
-import type { MatchdayQuote } from '@/lib/matchday'
+import type { MatchdayQuote, CustomBet } from '@/lib/matchday'
 import type { MatchSlideData } from '@/lib/types/matchday'
+import { MATCHES } from '@/lib/data/matches'
+import { COUNTRY_ABB } from '@/lib/data/countries'
 
 interface Props {
   matchdayId: number
@@ -15,12 +17,84 @@ interface Props {
     participantToto: '1' | 'X' | '2' | null
     participantUitslag: string | null
   }>
+  customBets?: CustomBet[]
   exporting?: boolean
 }
 
 export const InzetSlide = forwardRef<HTMLDivElement, Props>(
-  ({ matchdayId, totoVanDeDagName, matchData, exporting = false }, ref) => {
+  ({ matchdayId, totoVanDeDagName, matchData, customBets, exporting = false }, ref) => {
     const padded = String(matchdayId).padStart(2, '0')
+
+    if (customBets && customBets.length > 0) {
+      return (
+        <SlideWrapper ref={ref} title={`INZET ${padded}`} titleFont="accent" minHeight={720}>
+          <div className="flex flex-col gap-5 mt-4 mx-2">
+            {customBets.map((bet, idx) => {
+              // backward compat: oude data heeft matchId (single), nieuwe heeft matchIds (array)
+              const resolvedMatchIds = bet.matchIds
+                ?? ((bet as unknown as { matchId?: number }).matchId != null
+                  ? [(bet as unknown as { matchId: number }).matchId]
+                  : [])
+              return (
+              <div
+                key={idx}
+                className="rounded-2xl px-5 py-5 flex flex-col gap-4"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,107,0,0.25)',
+                }}
+              >
+                {resolvedMatchIds.length > 0 && (
+                  <div className="flex flex-col gap-2 items-center">
+                    {resolvedMatchIds.map((mid) => {
+                      const m = MATCHES.find((x) => x.id === mid)
+                      if (!m) return null
+                      return (
+                        <div key={mid} className="flex items-center gap-2">
+                          <FlagImage country={m.home} size={24} />
+                          <span className="font-accent font-light text-sm text-white">
+                            {COUNTRY_ABB[m.home] ?? m.home}
+                          </span>
+                          <span className="font-heading text-white opacity-30">–</span>
+                          <span className="font-accent font-light text-sm text-white">
+                            {COUNTRY_ABB[m.away] ?? m.away}
+                          </span>
+                          <FlagImage country={m.away} size={24} />
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                <p className="font-heading text-[20px] text-white tracking-wide leading-snug text-center">
+                  {bet.description}
+                </p>
+
+                <div
+                  className="flex justify-between items-center pt-3"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.10)' }}
+                >
+                  <div className="flex flex-col items-center flex-1">
+                    <span className="font-heading text-[11px] text-[#888] tracking-wider uppercase">Inzet</span>
+                    <span className="font-heading text-[22px] text-white mt-1">
+                      € {bet.inzet.toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                  <div className="font-heading text-[20px] text-white opacity-30">×</div>
+                  <div className="flex flex-col items-center flex-1">
+                    <span className="font-heading text-[11px] text-[#888] tracking-wider uppercase">Quotering</span>
+                    <span className="font-heading text-[22px] text-[#FF6B00] mt-1">
+                      {bet.quotering.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              )
+            })}
+          </div>
+        </SlideWrapper>
+      )
+    }
 
     return (
       <SlideWrapper ref={ref} title={`INZET ${padded}`} titleFont="accent" minHeight={720}>

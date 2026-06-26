@@ -41,10 +41,19 @@ export function resolveUitslagOdds(q: MatchdayQuote | undefined, uitslag: string
   return q.uitslagOdds || 1
 }
 
+export interface CustomBet {
+  description: string
+  matchIds?: number[]
+  inzet: number
+  quotering: number
+}
+
+export const FIRST_CUSTOM_BET_MATCHDAY = 15
+
 export interface MatchdayConfig {
   matchdayId: number
   quotes?: MatchdayQuote[]  // legacy: gedeeld (backward compat)
-  og: { potStand: number; quotes?: MatchdayQuote[] }
+  og: { potStand: number; quotes?: MatchdayQuote[]; customBets?: CustomBet[] }
   asc: { potStand: number; quotes?: MatchdayQuote[] }
   savedAt: string
 }

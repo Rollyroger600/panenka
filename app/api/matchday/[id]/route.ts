@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { loadMatchdayConfig, saveMatchdayConfig, getOrCreateRotation } from '@/lib/matchday'
-import type { MatchdayConfig, MatchdayQuote } from '@/lib/matchday'
+import type { MatchdayConfig, MatchdayQuote, CustomBet } from '@/lib/matchday'
 import type { GroupId } from '@/lib/groups'
 
 async function isAdmin(): Promise<boolean> {
@@ -41,19 +41,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Invalid matchday' }, { status: 400 })
   }
 
-  const body = await req.json() as { group: GroupId; quotes: MatchdayQuote[]; potStand: number }
+  const body = await req.json() as {
+    group: GroupId
+    quotes: MatchdayQuote[]
+    potStand: number
+    customBets?: CustomBet[]
+  }
   const existing = await loadMatchdayConfig(matchdayId)
+  const groupUpdate: Record<string, unknown> = {
+    ...(existing?.[body.group] ?? { potStand: 0 }),
+    potStand: body.potStand,
+    quotes: body.quotes,
+  }
+  if (body.customBets !== undefined) {
+    groupUpdate.customBets = body.customBets
+  }
   const config: MatchdayConfig = {
     matchdayId,
     ...(existing?.quotes ? { quotes: existing.quotes } : {}),
     og: existing?.og ?? { potStand: 0 },
     asc: existing?.asc ?? { potStand: 0 },
     savedAt: new Date().toISOString(),
-    [body.group]: {
-      ...(existing?.[body.group] ?? { potStand: 0 }),
-      potStand: body.potStand,
-      quotes: body.quotes,
-    },
+    [body.group]: groupUpdate,
   }
 
   await saveMatchdayConfig(config)

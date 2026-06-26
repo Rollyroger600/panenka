@@ -1,6 +1,6 @@
 import type { Match } from '@/lib/data/matches'
 import type { MatchOdds } from '@/lib/data/odds'
-import type { MatchdayConfig, MatchdayScoreRow } from '@/lib/matchday'
+import type { MatchdayConfig, MatchdayScoreRow, CustomBet } from '@/lib/matchday'
 
 export interface MatchParticipantRow {
   initials: string
@@ -132,4 +132,5 @@ export interface FullMatchdayData {
   scores: MatchdayScoreRow[]
   potHistory: PotPoint[]          // pot stand for all saved matchdays up to this one
   scoreHistory: ScoreHistoryPoint[] // total per deelnemer per matchday (for line chart)
+  customBets?: CustomBet[]        // OG MD15+: custom bets instead of toto van de dag
 }
