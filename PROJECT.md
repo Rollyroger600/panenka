@@ -845,6 +845,22 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-26 — Token fix PN + MD17 rotation fix + pot updates (Claude Code)
+
+#### Redis data fix — PN tokens wedstrijd 58/61
+- `scripts\fix_pn_tokens.mjs`: eenmalig script. PN had 7 tokens op wedstrijd 58 (max 6). Tokens 58: 7→6, tokens 61: 3→4. Scores herberekend via admin panel.
+
+#### Redis data fix — ASC rotation MD17
+- `scripts\fix_md17_rotation.mjs`: eenmalig script. ASC rotation voor MD17 stond op BV (geen voorspellingen), gecorrigeerd naar RA. Inzet slide toonde daardoor geen naam/voorspellingen/quoteringen.
+
+#### Stand pagina — Pot tab OG en ASC
+- `app\(app)\stand\StandClient.tsx`: OG en ASC: Toto's en uitslagen matchday 16 en 17 (-5,00 elk).
+
+#### Stand pagina — Pot tab ASC
+- `app\(app)\stand\StandClient.tsx`: ASC: Winst Matchday 15 (+49,15) toegevoegd, Winst Matchday 14 (+13,80) verwijderd, Winst Matchday 05 gecorrigeerd (3,45→3,52).
+
+---
+
 ### 2026-06-26 — Custom bets (OG MD15+) + pot MD15 + winst MD13/14 (Claude Code)
 
 #### Matchday slides — custom weddenschappen (OG, MD15+)

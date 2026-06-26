@@ -51,6 +51,8 @@ interface PotRegel {
 const POT_REGELS: Record<string, PotRegel[]> = {
   og: [
     // Nieuwste bovenaan
+    { datum: '2026-06-26', omschrijving: "Toto's en uitslagen matchday 17", bedrag: -5 },
+    { datum: '2026-06-26', omschrijving: "Toto's en uitslagen matchday 16", bedrag: -5 },
     { datum: '2026-06-26', omschrijving: "Toto's en uitslagen matchday 15", bedrag: -5 },
     { datum: '2026-06-25', omschrijving: 'Winst Matchday 14', bedrag: 8.00 },
     { datum: '2026-06-25', omschrijving: "Toto's en uitslagen matchday 14", bedrag: -5 },
@@ -79,8 +81,10 @@ const POT_REGELS: Record<string, PotRegel[]> = {
   ],
   asc: [
     // Nieuwste bovenaan
+    { datum: '2026-06-26', omschrijving: "Toto's en uitslagen matchday 17", bedrag: -5 },
+    { datum: '2026-06-26', omschrijving: "Toto's en uitslagen matchday 16", bedrag: -5 },
+    { datum: '2026-06-26', omschrijving: 'Winst Matchday 15', bedrag: 49.15 },
     { datum: '2026-06-26', omschrijving: "Toto's en uitslagen matchday 15", bedrag: -5 },
-    { datum: '2026-06-25', omschrijving: 'Winst Matchday 14', bedrag: 13.80 },
     { datum: '2026-06-25', omschrijving: "Toto's en uitslagen matchday 14", bedrag: -5 },
     { datum: '2026-06-24', omschrijving: 'Winst Matchday 13', bedrag: 5.24 },
     { datum: '2026-06-24', omschrijving: "Toto's en uitslagen matchday 13", bedrag: -5 },
@@ -93,7 +97,7 @@ const POT_REGELS: Record<string, PotRegel[]> = {
     { datum: '2026-06-19', omschrijving: "Toto's en uitslagen matchday 08", bedrag: -5 },
     { datum: '2026-06-18', omschrijving: "Toto's en uitslagen matchday 07", bedrag: -5 },
     { datum: '2026-06-17', omschrijving: "Toto's en uitslagen matchday 06", bedrag: -5 },
-    { datum: '2026-06-17', omschrijving: 'Winst Matchday 05', bedrag: 3.45 },
+    { datum: '2026-06-17', omschrijving: 'Winst Matchday 05', bedrag: 3.52 },
     { datum: '2026-06-16', omschrijving: "Toto's en uitslagen matchday 05", bedrag: -5 },
     { datum: '2026-06-15', omschrijving: "Toto's en uitslagen matchday 04", bedrag: -5 },
     { datum: '2026-06-15', omschrijving: 'Winst welkomstbonus', bedrag: 100 },
