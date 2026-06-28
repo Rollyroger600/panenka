@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-28f — ASC groep matchday custom bets vanaf MD19 (Claude Code)
+
+**ASC-groep InzetSlide krijgt hetzelfde custom bets format als OG (admin-ingevoerde weddenschappen i.p.v. 4 wedstrijden met toto/uitslag)**
+- **`lib/matchday.ts`**: `FIRST_CUSTOM_BET_MATCHDAY` is nu een per-groep record (`{ og: 15, asc: 19 }`). `asc`-type in `MatchdayConfig` heeft nu ook `customBets?: CustomBet[]`.
+- **`app/api/matchday/[id]/full/route.ts`**: `useCustomBets` logica is nu groep-aware — leest custom bets uit `config[group]` i.p.v. hardcoded `config.og`.
+- **`app/admin/AdminClient.tsx`**: admin-interface toont weddenschappen-formulier ook voor ASC vanaf MD19, leest/schrijft naar de juiste groep-config.
+- **`lib/types/matchday.ts`**: comment bijgewerkt.
+
+---
+
 ### 2026-06-28e — KO deadline override voor specifieke deelnemers (Claude Code)
 
 **RA, TdL en RH mogen alsnog wedstrijd 73 invullen ondanks verstreken deadline**

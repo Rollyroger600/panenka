@@ -48,13 +48,13 @@ export interface CustomBet {
   quotering: number
 }
 
-export const FIRST_CUSTOM_BET_MATCHDAY = 15
+export const FIRST_CUSTOM_BET_MATCHDAY: Record<string, number> = { og: 15, asc: 19 }
 
 export interface MatchdayConfig {
   matchdayId: number
   quotes?: MatchdayQuote[]  // legacy: gedeeld (backward compat)
   og: { potStand: number; quotes?: MatchdayQuote[]; customBets?: CustomBet[] }
-  asc: { potStand: number; quotes?: MatchdayQuote[] }
+  asc: { potStand: number; quotes?: MatchdayQuote[]; customBets?: CustomBet[] }
   savedAt: string
 }
 

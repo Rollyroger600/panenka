@@ -144,8 +144,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const resolvedConfig = { ...config, quotes: getGroupQuotes(config, group) }
 
-  const useCustomBets = group === 'og' && matchdayId >= FIRST_CUSTOM_BET_MATCHDAY
-  const customBets = useCustomBets ? (config.og.customBets ?? []) : undefined
+  const useCustomBets = matchdayId >= (FIRST_CUSTOM_BET_MATCHDAY[group] ?? Infinity)
+  const customBets = useCustomBets ? (config[group].customBets ?? []) : undefined
 
   const data: FullMatchdayData = {
     matchdayId,

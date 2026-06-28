@@ -132,5 +132,5 @@ export interface FullMatchdayData {
   scores: MatchdayScoreRow[]
   potHistory: PotPoint[]          // pot stand for all saved matchdays up to this one
   scoreHistory: ScoreHistoryPoint[] // total per deelnemer per matchday (for line chart)
-  customBets?: CustomBet[]        // OG MD15+: custom bets instead of toto van de dag
+  customBets?: CustomBet[]        // OG MD15+, ASC MD19+: custom bets instead of toto van de dag
 }

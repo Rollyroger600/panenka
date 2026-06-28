@@ -849,7 +849,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
   const [totoPredictions, setTotoPredictions] = useState<Record<number, Prediction>>({})
   const [customBets, setCustomBets] = useState<Array<{ description: string; matchIds: number[]; inzet: string; quotering: string }>>([])
 
-  const useCustomBets = groupId === 'og' && matchdayId >= FIRST_CUSTOM_BET_MATCHDAY
+  const useCustomBets = matchdayId >= (FIRST_CUSTOM_BET_MATCHDAY[groupId] ?? Infinity)
 
   useEffect(() => {
     setLoading(true)
@@ -875,7 +875,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
           })
         )
         setPotStand(String(cfg[groupId]?.potStand ?? ''))
-        const existingBets: CustomBet[] = cfg.og?.customBets ?? []
+        const existingBets: CustomBet[] = cfg[groupId]?.customBets ?? []
         setCustomBets(
           existingBets.length > 0
             ? existingBets.map((b) => ({
