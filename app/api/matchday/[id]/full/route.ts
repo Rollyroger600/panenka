@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { kvGet, participantKey } from '@/lib/kv/kv'
 import { MATCHES } from '@/lib/data/matches'
 import { MATCH_ODDS } from '@/lib/data/odds'
+import { KO_MATCH_ODDS } from '@/lib/data/koMatchOdds'
 import { PARTICIPANTS } from '@/lib/participants'
 import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
@@ -18,6 +19,7 @@ import {
 import { getMatchesForMatchday, MATCHDAY_COUNT } from '@/lib/data/matchdayMap'
 import type { Prediction, KnockoutPicks, FantasySquad } from '@/store/gameStore'
 import type { MatchResult, FantasyStats } from '@/lib/scoring'
+import type { KoMatchTeams } from '@/app/actions/admin'
 import type { FullMatchdayData, MatchSlideData, MatchParticipantRow, PotPoint, ScoreHistoryPoint } from '@/lib/types/matchday'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -37,16 +39,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   // Load shared data
-  const [rotation, results, koResults, fantasyStats] = await Promise.all([
+  const [rotation, results, koResults, fantasyStats, koMatchTeams] = await Promise.all([
     getOrCreateRotation(group),
     kvGet<Record<number, MatchResult>>('results'),
     kvGet<Record<string, string[]>>('ko_results'),
     kvGet<FantasyStats>('fantasy_stats'),
+    kvGet<KoMatchTeams>('ko_match_teams'),
   ])
 
   const safeResults = results ?? {}
   const safeKoResults = koResults ?? {}
   const safeFstats = fantasyStats ?? {}
+  const safeKoTeams = koMatchTeams ?? {}
 
   // Determine totoVanDeDag
   const totoParticipant = getTotoVanDeDag(rotation, matchdayId)
@@ -84,10 +88,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const matchSlides: MatchSlideData[][] = slideGroups.map((ids) =>
     ids.map((matchId) => {
-      const match = MATCHES.find((m) => m.id === matchId)
-      if (!match) return null
+      const staticMatch = MATCHES.find((m) => m.id === matchId)
+      if (!staticMatch) return null
 
-      const odds = MATCH_ODDS[matchId] ?? null
+      const koTeam = safeKoTeams[matchId]
+      const match = koTeam
+        ? { ...staticMatch, home: koTeam.home, away: koTeam.away }
+        : staticMatch
+
+      const odds = (matchId > 72 ? KO_MATCH_ODDS[matchId] : MATCH_ODDS[matchId]) ?? null
 
       const participantRows: MatchParticipantRow[] = groupParticipants.map((p) => {
         const pred = predsByInitials[p.initials]?.[matchId]

@@ -3898,6 +3898,27 @@ De admin ESPN import route had zijn eigen matching (via middleName/fullName). Nu
 
 ---
 
+### 2026-06-28 — Matchday slides KO-fix + late predictions LV/TG (Claude Code)
+
+#### Matchday slides: KO-wedstrijden tonen nu landen, quoteringen en fantasy spelers (`app/api/matchday/[id]/full/route.ts`)
+
+**Probleem:** Op de matchday slides toonden KO-wedstrijden (73+) "TBD" in plaats van landvlaggen en 3-letter codes. Ook ontbraken de quoteringen en fantasy spelers.
+
+**Oorzaak (3 bugs):**
+1. De API route gebruikte alleen de statische `MATCHES` array waar KO-wedstrijden hardcoded als `TBD` staan — de dynamische teams uit Redis (`ko_match_teams`) werden niet gemerged.
+2. Odds kwamen alleen uit `MATCH_ODDS` (groepsfase 1-72); `KO_MATCH_ODDS` werd niet geraadpleegd voor wedstrijden 73+.
+3. `getFantasyPlayersForMatch()` matcht op landnaam, dus met "TBD" kon het nooit fantasy spelers vinden.
+
+**Fix:** `ko_match_teams` wordt nu geladen uit Redis en gemerged met de statische match data. Voor matchId > 72 worden `KO_MATCH_ODDS` gebruikt i.p.v. `MATCH_ODDS`.
+
+#### Late predictions: LV en TG wedstrijd 73 (Redis)
+
+Laurens (LV) en Timo (TG) hadden hun voorspelling voor wedstrijd 73 te laat ingediend. Handmatig toegevoegd aan Redis:
+- LV: 1 token, toto 2, uitslag 1-2
+- TG: 1 token, toto 2, uitslag 0-2
+
+---
+
 ### 2026-06-13 — Live slide bug: gegevens vorige wedstrijd zichtbaar tijdens nieuwe wedstrijd (Claude Code)
 
 #### Live slide toont nu alleen actieve (IN_PLAY/PAUSED) wedstrijden (`components/matchday/MatchdayDrawer.tsx`)
