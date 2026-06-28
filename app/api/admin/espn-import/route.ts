@@ -10,6 +10,10 @@ export interface EspnImportPreview {
   uitslag: string
   toto: '1' | 'X' | '2'
   status: string
+  // KO-wedstrijden: totale score na verlenging (verschilt van uitslag als er verlengd is)
+  totalUitslag?: string
+  // Team dat de strafschoppenserie won ('home' | 'away'), null als er geen penalties waren
+  penaltyWinner?: 'home' | 'away' | null
   matched: Array<{
     espnName: string
     internalName: string
@@ -24,6 +28,26 @@ export interface EspnImportPreview {
     assists: number
   }>
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getGoalPhase(clockDisplay: string, isPenaltyKick: boolean): 'regular' | 'extratime' | 'shootout' {
+  const s = clockDisplay.replace("'", '').trim()
+  if (s.includes('+')) {
+    const base = parseInt(s.split('+')[0])
+    return base <= 90 ? 'regular' : 'extratime'
+  }
+  const minute = parseInt(s) || 0
+  if (minute <= 90) return 'regular'
+  if (minute > 120 && isPenaltyKick) return 'shootout'
+  return 'extratime'
+}
+
+function isPenaltyStatus(status: string): boolean {
+  return ['After Pen.', 'Final/Penalties'].includes(status)
+}
+
+// ─── Route ────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   const store = await cookies()
@@ -40,6 +64,8 @@ export async function GET(req: NextRequest) {
   if (!espnId) {
     return NextResponse.json({ error: 'Geen ESPN ID voor deze wedstrijd' }, { status: 404 })
   }
+
+  const isKo = matchId > 72
 
   let summary: Record<string, unknown>
   try {
@@ -60,33 +86,66 @@ export async function GET(req: NextRequest) {
   const awayComp = comp.competitors?.find((c: any) => c.homeAway === 'away')
   const scoreHome = parseInt(homeComp?.score ?? '0') || 0
   const scoreAway = parseInt(awayComp?.score ?? '0') || 0
-  const uitslag = `${scoreHome}-${scoreAway}`
-  const toto: '1' | 'X' | '2' = scoreHome > scoreAway ? '1' : scoreAway > scoreHome ? '2' : 'X'
   const status: string = comp.status?.type?.description ?? 'Onbekend'
 
   // Doelpunten en assists extraheren uit rosters
   const rosters: any[] = (summary.rosters as any[]) ?? []
   const goalsByScorer: Record<string, number> = {}
   const assistsByScorer: Record<string, number> = {}
+  const reguliereScore = { home: 0, away: 0 }
 
   for (const roster of rosters) {
+    const team: string = roster.homeAway
     for (const player of roster.roster ?? []) {
       const name: string = player.athlete?.displayName ?? ''
       for (const play of player.plays ?? []) {
-        if (play.didAssist) assistsByScorer[name] = (assistsByScorer[name] ?? 0) + 1
-        if (play.didScore) goalsByScorer[name] = (goalsByScorer[name] ?? 0) + 1
+        const clockDisplay: string = play.clock?.displayValue ?? '0'
+        const phase = isKo ? getGoalPhase(clockDisplay, play.penaltyKick ?? false) : 'regular'
+
+        if (play.didAssist) {
+          if (phase !== 'shootout') {
+            assistsByScorer[name] = (assistsByScorer[name] ?? 0) + 1
+          }
+        }
+        if (play.didScore) {
+          // Reguliere score bijhouden (voor toto/uitslag)
+          if (phase === 'regular') {
+            const isOwn = play.ownGoal ?? false
+            if (team === 'home') { isOwn ? reguliereScore.away++ : reguliereScore.home++ }
+            else                { isOwn ? reguliereScore.home++ : reguliereScore.away++ }
+          }
+          // Fantasy: reguliere + verlenging, geen strafschoppenserie
+          if (phase !== 'shootout') {
+            goalsByScorer[name] = (goalsByScorer[name] ?? 0) + 1
+          }
+        }
       }
     }
   }
 
+  // KO-wedstrijden: toto/uitslag op basis van reguliere stand
+  const effectiveHome = isKo ? reguliereScore.home : scoreHome
+  const effectiveAway = isKo ? reguliereScore.away : scoreAway
+  const uitslag = `${effectiveHome}-${effectiveAway}`
+  const toto: '1' | 'X' | '2' = effectiveHome > effectiveAway ? '1' : effectiveAway > effectiveHome ? '2' : 'X'
+
+  // Totale score na verlenging (als die afwijkt van reguliere stand)
+  const totalDiffers = isKo && (scoreHome !== effectiveHome || scoreAway !== effectiveAway)
+  const totalUitslag = totalDiffers ? `${scoreHome}-${scoreAway}` : undefined
+
+  // Strafschoppenserie: wie won?
+  let penaltyWinner: 'home' | 'away' | null = null
+  if (isKo && isPenaltyStatus(status)) {
+    if (homeComp?.winner === true) penaltyWinner = 'home'
+    else if (awayComp?.winner === true) penaltyWinner = 'away'
+  }
+
   // ESPN displayName → interne spelersnaam
-  // 1. Expliciete map (ESPN_PLAYER_MAP omgekeerd: ESPN name → player)
   const espnToPlayer = new Map<string, { id: number; name: string; country: string }>()
   for (const p of WK_PLAYERS) {
     const espnName = ESPN_PLAYER_MAP[p.id]
     if (espnName) espnToPlayer.set(espnName.toLowerCase().trim(), { id: p.id, name: p.name, country: p.country })
   }
-  // 2. Fallback: middleName / fullName (voor spelers niet in de expliciete map)
   for (const p of WK_PLAYERS) {
     const mid  = p.middleName.toLowerCase().trim()
     const full = p.fullName.toLowerCase().trim()
@@ -114,5 +173,11 @@ export async function GET(req: NextRequest) {
   matched.sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists))
   unmatched.sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists))
 
-  return NextResponse.json({ uitslag, toto, status, matched, unmatched } satisfies EspnImportPreview)
+  const result: EspnImportPreview = {
+    uitslag, toto, status, matched, unmatched,
+    ...(totalUitslag ? { totalUitslag } : {}),
+    ...(penaltyWinner != null ? { penaltyWinner } : {}),
+  }
+
+  return NextResponse.json(result)
 }

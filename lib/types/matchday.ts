@@ -18,6 +18,7 @@ export interface MatchSlideData {
   match: Match
   odds: MatchOdds | null
   participantRows: MatchParticipantRow[]
+  locked?: boolean
 }
 
 export interface PotPoint {
@@ -35,6 +36,7 @@ export interface LiveGoalEvent {
   minute: number
   team: 'home' | 'away'
   type: 'REGULAR' | 'PENALTY' | 'OWN'
+  phase: 'regular' | 'extratime' | 'shootout'
   assister?: string
 }
 
@@ -116,6 +118,8 @@ export interface LiveMatchData {
   awayFormation?: string | null
   homeStats?: LiveMatchStats | null
   awayStats?: LiveMatchStats | null
+  homeTeamName?: string | null
+  awayTeamName?: string | null
   // ESPN-provided team display info (overschrijft landvlag/afkorting bij club-wedstrijden)
   homeTeamAbbr?: string | null
   awayTeamAbbr?: string | null

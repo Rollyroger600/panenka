@@ -86,6 +86,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ? [matchIds]                           // 1 slide: both matches
     : [matchIds.slice(0, 2), matchIds.slice(2)]  // 2 slides
 
+  const TWO_HOURS_MS = 2 * 60 * 60 * 1000
+  const now = Date.now()
+
   const matchSlides: MatchSlideData[][] = slideGroups.map((ids) =>
     ids.map((matchId) => {
       const staticMatch = MATCHES.find((m) => m.id === matchId)
@@ -98,7 +101,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
       const odds = (matchId > 72 ? KO_MATCH_ODDS[matchId] : MATCH_ODDS[matchId]) ?? null
 
+      const locked = matchId > 72 && koTeam?.kickoff
+        ? now < new Date(koTeam.kickoff).getTime() - TWO_HOURS_MS
+        : false
+
       const participantRows: MatchParticipantRow[] = groupParticipants.map((p) => {
+        if (locked) {
+          return {
+            initials: p.initials,
+            name: p.name,
+            tokens: null,
+            toto: null,
+            uitslag: null,
+            uitslagQuote: null,
+            fantasyHome: null,
+            fantasyAway: null,
+          }
+        }
         const pred = predsByInitials[p.initials]?.[matchId]
         const squad = squadsByInitials[p.initials] ?? {}
         const { home: fantasyHome, away: fantasyAway } = getFantasyPlayersForMatch(
@@ -118,7 +137,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         }
       })
 
-      return { matchId, match, odds, participantRows } as MatchSlideData
+      return { matchId, match, odds, participantRows, ...(locked ? { locked } : {}) } as MatchSlideData
     }).filter(Boolean) as MatchSlideData[]
   )
 

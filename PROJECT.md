@@ -845,6 +845,38 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-28i — Admin ESPN import KO-aware + score picker fix (Claude Code)
+
+**Admin ESPN-import toont nu reguliere-tijd score voor KO-wedstrijden**
+- **`app/api/admin/espn-import/route.ts`**: volledig herschreven voor KO-wedstrijden. Toto/uitslag gebaseerd op reguliere stand (90'+blessuretijd). Goals/assists inclusief verlenging, exclusief strafschoppenserie. Nieuw: `totalUitslag` (na verlenging) en `penaltyWinner` ('home'/'away') in response.
+- **`app/admin/AdminClient.tsx`**: ESPN preview toont "n.v. X-Y" bij verlenging en "P → thuis/uit" bij penalties. `hasOdds` check gebruikt nu ook `KO_MATCH_ODDS` voor score picker bij KO-wedstrijden.
+
+---
+
+### 2026-06-28h — KO verlenging/penalties scoring regels (Claude Code)
+
+**Live match slides: toto/uitslag op reguliere stand, fantasy inclusief verlenging**
+- **`lib/types/matchday.ts`**: `LiveGoalEvent` heeft nu een `phase` veld: `'regular' | 'extratime' | 'shootout'`.
+- **`app/api/matchday/live/route.ts`**: `getGoalPhase()` helper bepaalt per doelpunt de fase op basis van clock display (base ≤90 = regular, >90 zonder + = extratime, >120 + penalty = shootout). `extractGoals()` retourneert nu ook `reguliereScore`. `totoNow`/`uitslagNow` gebruiken de reguliere stand. `isReguliereTijdVoorbij()` detecteert extra time/shootout status. `computeUitslagState` behandelt reguliere stand als definitief zodra verlenging begint. Fantasy goals/assists tellen reguliere + verlenging, geen shootout.
+- **`app/api/match/[id]/goals/route.ts`**: `phase` veld toegevoegd aan goal events.
+- **`app/matchday-preview/page.tsx`**: mock data bijgewerkt met `phase` veld.
+
+---
+
+### 2026-06-28g — KO matchday slides voorspellingen verbergen + live match slide fixes (Claude Code)
+
+**Matchday slides: voorspellingen pas zichtbaar vanaf 2u voor aftrap**
+- **`lib/types/matchday.ts`**: `MatchSlideData` heeft nu `locked?: boolean`. `LiveMatchData` heeft nu `homeTeamName`/`awayTeamName`.
+- **`app/api/matchday/[id]/full/route.ts`**: voor KO-wedstrijden wordt de kickoff-tijd uit `ko_match_teams` KV vergeleken met `now - 2u`. Locked wedstrijden krijgen geblankeerde voorspellingen.
+- **`components/matchday/slides/MatchSlide.tsx`**: locked wedstrijden tonen "Voorspellingen verborgen tot 2u voor aftrap" header met 🔒 icoon per deelnemer.
+
+**Live match slide werkt nu voor KO-wedstrijden**
+- **`lib/data/espnMatchIds.ts`**: ESPN event IDs toegevoegd voor alle 16 rv32 wedstrijden (73-88).
+- **`app/api/matchday/live/route.ts`**: gebruikt nu `KO_MATCH_ODDS` voor KO-wedstrijden. Laadt `ko_match_teams` uit KV voor correcte team names + fantasy matching. Extra-time/penalty ESPN statussen toegevoegd aan `espnStatusToInternal`.
+- **`components/matchday/slides/LiveSlide.tsx`**: gebruikt `homeTeamName`/`awayTeamName` uit API response i.p.v. statische TBD matches.
+
+---
+
 ### 2026-06-28f — ASC groep matchday custom bets vanaf MD19 (Claude Code)
 
 **ASC-groep InzetSlide krijgt hetzelfde custom bets format als OG (admin-ingevoerde weddenschappen i.p.v. 4 wedstrijden met toto/uitslag)**

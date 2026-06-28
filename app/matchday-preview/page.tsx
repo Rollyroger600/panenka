@@ -131,9 +131,9 @@ const MOCK_LIVE: LiveMatchData[] = [
     score: { home: 2, away: 1 },
     minute: 67,
     goals: [
-      { scorer: 'M. Depay', minute: 23, team: 'home', type: 'REGULAR' },
-      { scorer: 'L. Martinez', minute: 45, team: 'away', type: 'PENALTY' },
-      { scorer: 'C. Gakpo', minute: 67, team: 'home', type: 'REGULAR' },
+      { scorer: 'M. Depay', minute: 23, team: 'home', type: 'REGULAR', phase: 'regular' as const },
+      { scorer: 'L. Martinez', minute: 45, team: 'away', type: 'PENALTY', phase: 'regular' as const },
+      { scorer: 'C. Gakpo', minute: 67, team: 'home', type: 'REGULAR', phase: 'regular' as const },
     ],
     participantRows: OG.map((p, i) => {
       const totos: Array<'1' | 'X' | '2'> = ['1', '1', 'X', '2', '1', '1', 'X', '2', '1', '1', 'X', '2', '1', '1', '2']

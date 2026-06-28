@@ -44,7 +44,7 @@ interface Props {
 }
 
 function MatchSection({ data, last }: { data: MatchSlideData; last?: boolean }) {
-  const { match, odds, participantRows } = data
+  const { match, odds, participantRows, locked } = data
 
   return (
     <div className={last ? 'mb-0' : 'mb-3'}>
@@ -71,83 +71,118 @@ function MatchSection({ data, last }: { data: MatchSlideData; last?: boolean }) 
         </p>
       </div>
 
-      {/* Kolomkoppen — single flex row zodat verticale lijnen doorlopend zijn */}
-      <div
-        className="flex border-b font-heading uppercase"
-        style={{ borderColor: 'rgba(255,255,255,0.15)', paddingBottom: 2 }}
-      >
-        {/* Naam */}
-        <div style={{ width: W.name, borderRight: VLINE }} />
-
-        {/* Inzet */}
-        <div style={{ width: W.inzet, borderRight: VLINE, ...HDR }} className="flex items-center justify-center">
-          Inzet
-        </div>
-
-        {/* Toto — sub-koppen 1 / X / 2 */}
-        <div style={{ width: W.toto1 + W.totoX + W.toto2, borderRight: VLINE }} className="flex items-center">
-          <div style={{ width: W.toto1, ...HDR }} className="flex justify-center">1</div>
-          <div style={{ width: W.totoX, ...HDR }} className="flex justify-center">X</div>
-          <div style={{ width: W.toto2, ...HDR }} className="flex justify-center">2</div>
-        </div>
-
-        {/* Uitslag Voorspelling — merged */}
-        <div style={{ width: W.uitslag + W.quote, borderRight: VLINE, ...HDR }} className="flex items-center justify-center">
-          Uitslag Voorspelling
-        </div>
-
-        {/* Fantasy XV — vlaggen boven eigen kolom, titel gecentreerd */}
-        <div style={{ flex: 2, position: 'relative' }} className="flex items-center">
-          <div style={{ flex: 1 }} className="flex justify-center">
-            <FlagImage country={match.home} size={10} />
-          </div>
-          <span className="absolute left-1/2 -translate-x-1/2 font-heading uppercase" style={HDR}>
-            Fantasy XV
-          </span>
-          <div style={{ flex: 1 }} className="flex justify-center">
-            <FlagImage country={match.away} size={10} />
+      {/* Kolomkoppen */}
+      {locked ? (
+        <div
+          className="flex border-b font-heading uppercase"
+          style={{ borderColor: 'rgba(255,255,255,0.15)', paddingBottom: 2 }}
+        >
+          <div style={{ width: W.name, borderRight: VLINE }} />
+          <div className="flex-1 flex items-center justify-center" style={HDR}>
+            Voorspellingen verborgen tot 2u voor aftrap
           </div>
         </div>
-      </div>
+      ) : (
+        <div
+          className="flex border-b font-heading uppercase"
+          style={{ borderColor: 'rgba(255,255,255,0.15)', paddingBottom: 2 }}
+        >
+          {/* Naam */}
+          <div style={{ width: W.name, borderRight: VLINE }} />
+
+          {/* Inzet */}
+          <div style={{ width: W.inzet, borderRight: VLINE, ...HDR }} className="flex items-center justify-center">
+            Inzet
+          </div>
+
+          {/* Toto — sub-koppen 1 / X / 2 */}
+          <div style={{ width: W.toto1 + W.totoX + W.toto2, borderRight: VLINE }} className="flex items-center">
+            <div style={{ width: W.toto1, ...HDR }} className="flex justify-center">1</div>
+            <div style={{ width: W.totoX, ...HDR }} className="flex justify-center">X</div>
+            <div style={{ width: W.toto2, ...HDR }} className="flex justify-center">2</div>
+          </div>
+
+          {/* Uitslag Voorspelling — merged */}
+          <div style={{ width: W.uitslag + W.quote, borderRight: VLINE, ...HDR }} className="flex items-center justify-center">
+            Uitslag Voorspelling
+          </div>
+
+          {/* Fantasy XV — vlaggen boven eigen kolom, titel gecentreerd */}
+          <div style={{ flex: 2, position: 'relative' }} className="flex items-center">
+            <div style={{ flex: 1 }} className="flex justify-center">
+              <FlagImage country={match.home} size={10} />
+            </div>
+            <span className="absolute left-1/2 -translate-x-1/2 font-heading uppercase" style={HDR}>
+              Fantasy XV
+            </span>
+            <div style={{ flex: 1 }} className="flex justify-center">
+              <FlagImage country={match.away} size={10} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Deelnemerssrijen */}
-      {participantRows.map((row) => (
-        <div
-          key={row.initials}
-          className="flex border-b"
-          style={{ borderColor: 'rgba(255,255,255,0.05)' }}
-        >
-          {[
-            { w: W.name,    vline: true,  content: <span className="font-heading text-[9px] truncate">{row.name}</span>, left: true  },
-            { w: W.inzet,   vline: true,  content: row.tokens ?? '',                              left: false },
-            { w: W.toto1,   vline: false, content: row.toto === '1' ? fmt(odds?.home) : '',  left: false },
-            { w: W.totoX,   vline: false, content: row.toto === 'X' ? fmt(odds?.draw) : '',  left: false },
-            { w: W.toto2,   vline: true,  content: row.toto === '2' ? fmt(odds?.away) : '',  left: false },
-            { w: W.uitslag, vline: false, content: fmtUitslag(row.uitslag),                   left: false },
-            { w: W.quote,   vline: true,  content: fmt(row.uitslagQuote),                     left: false },
-          ].map(({ w, vline, content, left }, i) => (
+      {locked ? (
+        participantRows.map((row) => (
+          <div
+            key={row.initials}
+            className="flex border-b"
+            style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+          >
             <div
-              key={i}
-              className={`font-heading text-[9px] text-white flex items-center ${left ? 'justify-start' : 'justify-center'}`}
-              style={{ width: w, flexShrink: 0, paddingTop: 0, paddingBottom: 0, borderRight: vline ? VLINE : undefined }}
+              className="font-heading text-[9px] text-white flex items-center justify-start"
+              style={{ width: W.name, flexShrink: 0, borderRight: VLINE }}
             >
-              {content}
+              <span className="font-heading text-[9px] truncate">{row.name}</span>
             </div>
-          ))}
-          <div
-            className="font-heading text-white flex items-center justify-center truncate px-0.5"
-            style={{ flex: 1, fontSize: 8, paddingTop: 0, paddingBottom: 0 }}
-          >
-            {middleName(row.fantasyHome ?? '')}
+            <div
+              className="flex-1 flex items-center justify-center"
+              style={{ color: MUTED, fontSize: 9 }}
+            >
+              🔒
+            </div>
           </div>
+        ))
+      ) : (
+        participantRows.map((row) => (
           <div
-            className="font-heading text-white flex items-center justify-center truncate px-0.5"
-            style={{ flex: 1, fontSize: 8, paddingTop: 0, paddingBottom: 0 }}
+            key={row.initials}
+            className="flex border-b"
+            style={{ borderColor: 'rgba(255,255,255,0.05)' }}
           >
-            {middleName(row.fantasyAway ?? '')}
+            {[
+              { w: W.name,    vline: true,  content: <span className="font-heading text-[9px] truncate">{row.name}</span>, left: true  },
+              { w: W.inzet,   vline: true,  content: row.tokens ?? '',                              left: false },
+              { w: W.toto1,   vline: false, content: row.toto === '1' ? fmt(odds?.home) : '',  left: false },
+              { w: W.totoX,   vline: false, content: row.toto === 'X' ? fmt(odds?.draw) : '',  left: false },
+              { w: W.toto2,   vline: true,  content: row.toto === '2' ? fmt(odds?.away) : '',  left: false },
+              { w: W.uitslag, vline: false, content: fmtUitslag(row.uitslag),                   left: false },
+              { w: W.quote,   vline: true,  content: fmt(row.uitslagQuote),                     left: false },
+            ].map(({ w, vline, content, left }, i) => (
+              <div
+                key={i}
+                className={`font-heading text-[9px] text-white flex items-center ${left ? 'justify-start' : 'justify-center'}`}
+                style={{ width: w, flexShrink: 0, paddingTop: 0, paddingBottom: 0, borderRight: vline ? VLINE : undefined }}
+              >
+                {content}
+              </div>
+            ))}
+            <div
+              className="font-heading text-white flex items-center justify-center truncate px-0.5"
+              style={{ flex: 1, fontSize: 8, paddingTop: 0, paddingBottom: 0 }}
+            >
+              {middleName(row.fantasyHome ?? '')}
+            </div>
+            <div
+              className="font-heading text-white flex items-center justify-center truncate px-0.5"
+              style={{ flex: 1, fontSize: 8, paddingTop: 0, paddingBottom: 0 }}
+            >
+              {middleName(row.fantasyAway ?? '')}
+            </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
 
     </div>
   )

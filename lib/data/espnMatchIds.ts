@@ -80,6 +80,24 @@ export const ESPN_MATCH_IDS: Record<number, number> = {
   71: 760484,  // Algerije vs Oostenrijk
   72: 760483,  // Jordanië vs Argentinië
 
-  // ─── Knock-out fase (73–104) ──────────────────────────────────────────────
-  // Aanvullen zodra ESPN de knock-out wedstrijden publiceert (verwacht ~1 jul)
+  // ─── Knock-out fase: Ronde van 32 (73–88) ──────────────────────────────────
+  73: 760486,  // Zuid-Afrika vs Canada
+  74: 760489,  // Duitsland vs Paraguay
+  75: 760488,  // Nederland vs Marokko
+  76: 760487,  // Brazilië vs Japan
+  77: 760492,  // Frankrijk vs Zweden
+  78: 760490,  // Ivoorkust vs Noorwegen
+  79: 760491,  // Mexico vs Ecuador
+  80: 760495,  // Engeland vs DR Congo
+  81: 760494,  // Verenigde Staten vs Bosnië en Herzegovina
+  82: 760493,  // België vs Senegal
+  83: 760496,  // Portugal vs Kroatië
+  84: 760497,  // Spanje vs Oostenrijk
+  85: 760498,  // Zwitserland vs Algerije
+  86: 760500,  // Argentinië vs Kaapverdië
+  87: 760501,  // Colombia vs Ghana
+  88: 760499,  // Australië vs Egypte
+
+  // ─── Knock-out fase: Ronde van 16+ (89–104) ──────────────────────────────
+  // Aanvullen zodra ESPN de wedstrijden publiceert
 }

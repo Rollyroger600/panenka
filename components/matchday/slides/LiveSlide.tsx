@@ -593,7 +593,12 @@ export const LiveSlide = forwardRef<HTMLDivElement, Props>(
   ({ matchdayId, liveMatch, exporting = false }, ref) => {
     void String(matchdayId).padStart(2, '0')
 
-    const match = MATCHES.find((m) => m.id === liveMatch.matchId)
+    const staticMatch = MATCHES.find((m) => m.id === liveMatch.matchId)
+    const match = staticMatch ? {
+      ...staticMatch,
+      home: liveMatch.homeTeamName ?? staticMatch.home,
+      away: liveMatch.awayTeamName ?? staticMatch.away,
+    } : null
 
     return (
       <SlideWrapper

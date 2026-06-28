@@ -23,6 +23,18 @@ interface EspnRoster {
   roster?: EspnRosterEntry[]
 }
 
+function getGoalPhase(clockDisplay: string, isPenaltyKick: boolean): 'regular' | 'extratime' | 'shootout' {
+  const s = clockDisplay.replace("'", '').trim()
+  if (s.includes('+')) {
+    const base = parseInt(s.split('+')[0])
+    return base <= 90 ? 'regular' : 'extratime'
+  }
+  const minute = parseInt(s) || 0
+  if (minute <= 90) return 'regular'
+  if (minute > 120 && isPenaltyKick) return 'shootout'
+  return 'extratime'
+}
+
 function parseMinute(displayValue: string): number {
   const s = displayValue.replace("'", '').trim()
   if (s === 'HT') return 45
@@ -56,13 +68,15 @@ function extractGoals(rosters: EspnRoster[]): LiveGoalEvent[] {
       const name = player.athlete?.displayName ?? ''
       for (const play of player.plays ?? []) {
         if (play.didScore) {
-          const minute = parseMinute(play.clock?.displayValue ?? '0')
+          const clockDisplay = play.clock?.displayValue ?? '0'
+          const minute = parseMinute(clockDisplay)
           const assister = assistByMinuteTeam[`${minute}-${team}`]
           goals.push({
             scorer: name,
             minute,
             team,
             type: play.ownGoal ? 'OWN' : play.penaltyKick ? 'PENALTY' : 'REGULAR',
+            phase: getGoalPhase(clockDisplay, play.penaltyKick ?? false),
             ...(assister ? { assister } : {}),
           })
         }

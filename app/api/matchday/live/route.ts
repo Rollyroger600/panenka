@@ -8,6 +8,7 @@ import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { ESPN_MATCH_IDS } from '@/lib/data/espnMatchIds'
 import { ESPN_PLAYER_MAP } from '@/lib/data/espnPlayerMap'
 import { MATCH_ODDS } from '@/lib/data/odds'
+import { KO_MATCH_ODDS } from '@/lib/data/koMatchOdds'
 import { computePlayerQuote, normalizeUitslag } from '@/lib/helpers'
 import { ALL_SLOTS } from '@/lib/data/slots'
 import type { GroupId } from '@/lib/groups'
@@ -97,19 +98,60 @@ function normName(s: string): string {
   return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim()
 }
 
+function isReguliereTijdVoorbij(description: string): boolean {
+  switch (description) {
+    case 'Extra Time':
+    case 'Extra Time First Half':
+    case 'Extra Time Second Half':
+    case 'Extra Time Half Time':
+    case 'Overtime':
+    case 'Penalty Shootout':
+    case 'Penalties':
+    case 'After Extra Time':
+    case 'After Pen.':
+    case 'Final/Penalties':
+      return true
+    default:
+      return false
+  }
+}
+
 function espnStatusToInternal(description: string): 'IN_PLAY' | 'PAUSED' | 'FINISHED' | null {
   switch (description) {
     case 'In Progress':
     case 'First Half':
-    case 'Second Half': return 'IN_PLAY'
+    case 'Second Half':
+    case 'Extra Time':
+    case 'Extra Time First Half':
+    case 'Extra Time Second Half':
+    case 'Overtime':
+    case 'Penalty Shootout':
+    case 'Penalties':          return 'IN_PLAY'
     case 'Half Time':
     case 'Halftime':
     case 'End of Period':
-    case 'Intermission': return 'PAUSED'
+    case 'Intermission':
+    case 'Extra Time Half Time': return 'PAUSED'
     case 'Full Time':
-    case 'Final':       return 'FINISHED'
-    default:            return null
+    case 'Final':
+    case 'Final - Loss':
+    case 'After Extra Time':
+    case 'After Pen.':
+    case 'Final/Penalties':    return 'FINISHED'
+    default:                   return null
   }
+}
+
+function getGoalPhase(clockDisplay: string, isPenaltyKick: boolean): 'regular' | 'extratime' | 'shootout' {
+  const s = clockDisplay.replace("'", '').trim()
+  if (s.includes('+')) {
+    const base = parseInt(s.split('+')[0])
+    return base <= 90 ? 'regular' : 'extratime'
+  }
+  const minute = parseInt(s) || 0
+  if (minute <= 90) return 'regular'
+  if (minute > 120 && isPenaltyKick) return 'shootout'
+  return 'extratime'
 }
 
 function parseEspnMinute(displayValue: string): number {
@@ -166,12 +208,14 @@ function extractGoals(rosters: EspnRoster[]): {
   goals: LiveGoalEvent[]
   goalsByScorer: Record<string, number>
   assistsByScorer: Record<string, number>
+  reguliereScore: { home: number; away: number }
 } {
   const goals: LiveGoalEvent[] = []
   const goalsByScorer: Record<string, number> = {}
   const assistsByScorer: Record<string, number> = {}
-  // minute+team → assister name, for linking to goals
-  const assistByMinuteTeam: Record<string, string> = {}
+  const reguliereScore = { home: 0, away: 0 }
+  // minute+team → assister name + phase, for linking to goals
+  const assistByMinuteTeam: Record<string, { name: string; phase: 'regular' | 'extratime' | 'shootout' }> = {}
 
   for (const roster of rosters) {
     const team = roster.homeAway
@@ -179,9 +223,13 @@ function extractGoals(rosters: EspnRoster[]): {
       const name = player.athlete?.displayName ?? ''
       for (const play of player.plays ?? []) {
         if (play.didAssist) {
-          assistsByScorer[name] = (assistsByScorer[name] ?? 0) + 1
-          const min = parseEspnMinute(play.clock?.displayValue ?? '0')
-          assistByMinuteTeam[`${min}-${team}`] = name
+          const clockDisplay = play.clock?.displayValue ?? '0'
+          const min = parseEspnMinute(clockDisplay)
+          const phase = getGoalPhase(clockDisplay, false)
+          if (phase !== 'shootout') {
+            assistsByScorer[name] = (assistsByScorer[name] ?? 0) + 1
+          }
+          assistByMinuteTeam[`${min}-${team}`] = { name, phase }
         }
       }
     }
@@ -193,23 +241,39 @@ function extractGoals(rosters: EspnRoster[]): {
       const name = player.athlete?.displayName ?? ''
       for (const play of player.plays ?? []) {
         if (play.didScore) {
-          const minute = parseEspnMinute(play.clock?.displayValue ?? '0')
-          const assister = assistByMinuteTeam[`${minute}-${team}`]
+          const clockDisplay = play.clock?.displayValue ?? '0'
+          const minute = parseEspnMinute(clockDisplay)
+          const phase = getGoalPhase(clockDisplay, play.penaltyKick ?? false)
+          const assistEntry = assistByMinuteTeam[`${minute}-${team}`]
+          const assister = assistEntry?.name
+
           goals.push({
             scorer: name,
             minute,
             team,
             type: play.ownGoal ? 'OWN' : play.penaltyKick ? 'PENALTY' : 'REGULAR',
+            phase,
             ...(assister ? { assister } : {}),
           })
-          goalsByScorer[name] = (goalsByScorer[name] ?? 0) + 1
+
+          // Reguliere score: alleen goals in reguliere tijd (90' + blessuretijd)
+          if (phase === 'regular') {
+            const isOwn = play.ownGoal ?? false
+            if (team === 'home') { isOwn ? reguliereScore.away++ : reguliereScore.home++ }
+            else                { isOwn ? reguliereScore.home++ : reguliereScore.away++ }
+          }
+
+          // Fantasy: reguliere + verlenging, geen strafschoppenserie
+          if (phase !== 'shootout') {
+            goalsByScorer[name] = (goalsByScorer[name] ?? 0) + 1
+          }
         }
       }
     }
   }
 
   goals.sort((a, b) => a.minute - b.minute)
-  return { goals, goalsByScorer, assistsByScorer }
+  return { goals, goalsByScorer, assistsByScorer, reguliereScore }
 }
 
 function extractBookings(rosters: EspnRoster[]): LiveBookingEvent[] {
@@ -379,7 +443,9 @@ export async function GET(req: NextRequest) {
   const members = GROUP_MEMBERS[group]
   const groupParticipants = PARTICIPANTS.filter((p) => members.includes(p.initials))
 
-  const [allPredictions, allSquads] = await Promise.all([
+  const hasKoMatches = matchIds.some((id) => id > 72)
+
+  const [allPredictions, allSquads, koMatchTeams] = await Promise.all([
     Promise.all(
       groupParticipants.map(async (p) => ({
         initials: p.initials,
@@ -392,6 +458,9 @@ export async function GET(req: NextRequest) {
         squad: (await kvGet<{ squad: FantasySquad }>(participantKey('fantasy', p.initials)))?.squad ?? {},
       }))
     ),
+    hasKoMatches
+      ? kvGet<Record<number, { home: string; away: string; kickoff?: string }>>('ko_match_teams')
+      : Promise.resolve(null),
   ])
 
   const predsByInitials = Object.fromEntries(allPredictions.map((x) => [x.initials, x.preds]))
@@ -433,6 +502,7 @@ export async function GET(req: NextRequest) {
     const statusDesc = comp.status?.type?.description ?? ''
     const internalStatus = espnStatusToInternal(statusDesc)
     if (!internalStatus) continue
+    const regulierVoorbij = isReguliereTijdVoorbij(statusDesc)
 
     const homeComp = comp.competitors?.find((c) => c.homeAway === 'home')
     const awayComp = comp.competitors?.find((c) => c.homeAway === 'away')
@@ -445,7 +515,7 @@ export async function GET(req: NextRequest) {
     const awayTeamLogo = awayComp?.team.logos?.[0]?.href ?? null
 
     const rosters = summary.rosters ?? []
-    const { goals, goalsByScorer, assistsByScorer } = extractGoals(rosters)
+    const { goals, goalsByScorer, assistsByScorer, reguliereScore } = extractGoals(rosters)
     const bookings      = extractBookings(rosters)
     const substitutions = extractSubs(rosters)
     const { homeLineup, awayLineup, homeBench, awayBench } = extractLineups(rosters)
@@ -475,12 +545,18 @@ export async function GET(req: NextRequest) {
         ?? 0
     }
 
-    const totoNow    = currentToto(scoreHome, scoreAway)
-    const uitslagNow = `${scoreHome} - ${scoreAway}`
-    const match      = MATCHES.find((m) => m.id === matchId)
+    // Toto/uitslag beoordeling op basis van de reguliere stand (90' + blessuretijd),
+    // niet de stand na verlenging/penalties
+    const totoNow    = currentToto(reguliereScore.home, reguliereScore.away)
+    const uitslagNow = `${reguliereScore.home} - ${reguliereScore.away}`
+    const staticMatch = MATCHES.find((m) => m.id === matchId)
+    const koTeams = matchId > 72 ? koMatchTeams?.[matchId] : null
+    const match = staticMatch && koTeams
+      ? { ...staticMatch, home: koTeams.home, away: koTeams.away }
+      : staticMatch
 
     const quoteEntry = config ? getGroupQuotes(config, group).find((q) => q.matchId === matchId) : undefined
-    const staticOdds = MATCH_ODDS[matchId]
+    const staticOdds = matchId <= 72 ? MATCH_ODDS[matchId] : KO_MATCH_ODDS[matchId]
 
     // Merge MATCH_ODDS (per-outcome toto + per-score uitslag) with admin config.
     // Admin per-outcome values override MATCH_ODDS when explicitly set.
@@ -504,8 +580,10 @@ export async function GET(req: NextRequest) {
 
       const totoCorrect    = toto === totoNow
       const uitslagCorrect = uitslag === uitslagNow
+      // Als de reguliere tijd voorbij is, behandel de reguliere stand als definitief
+      const effectiveStatus = regulierVoorbij ? 'FINISHED' : internalStatus
       const { impossible: uitslagImpossible, possible: uitslagPossible } =
-        computeUitslagState(uitslag, scoreHome, scoreAway, internalStatus)
+        computeUitslagState(uitslag, reguliereScore.home, reguliereScore.away, effectiveStatus)
 
       const totoOdds    = resolveTotoOdds(effectiveQuote, toto)
       const uitslagOdds = resolveUitslagOdds(effectiveQuote, uitslag)
@@ -611,6 +689,8 @@ export async function GET(req: NextRequest) {
       homeFormation: null,  // ESPN geeft formatie niet als string
       awayFormation: null,
       ...extractStats(summary.boxscore?.teams, rosters),
+      homeTeamName: match?.home ?? null,
+      awayTeamName: match?.away ?? null,
       homeTeamAbbr,
       awayTeamAbbr,
       homeTeamLogo,

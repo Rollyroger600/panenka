@@ -5,6 +5,7 @@ import { ALL_COUNTRIES } from '@/lib/data/countries'
 import { FlagImage } from '@/components/ui/FlagImage'
 import { ScorePicker } from '@/components/matches/ScorePicker'
 import { MATCH_ODDS } from '@/lib/data/odds'
+import { KO_MATCH_ODDS } from '@/lib/data/koMatchOdds'
 import { abbrevCountry } from '@/lib/helpers'
 import {
   saveResult, deleteResult, saveKoResults, saveKoMatchTeams,
@@ -1327,7 +1328,8 @@ function MatchResultRow({ match, result, saving, onSave, onDelete, onEspnImport 
   const [importing, setImporting] = useState(false)
 
   const hasEspnId = !!ESPN_MATCH_IDS[match.id]
-  const hasOdds = Object.keys(MATCH_ODDS[match.id]?.scores ?? {}).length > 0
+  const odds = match.id > 72 ? KO_MATCH_ODDS[match.id] : MATCH_ODDS[match.id]
+  const hasOdds = Object.keys(odds?.scores ?? {}).length > 0
 
   async function fetchEspn() {
     setEspnState('loading')
@@ -1498,6 +1500,14 @@ function MatchResultRow({ match, result, saving, onSave, onDelete, onEspnImport 
             <div className="flex items-center gap-2 mb-3">
               <span className="font-heading text-lg font-bold text-white">{espnData.uitslag}</span>
               <span className="text-[10px] bg-[#FF6B00]/20 text-[#FF6B00] font-bold px-2 py-0.5 rounded">{espnData.toto}</span>
+              {espnData.totalUitslag && (
+                <span className="text-[10px] text-[#888]">n.v. {espnData.totalUitslag}</span>
+              )}
+              {espnData.penaltyWinner && (
+                <span className="text-[10px] bg-[#4db8d4]/20 text-[#4db8d4] font-bold px-2 py-0.5 rounded">
+                  P → {espnData.penaltyWinner === 'home' ? 'thuis' : 'uit'}
+                </span>
+              )}
               <button
                 onClick={() => { setToto(espnData.toto); setUitslag(espnData.uitslag) }}
                 className="ml-auto text-[10px] bg-[#1e1e1e] border border-[#333] text-white px-2 py-1 rounded-lg hover:border-[#FF6B00] transition-colors"
