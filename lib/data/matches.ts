@@ -92,43 +92,43 @@ export const MATCHES: Match[] = [
   // Teams zijn TBD totdat de poulefase is afgerond.
   // Activeer per wedstrijd (active: true) zodra de teams bekend zijn.
 
-  // Ronde van 32 — 16 wedstrijden — ±1–4 jul
-  { id: 73,  poule: 'KO', round: 1, date: '1 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 74,  poule: 'KO', round: 1, date: '1 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 75,  poule: 'KO', round: 1, date: '1 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 76,  poule: 'KO', round: 1, date: '1 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 77,  poule: 'KO', round: 1, date: '2 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 78,  poule: 'KO', round: 1, date: '2 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 79,  poule: 'KO', round: 1, date: '2 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 80,  poule: 'KO', round: 1, date: '2 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 81,  poule: 'KO', round: 1, date: '3 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 82,  poule: 'KO', round: 1, date: '3 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 83,  poule: 'KO', round: 1, date: '3 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 84,  poule: 'KO', round: 1, date: '3 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 85,  poule: 'KO', round: 1, date: '4 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 86,  poule: 'KO', round: 1, date: '4 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 87,  poule: 'KO', round: 1, date: '4 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 88,  poule: 'KO', round: 1, date: '4 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  // Ronde van 32 — 16 wedstrijden — 28 jun – 3 jul
+  { id: 73,  poule: 'KO', round: 1, date: '28 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 74,  poule: 'KO', round: 1, date: '29 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 75,  poule: 'KO', round: 1, date: '29 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 76,  poule: 'KO', round: 1, date: '29 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 77,  poule: 'KO', round: 1, date: '30 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 78,  poule: 'KO', round: 1, date: '30 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 79,  poule: 'KO', round: 1, date: '30 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 80,  poule: 'KO', round: 1, date: '1 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 81,  poule: 'KO', round: 1, date: '1 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 82,  poule: 'KO', round: 1, date: '1 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 83,  poule: 'KO', round: 1, date: '2 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 84,  poule: 'KO', round: 1, date: '2 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 85,  poule: 'KO', round: 1, date: '2 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 86,  poule: 'KO', round: 1, date: '3 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 87,  poule: 'KO', round: 1, date: '3 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 88,  poule: 'KO', round: 1, date: '3 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
 
-  // Ronde van 16 — 8 wedstrijden — ±5–6 jul
-  { id: 89,  poule: 'KO', round: 1, date: '5 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
-  { id: 90,  poule: 'KO', round: 1, date: '5 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
+  // Ronde van 16 — 8 wedstrijden — 4–7 jul
+  { id: 89,  poule: 'KO', round: 1, date: '4 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
+  { id: 90,  poule: 'KO', round: 1, date: '4 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
   { id: 91,  poule: 'KO', round: 1, date: '5 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
   { id: 92,  poule: 'KO', round: 1, date: '5 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
   { id: 93,  poule: 'KO', round: 1, date: '6 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
   { id: 94,  poule: 'KO', round: 1, date: '6 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
-  { id: 95,  poule: 'KO', round: 1, date: '6 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
-  { id: 96,  poule: 'KO', round: 1, date: '6 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
+  { id: 95,  poule: 'KO', round: 1, date: '7 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
+  { id: 96,  poule: 'KO', round: 1, date: '7 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv16', active: false },
 
-  // Kwartfinales — 4 wedstrijden — ±9–10 jul
+  // Kwartfinales — 4 wedstrijden — 9–11 jul
   { id: 97,  poule: 'KO', round: 1, date: '9 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'kf', active: false },
-  { id: 98,  poule: 'KO', round: 1, date: '9 jul',  home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'kf', active: false },
+  { id: 98,  poule: 'KO', round: 1, date: '10 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'kf', active: false },
   { id: 99,  poule: 'KO', round: 1, date: '10 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'kf', active: false },
-  { id: 100, poule: 'KO', round: 1, date: '10 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'kf', active: false },
+  { id: 100, poule: 'KO', round: 1, date: '11 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'kf', active: false },
 
-  // Halve finales — 2 wedstrijden — ±13–14 jul
-  { id: 101, poule: 'KO', round: 1, date: '13 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'hf', active: false },
-  { id: 102, poule: 'KO', round: 1, date: '14 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'hf', active: false },
+  // Halve finales — 2 wedstrijden — 14–15 jul
+  { id: 101, poule: 'KO', round: 1, date: '14 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'hf', active: false },
+  { id: 102, poule: 'KO', round: 1, date: '15 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'hf', active: false },
 
   // 3e/4e plaatsmatch — 18 jul
   { id: 103, poule: 'KO', round: 1, date: '18 jul', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'brons', active: false },

@@ -191,6 +191,34 @@ export async function saveFantasyStats(data: FantasyStats): Promise<void> {
   await kvSet('fantasy_stats', data)
 }
 
+export async function mergeFantasyStat(playerId: string, field: 'goals' | 'assists', value: number): Promise<FantasyStats> {
+  const current = await loadFantasyStats()
+  const entry = current[playerId] ?? { goals: 0, assists: 0 }
+  current[playerId] = { ...entry, [field]: value }
+  if (current[playerId].goals === 0 && current[playerId].assists === 0) {
+    delete current[playerId]
+  }
+  await kvSet('fantasy_stats', current)
+  return current
+}
+
+export async function removeFantasyStat(playerId: string): Promise<FantasyStats> {
+  const current = await loadFantasyStats()
+  delete current[playerId]
+  await kvSet('fantasy_stats', current)
+  return current
+}
+
+export async function mergeEspnStats(delta: Record<string, { goals: number; assists: number }>): Promise<FantasyStats> {
+  const current = await loadFantasyStats()
+  for (const [id, stats] of Object.entries(delta)) {
+    const existing = current[id] ?? { goals: 0, assists: 0 }
+    current[id] = { goals: existing.goals + stats.goals, assists: existing.assists + stats.assists }
+  }
+  await kvSet('fantasy_stats', current)
+  return current
+}
+
 export type ParticipantSquadData = {
   initials: string
   name: string

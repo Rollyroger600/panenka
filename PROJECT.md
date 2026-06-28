@@ -845,6 +845,22 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-28b — KO token reservering + datumfix + fantasy stats race condition (Claude Code)
+
+**KO-wedstrijden tokenbudget: reservering voor toekomstige wedstrijden**
+- **`hooks/useTokenBudget.ts`**: `TOTAL_KO_MATCHES = 32` constant. Budget reserveert nu `32 - availableMatchCount` tokens voor wedstrijden waarvan de teams nog niet bekend zijn (elk min. 1 token). Voorkomt dat deelnemers te veel tokens inzetten op de R32 en niet genoeg overhouden voor latere rondes.
+
+**KO-wedstrijden datums gecorrigeerd naar officieel FIFA-schema**
+- **`lib/data/matches.ts`**: R32 28 jun – 3 jul (was 1–4 jul), R16 4–7 jul (was 5–6 jul), KF 9–11 jul (was 9–10 jul), HF 14–15 jul (was 13–14 jul)
+- **`app/(app)/knockout/KnockoutClient.tsx`**: wedstrijdkaarten tonen nu de datum uit de KV kickoff-tijd (de echte bron) i.p.v. de hardcoded fallback-datum. Nieuwe `formatKickoffDate()` helper.
+
+**Fantasy stats race condition gefixt — data kon verdwijnen bij meerdere admin tabs**
+- **Oorzaak**: admin panel sloeg bij elke statwijziging de HELE React state op naar KV. Als de admin pagina eerder was geopend met verouderde data, werden tussentijds toegevoegde stats (incl. Vini Jr.) overschreven.
+- **`app/actions/admin.ts`**: drie nieuwe server actions `mergeFantasyStat()`, `removeFantasyStat()`, `mergeEspnStats()` — doen read-modify-write op de server zodat bestaande KV-data nooit verloren gaat.
+- **`app/admin/AdminClient.tsx`**: handlers gebruiken nu de nieuwe merge-actions i.p.v. `saveFantasyStats()` met volledige state overschrijving. React state wordt bijgewerkt met de verse server-data na elke operatie.
+
+---
+
 ### 2026-06-28 — KO-wedstrijden voorspellingen geactiveerd (Claude Code)
 
 **Knockout wedstrijden (#73-104) zijn nu speelbaar voor deelnemers.**

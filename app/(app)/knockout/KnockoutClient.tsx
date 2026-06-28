@@ -53,6 +53,11 @@ function formatKickoffTime(kickoff: string): string {
   return d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
 }
 
+function formatKickoffDate(kickoff: string): string {
+  const d = new Date(kickoff)
+  return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' })
+}
+
 interface Props {
   koResults: Record<string, string[]>
   results: Record<number, MatchResult>
@@ -156,7 +161,7 @@ export function KnockoutClient({ koResults, results, koMatchTeams, oranjeTokens 
                     matchId={match.id}
                     home={teams.home}
                     away={teams.away}
-                    date={match.date}
+                    date={teams.kickoff ? formatKickoffDate(teams.kickoff) : match.date}
                     time={teams.kickoff ? formatKickoffTime(teams.kickoff) : undefined}
                     remainingBudget={koRemaining}
                     readOnly={isLocked}

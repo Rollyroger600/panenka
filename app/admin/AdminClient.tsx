@@ -10,7 +10,8 @@ import {
   saveResult, deleteResult, saveKoResults, saveKoMatchTeams,
   saveOranjeResults, computeAndSaveScores,
   updateOranjeVraag, saveOranjeCorrect, saveOranjeBeoordeling,
-  saveFantasyStats, setAdminGroup, loadAllTokenUsage, loadVoortgang,
+  mergeFantasyStat, removeFantasyStat, mergeEspnStats,
+  setAdminGroup, loadAllTokenUsage, loadVoortgang,
   loadParticipantPredictions,
 } from '@/app/actions/admin'
 import type { KoMatchTeams, TokenUsageEntry, VoortgangEntry } from '@/app/actions/admin'
@@ -135,26 +136,28 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
 
   async function handleFantasyStat(playerId: string, field: 'goals' | 'assists', value: number) {
     const current = fantasyStats[playerId] ?? { goals: 0, assists: 0 }
-    const updated = { ...fantasyStats, [playerId]: { ...current, [field]: value } }
-    setFantasyStats(updated)
-    await saveFantasyStats(updated)
+    setFantasyStats({ ...fantasyStats, [playerId]: { ...current, [field]: value } })
+    const fresh = await mergeFantasyStat(playerId, field, value)
+    setFantasyStats(fresh)
   }
 
   async function handleFantasyRemove(playerId: string) {
     const updated = { ...fantasyStats }
     delete updated[playerId]
     setFantasyStats(updated)
-    await saveFantasyStats(updated)
+    const fresh = await removeFantasyStat(playerId)
+    setFantasyStats(fresh)
   }
 
   async function handleEspnImport(delta: Record<string, { goals: number; assists: number }>) {
-    const merged = { ...fantasyStats }
+    const optimistic = { ...fantasyStats }
     for (const [id, stats] of Object.entries(delta)) {
-      const existing = merged[id] ?? { goals: 0, assists: 0 }
-      merged[id] = { goals: existing.goals + stats.goals, assists: existing.assists + stats.assists }
+      const existing = optimistic[id] ?? { goals: 0, assists: 0 }
+      optimistic[id] = { goals: existing.goals + stats.goals, assists: existing.assists + stats.assists }
     }
-    setFantasyStats(merged)
-    await saveFantasyStats(merged)
+    setFantasyStats(optimistic)
+    const fresh = await mergeEspnStats(delta)
+    setFantasyStats(fresh)
   }
 
   async function handleCompute() {
