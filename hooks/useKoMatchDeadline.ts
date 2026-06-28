@@ -5,12 +5,16 @@ import type { KoMatchTeams } from '@/app/actions/admin'
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000
 
+const DEADLINE_OVERRIDES: Record<number, string[]> = {
+  73: ['RA', 'TDL', 'RH'],
+}
+
 export function isKoMatchLocked(kickoff: string | undefined): boolean {
   if (!kickoff) return false
   return Date.now() >= new Date(kickoff).getTime() - TWO_HOURS_MS
 }
 
-export function useKoMatchLocks(koMatchTeams: KoMatchTeams): Record<number, boolean> {
+export function useKoMatchLocks(koMatchTeams: KoMatchTeams, participant?: string): Record<number, boolean> {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -20,14 +24,21 @@ export function useKoMatchLocks(koMatchTeams: KoMatchTeams): Record<number, bool
 
   return useMemo(() => {
     const locks: Record<number, boolean> = {}
+    const upper = participant?.toUpperCase()
     for (const [idStr, data] of Object.entries(koMatchTeams)) {
+      const matchId = Number(idStr)
       const kickoff = data.kickoff
       if (!kickoff) {
-        locks[Number(idStr)] = false
+        locks[matchId] = false
         continue
       }
-      locks[Number(idStr)] = now >= new Date(kickoff).getTime() - TWO_HOURS_MS
+      const locked = now >= new Date(kickoff).getTime() - TWO_HOURS_MS
+      if (locked && upper && DEADLINE_OVERRIDES[matchId]?.includes(upper)) {
+        locks[matchId] = false
+        continue
+      }
+      locks[matchId] = locked
     }
     return locks
-  }, [koMatchTeams, now])
+  }, [koMatchTeams, now, participant])
 }

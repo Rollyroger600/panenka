@@ -5,6 +5,7 @@ import { usePredictions } from '@/hooks/usePredictions'
 import { useDeadline } from '@/hooks/useDeadline'
 import { useKoMatchBudget } from '@/hooks/useTokenBudget'
 import { useKoMatchLocks } from '@/hooks/useKoMatchDeadline'
+import { useGameStore } from '@/store/gameStore'
 import { Ronde32Section } from '@/components/knockout/Ronde32Section'
 import { RoundSection } from '@/components/knockout/RoundSection'
 import { KoMatchCard } from '@/components/matches/KoMatchCard'
@@ -71,9 +72,10 @@ export function KnockoutClient({ koResults, results, koMatchTeams, oranjeTokens 
   const { isPast } = useDeadline()
   const landenReadOnly = APP_PHASE >= 2
 
+  const participantInitials = useGameStore((s) => s.participantInitials)
   const availableMatchCount = Object.keys(koMatchTeams).length
   const { remaining: koRemaining } = useKoMatchBudget(oranjeTokens, availableMatchCount)
-  const locks = useKoMatchLocks(koMatchTeams)
+  const locks = useKoMatchLocks(koMatchTeams, participantInitials)
 
   const [mainTab, setMainTab] = useState<MainTab>('wedstrijden')
   const [landenTab, setLandenTab] = useState('ronde32')

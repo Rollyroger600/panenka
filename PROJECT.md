@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-28e — KO deadline override voor specifieke deelnemers (Claude Code)
+
+**RA, TdL en RH mogen alsnog wedstrijd 73 invullen ondanks verstreken deadline**
+- **`hooks/useKoMatchDeadline.ts`**: `DEADLINE_OVERRIDES` map toegevoegd (matchId → lijst van initialen). `useKoMatchLocks` accepteert nu een `participant` parameter; als de deelnemer in de override-lijst staat voor een wedstrijd, wordt de lock overgeslagen.
+- **`app/(app)/knockout/KnockoutClient.tsx`**: `participantInitials` uit Zustand store gehaald en doorgegeven aan `useKoMatchLocks`.
+
+---
+
 ### 2026-06-28d — Oranje vragen: type-aware antwoordvergelijking + beoordeling display (Claude Code)
 
 **Oranje antwoorden werden verkeerd beoordeeld — marge-logica hield geen rekening met vraagtype**
