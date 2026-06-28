@@ -4,7 +4,7 @@ import { kvGet, kvSet, groupKey } from '@/lib/kv/kv'
 import type { GroupId } from '@/lib/groups'
 import { DUAL_GROUP_INITIALS } from '@/lib/groups'
 import { PARTICIPANTS } from '@/lib/participants'
-import type { OranjeVraag, OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap } from '@/lib/types/oranjeVragen'
+import type { OranjeVraag, OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap, OranjeBeoordeling } from '@/lib/types/oranjeVragen'
 
 async function getGroupId(): Promise<GroupId> {
   const store = await cookies()
@@ -100,6 +100,17 @@ export async function loadOranjeCorrect(): Promise<OranjeCorrectMap> {
 
 export async function loadOranjeCorrectForGroup(groupId: GroupId): Promise<OranjeCorrectMap> {
   return (await kvGet<OranjeCorrectMap>(groupKey('oranje_correct', groupId))) ?? {}
+}
+
+// ── Beoordeling (admin-beoordeelde open vragen) ─────────────────────────
+
+export async function loadOranjeBeoordeling(): Promise<OranjeBeoordeling> {
+  const groupId = await getGroupId()
+  return (await kvGet<OranjeBeoordeling>(groupKey('oranje_beoordeling', groupId))) ?? {}
+}
+
+export async function loadOranjeBeoordelingForGroup(groupId: GroupId): Promise<OranjeBeoordeling> {
+  return (await kvGet<OranjeBeoordeling>(groupKey('oranje_beoordeling', groupId))) ?? {}
 }
 
 // ── Alle antwoorden (voor read-only weergave) ─────────────────────────────

@@ -2,11 +2,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { loadPredictions, savePredictions } from '@/app/actions/predictions'
-import { useDeadline } from './useDeadline'
-
 export function usePredictions() {
   const { predictions, initPredictions, setSaveStatus } = useGameStore()
-  const { isPast } = useDeadline()
   const [isLoaded, setIsLoaded] = useState(false)
   const initialized = useRef(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -20,7 +17,7 @@ export function usePredictions() {
   }, [initPredictions])
 
   useEffect(() => {
-    if (!initialized.current || isPast) return
+    if (!initialized.current) return
     setSaveStatus('saving')
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
@@ -33,7 +30,7 @@ export function usePredictions() {
       }
     }, 500)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [predictions, isPast, setSaveStatus])
+  }, [predictions, setSaveStatus])
 
   return { isLoaded }
 }

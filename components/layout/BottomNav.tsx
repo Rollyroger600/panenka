@@ -23,7 +23,16 @@ const TABS_PHASE2 = [
   { href: '/chat',      label: 'Chat',        Icon: IconChat },
 ]
 
-const TABS = APP_PHASE >= 2 ? TABS_PHASE2 : TABS_PHASE1
+const TABS_PHASE3 = [
+  { href: '/poulefase', label: 'Wedstrijden', Icon: IconPoule },
+  { href: '/knockout',  label: 'Knockout',    Icon: IconKO },
+  { href: '/fantasy',   label: 'Fantasy',     Icon: IconFantasy },
+  { href: '/oranje',    label: 'Oranje',      Icon: IconOranje },
+  { href: '/stand',     label: 'Stand',       Icon: IconOverzicht },
+  { href: '/chat',      label: 'Chat',        Icon: IconChat },
+]
+
+const TABS = APP_PHASE >= 3 ? TABS_PHASE3 : APP_PHASE >= 2 ? TABS_PHASE2 : TABS_PHASE1
 
 export function BottomNav() {
   const pathname = usePathname()

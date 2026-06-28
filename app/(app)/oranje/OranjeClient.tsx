@@ -7,6 +7,7 @@ import {
   loadOranjeAntwoorden, loadOranjeAntwoordenForGroup,
   saveOranjeAntwoorden, saveOranjeAntwoordenForGroup,
   loadOranjeCorrect, loadOranjeCorrectForGroup,
+  loadOranjeBeoordeling, loadOranjeBeoordelingForGroup,
   loadAllOranjeAntwoorden, loadAllOranjeAntwoordenForGroup,
 } from '@/app/actions/oranjeVragen'
 import { VraagIndienenCard } from '@/components/oranje/VraagIndienenCard'
@@ -18,7 +19,7 @@ import { DUAL_GROUP_INITIALS, GROUP_MEMBERS, getGroupForParticipant } from '@/li
 import { PARTICIPANTS } from '@/lib/participants'
 import { parseCorrectWaarden } from '@/lib/types/oranjeVragen'
 import type { GroupId } from '@/lib/groups'
-import type { OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap } from '@/lib/types/oranjeVragen'
+import type { OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap, OranjeBeoordeling } from '@/lib/types/oranjeVragen'
 
 const NED_MATCH_IDS = [10, 33, 58]
 const NED_MATCHES = MATCHES.filter((m) => NED_MATCH_IDS.includes(m.id))
@@ -36,6 +37,7 @@ export function OranjeClient({ mijnInitials }: Props) {
   const [vragen, setVragen] = useState<OranjeVragenMap>({})
   const [antwoorden, setAntwoorden] = useState<OranjeAntwoordenMap>({})
   const [correctMap, setCorrectMap] = useState<OranjeCorrectMap>({})
+  const [beoordeling, setBeoordeling] = useState<OranjeBeoordeling>({})
   const [alleAntwoorden, setAlleAntwoorden] = useState<Record<string, OranjeAntwoordenMap>>({})
   const [headerToggleEl, setHeaderToggleEl] = useState<Element | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -58,9 +60,11 @@ export function OranjeClient({ mijnInitials }: Props) {
   useEffect(() => {
     if (!isPast) return
     const correctLoader = isDualGroup ? loadOranjeCorrectForGroup(activeGroup) : loadOranjeCorrect()
+    const beoordelingLoader = isDualGroup ? loadOranjeBeoordelingForGroup(activeGroup) : loadOranjeBeoordeling()
     const alleLoader = isDualGroup ? loadAllOranjeAntwoordenForGroup(activeGroup) : loadAllOranjeAntwoorden()
-    Promise.all([correctLoader, alleLoader]).then(([cm, aa]) => {
+    Promise.all([correctLoader, beoordelingLoader, alleLoader]).then(([cm, bm, aa]) => {
       setCorrectMap(cm)
+      setBeoordeling(bm)
       setAlleAntwoorden(aa)
     })
   }, [isPast, activeGroup, isDualGroup])
@@ -94,17 +98,33 @@ export function OranjeClient({ mijnInitials }: Props) {
     return sum + Object.values(antwoorden[id] ?? {}).filter(Boolean).length
   }, 0)
 
+  const participantKey = mijnInitials.toLowerCase()
   const totalCorrect = NED_MATCH_IDS.reduce((sum, id) => {
     const matchCorrect = correctMap[id] ?? {}
     const matchAntwoorden = antwoorden[id] ?? {}
-    return sum + Object.entries(matchCorrect).filter(([key, correct]) => {
-      const userAnswer = matchAntwoorden[key]
-      if (!correct || !userAnswer) return false
-      return parseCorrectWaarden(correct).includes(userAnswer)
-    }).length
+    const matchBeoordeling = beoordeling[id] ?? {}
+    const allKeys = new Set([...Object.keys(matchCorrect), ...Object.keys(matchBeoordeling)])
+    let count = 0
+    for (const key of allKeys) {
+      const gegeven = matchAntwoorden[key]
+      if (!gegeven) continue
+      const correctWaarden = parseCorrectWaarden(matchCorrect[key] ?? null)
+      if (correctWaarden.length > 0) {
+        const isCorrect = correctWaarden.some((cw) => {
+          if (/^\d+$/.test(cw) && /^\d+$/.test(gegeven)) {
+            return Math.abs(parseInt(gegeven, 10) - parseInt(cw, 10)) <= 5
+          }
+          return gegeven === cw
+        })
+        if (isCorrect) count++
+      } else if (matchBeoordeling[key]?.[participantKey] === true) {
+        count++
+      }
+    }
+    return sum + count
   }, 0)
 
-  const tokensVerdiend = totalCorrect * 0.5
+  const tokensVerdiend = Math.ceil(totalCorrect * 0.5)
 
   // Deelnemers van de actieve groep voor "andere antwoorden"
   const groupId: GroupId = isDualGroup ? activeGroup : getGroupForParticipant(mijnInitials.toUpperCase())

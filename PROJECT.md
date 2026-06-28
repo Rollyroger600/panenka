@@ -845,6 +845,31 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-28 — KO-wedstrijden voorspellingen geactiveerd (Claude Code)
+
+**Knockout wedstrijden (#73-104) zijn nu speelbaar voor deelnemers.**
+
+- **`lib/config.ts`**: `APP_PHASE` van 2 naar 3
+- **`app/(app)/knockout/KnockoutClient.tsx`**: twee hoofd-tabs "Wedstrijden" (default) en "Landen". Wedstrijden-tab toont KoMatchCards per ronde (R32, R16, 1/4, 1/2, FIN) met token budget, per-match deadlines, en TBD placeholders
+- **`app/(app)/knockout/page.tsx`**: laadt nu ook `results`, `koMatchTeams`, `oranjeTokens` via server actions
+- **`components/matches/KoMatchCard.tsx`**: uitgebreid met `readOnly`, `result`, `time` props. Toont earned score na wedstrijd, details dropdown met doelpunten, vergrendeld 2u voor aftrap
+- **`hooks/useKoMatchDeadline.ts`**: nieuw — `isKoMatchLocked()` utility + `useKoMatchLocks()` hook. Wedstrijd open als geen kickoff-tijd, locked 2u voor aftrap
+- **`hooks/usePredictions.ts`**: `isPast` save-guard verwijderd — UI readOnly props zijn nu de enforcement, zodat KO predictions opslaanbaar blijven na de groepsdeadline
+- **`hooks/useTokenBudget.ts`**: `useKoMatchBudget` telt nu minimale 1 token per beschikbare wedstrijd mee in het budget. Base verhoogd van 50 naar 65 tokens
+- **`components/layout/TokenCount.tsx`**: route-aware — toont KO-budget op `/knockout`, poulefase-budget elders
+- **`components/layout/BottomNav.tsx`**: fase 3 tab-set met "Knockout" label (was "Landen")
+- **`app/actions/admin.ts`**: `KoMatchTeams` type uitgebreid met `kickoff?: string`
+- **`scripts/scrape-ko-match-odds.mjs`**: haalt nu ook kickoff-tijden op uit Kambi API (`event.start`) en slaat op in `ko_match_teams` KV. Leest `.env.local` voor Upstash credentials
+- **`lib/data/koMatchOdds.ts`**: gevuld met quoteringen voor 6 KO-wedstrijden (matches 73-78)
+
+**Oranje pagina tokens-berekening gefixt:**
+- **`app/(app)/oranje/OranjeClient.tsx`**: `totalCorrect` berekening gebruikt nu dezelfde logica als `scoreOranjeNieuw()` — numerieke marge (±5), admin-beoordeelde open vragen. Was: simpele string match (15 correct), nu: volledige scoring (23 correct, 12 tokens)
+- **`app/actions/oranjeVragen.ts`**: publieke `loadOranjeBeoordeling()` en `loadOranjeBeoordelingForGroup()` toegevoegd
+
+**CLAUDE.md** aangemaakt voor toekomstige sessies.
+
+---
+
 ### 2026-06-26 — Chat infinite scroll (Claude Code)
 
 #### Chat — oudere berichten laden bij omhoog scrollen
@@ -868,7 +893,7 @@ The following decisions were made during implementation that deviate from or ext
 #### Stand pagina — Pot tab ASC
 - `app\(app)\stand\StandClient.tsx`: ASC: Winst Matchday 15 (+49,15) toegevoegd, Winst Matchday 14 (+13,80) verwijderd, Winst Matchday 05 gecorrigeerd (3,45→3,52).
 
----
+---star
 
 ### 2026-06-26 — Custom bets (OG MD15+) + pot MD15 + winst MD13/14 (Claude Code)
 

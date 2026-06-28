@@ -153,7 +153,7 @@ export async function loadAlleOranjeAntwoorden(groupId: GroupId = 'og'): Promise
 
 // ── KO-wedstrijd teams (admin vult in zodra teams bekend zijn) ────────────
 
-export type KoMatchTeams = Record<number, { home: string; away: string }>
+export type KoMatchTeams = Record<number, { home: string; away: string; kickoff?: string }>
 
 export async function loadKoMatchTeams(): Promise<KoMatchTeams> {
   return (await kvGet<KoMatchTeams>('ko_match_teams')) ?? {}

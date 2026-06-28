@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * scrape-ko-match-odds.mjs
- * Haalt quoteringen op voor KO-wedstrijden (matchId 73–104) van Unibet/Kambi.
+ * Haalt quoteringen + kickoff-tijden op voor KO-wedstrijden (matchId 73–104) van Unibet/Kambi.
  *
  * Gebruik:
  *   node scripts/scrape-ko-match-odds.mjs
@@ -9,6 +9,7 @@
  * Vereist:
  *   - Node 18+ (ingebouwde fetch)
  *   - scripts/ko-match-teams.json met de bekende KO-teams (zie formaat hieronder)
+ *   - .env.local met UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (voor kickoff-tijden)
  *
  * ko-match-teams.json formaat:
  *   [
@@ -20,6 +21,7 @@
  *
  * Schrijft naar:
  *   lib/data/koMatchOdds.ts  — quoteringen voor bekende KO-wedstrijden
+ *   ko_match_teams KV        — kickoff-tijden worden gemerged in bestaande KV-data
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
@@ -27,6 +29,16 @@ import { fileURLToPath } from 'url';
 import { join, dirname } from 'path';
 
 const __dirname    = dirname(fileURLToPath(import.meta.url));
+
+// Laad .env.local handmatig (geen dotenv dependency nodig)
+const envPath = join(__dirname, '..', '.env.local');
+if (existsSync(envPath)) {
+  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+    const m = line.match(/^([A-Z_]+)=(.+)$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim();
+  }
+}
+
 const TEAMS_FILE   = join(__dirname, 'ko-match-teams.json');
 const OUT_FILE     = join(__dirname, '..', 'lib', 'data', 'koMatchOdds.ts');
 
@@ -98,12 +110,14 @@ async function main() {
       home: toDecimal(homeOdds),
       draw: toDecimal(drawOdds),
       away: toDecimal(awayOdds),
+      start: eventObj.start,
     };
   }
   console.log(`   ${Object.keys(eventByTeams).length} events gevonden\n`);
 
   // Verwerk KO-wedstrijden
   const newEntries = {};
+  const kickoffs = {};
   const missing = [];
 
   for (const match of koMatches) {
@@ -118,6 +132,7 @@ async function main() {
     process.stdout.write(`  📊 Match ${String(match.id).padStart(3)}: ${match.home} vs ${match.away} ...`);
     const scores = await fetchCorrectScores(event.id);
     newEntries[match.id] = { ...event, scores };
+    if (event.start) kickoffs[match.id] = { home: match.home, away: match.away, kickoff: event.start };
     console.log(` ✓ (${Object.keys(scores).length} scores)`);
     await new Promise(r => setTimeout(r, 250));
   }
@@ -160,6 +175,35 @@ async function main() {
 
   lines.push(`}`, ``);
   writeFileSync(OUT_FILE, lines.join('\n'), 'utf8');
+
+  // Schrijf kickoff-tijden naar ko_match_teams KV (merge met bestaande data)
+  const kvUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const kvToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (kvUrl && kvToken && Object.keys(kickoffs).length > 0) {
+    console.log('\n📡 Kickoff-tijden opslaan in KV...');
+    const kvRes = await fetch(`${kvUrl}/get/ko_match_teams`, {
+      headers: { Authorization: `Bearer ${kvToken}` },
+    });
+    const kvData = await kvRes.json();
+    let existing_kv = kvData.result ?? {};
+    if (typeof existing_kv === 'string') existing_kv = JSON.parse(existing_kv);
+    if (typeof existing_kv === 'string') existing_kv = JSON.parse(existing_kv);
+    for (const [id, data] of Object.entries(kickoffs)) {
+      existing_kv[id] = { ...existing_kv[id], ...data };
+    }
+    await fetch(`${kvUrl}/set/ko_match_teams`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${kvToken}` },
+      body: JSON.stringify(existing_kv),
+    });
+    console.log(`   ${Object.keys(kickoffs).length} kickoff-tijden bijgewerkt in KV`);
+  } else if (Object.keys(kickoffs).length > 0) {
+    console.log('\n⚠ Geen UPSTASH env vars gevonden — kickoff-tijden niet opgeslagen in KV');
+    console.log('  Kickoff-tijden gevonden:');
+    for (const [id, data] of Object.entries(kickoffs)) {
+      console.log(`    Match ${id}: ${data.kickoff}`);
+    }
+  }
 
   console.log(`\n✅ Klaar!`);
   console.log(`   ${Object.keys(newEntries).length} nieuwe wedstrijden bijgewerkt`);

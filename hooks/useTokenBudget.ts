@@ -27,14 +27,22 @@ export function useTokenBudget(initials?: string) {
 
 // Budget voor KO-wedstrijden toto/uitslag (73–104)
 // Base: 50 tokens + bonus Oranje-tokens (berekend door server na scorerun)
-export function useKoMatchBudget(oranjeTokens: number) {
+// availableMatchCount = aantal wedstrijden met bekende teams (elk 1 token minimum)
+export function useKoMatchBudget(oranjeTokens: number, availableMatchCount = 0) {
   const predictions = useGameStore((s) => s.predictions)
-  const base = 50
+  const base = 65
   const total = base + oranjeTokens
   const used = useMemo(() => {
-    return Object.entries(predictions)
-      .filter(([id]) => parseInt(id) >= 73)
-      .reduce((sum, [, p]) => sum + (p.tokens ?? 0), 0)
-  }, [predictions])
+    const filledIds = new Set<number>()
+    let sum = 0
+    for (const [idStr, p] of Object.entries(predictions)) {
+      const id = parseInt(idStr)
+      if (id < 73) continue
+      filledIds.add(id)
+      sum += p.tokens ?? 1
+    }
+    const unfilledCount = Math.max(0, availableMatchCount - filledIds.size)
+    return sum + unfilledCount
+  }, [predictions, availableMatchCount])
   return { base, oranjeTokens, total, used, remaining: total - used }
 }
