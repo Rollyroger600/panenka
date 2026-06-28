@@ -28,5 +28,55 @@
     "id": 78,
     "home": "Ivoorkust",
     "away": "Noorwegen"
+  },
+  {
+    "id": 79,
+    "home": "Mexico",
+    "away": "Ecuador"
+  },
+  {
+    "id": 80,
+    "home": "Engeland",
+    "away": "DR Congo"
+  },
+  {
+    "id": 81,
+    "home": "Verenigde Staten",
+    "away": "Bosnië en Herzegovina"
+  },
+  {
+    "id": 82,
+    "home": "België",
+    "away": "Senegal"
+  },
+  {
+    "id": 83,
+    "home": "Portugal",
+    "away": "Kroatië"
+  },
+  {
+    "id": 84,
+    "home": "Spanje",
+    "away": "Oostenrijk"
+  },
+  {
+    "id": 85,
+    "home": "Zwitserland",
+    "away": "Algerije"
+  },
+  {
+    "id": 86,
+    "home": "Argentinië",
+    "away": "Kaapverdië"
+  },
+  {
+    "id": 87,
+    "home": "Colombia",
+    "away": "Ghana"
+  },
+  {
+    "id": 88,
+    "home": "Australië",
+    "away": "Egypte"
   }
 ]

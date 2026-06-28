@@ -860,7 +860,8 @@ The following decisions were made during implementation that deviate from or ext
 - **`components/layout/BottomNav.tsx`**: fase 3 tab-set met "Knockout" label (was "Landen")
 - **`app/actions/admin.ts`**: `KoMatchTeams` type uitgebreid met `kickoff?: string`
 - **`scripts/scrape-ko-match-odds.mjs`**: haalt nu ook kickoff-tijden op uit Kambi API (`event.start`) en slaat op in `ko_match_teams` KV. Leest `.env.local` voor Upstash credentials
-- **`lib/data/koMatchOdds.ts`**: gevuld met quoteringen voor 6 KO-wedstrijden (matches 73-78)
+- **`lib/data/koMatchOdds.ts`**: gevuld met quoteringen voor alle 16 R32 wedstrijden (matches 73-88)
+- **`scripts/ko-match-teams.json`**: 16 R32 wedstrijden met teams, gebruikt door scraper
 
 **Oranje pagina tokens-berekening gefixt:**
 - **`app/(app)/oranje/OranjeClient.tsx`**: `totalCorrect` berekening gebruikt nu dezelfde logica als `scoreOranjeNieuw()` — numerieke marge (±5), admin-beoordeelde open vragen. Was: simpele string match (15 correct), nu: volledige scoring (23 correct, 12 tokens)
