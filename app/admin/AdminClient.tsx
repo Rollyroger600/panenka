@@ -11,10 +11,10 @@ import {
   saveOranjeResults, computeAndSaveScores,
   updateOranjeVraag, saveOranjeCorrect, saveOranjeBeoordeling,
   mergeFantasyStat, removeFantasyStat, mergeEspnStats,
-  setAdminGroup, loadAllTokenUsage, loadVoortgang,
+  setAdminGroup, loadAllTokenUsage, loadKoTokenUsage, loadVoortgang,
   loadParticipantPredictions,
 } from '@/app/actions/admin'
-import type { KoMatchTeams, TokenUsageEntry, VoortgangEntry } from '@/app/actions/admin'
+import type { KoMatchTeams, TokenUsageEntry, KoTokenUsageEntry, VoortgangEntry } from '@/app/actions/admin'
 import type { Prediction } from '@/store/gameStore'
 import { getMatchesForMatchday } from '@/lib/data/matchdayMap'
 import { GROUP_MEMBERS } from '@/lib/groups'
@@ -40,7 +40,7 @@ const NED_MATCHES = [
   { id: 58, label: 'TUN – NED (26 jun)' },
 ]
 
-type Tab = 'matches' | 'knockout' | 'ko_matches' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday' | 'tokens' | 'voortgang'
+type Tab = 'matches' | 'knockout' | 'ko_matches' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday' | 'tokens' | 'ko_tokens' | 'voortgang'
 
 interface Props {
   groupId: GroupId
@@ -71,6 +71,8 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   const [loadingTokens, setLoadingTokens] = useState(false)
   const [voortgang, setVoortgang] = useState<VoortgangEntry[] | null>(null)
   const [loadingVoortgang, setLoadingVoortgang] = useState(false)
+  const [koTokenUsage, setKoTokenUsage] = useState<KoTokenUsageEntry[] | null>(null)
+  const [loadingKoTokens, setLoadingKoTokens] = useState(false)
   const [search, setSearch] = useState('')
   const [saving, setSaving] = useState<number | null>(null)
   const [fantasyStats, setFantasyStats] = useState<FantasyStats>(initialFantasyStats)
@@ -176,6 +178,14 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     setTab('tokens')
   }
 
+  async function handleLoadKoTokens() {
+    setLoadingKoTokens(true)
+    const data = await loadKoTokenUsage(groupId)
+    setKoTokenUsage(data)
+    setLoadingKoTokens(false)
+    setTab('ko_tokens')
+  }
+
   async function handleLoadVoortgang() {
     setLoadingVoortgang(true)
     const data = await loadVoortgang(groupId)
@@ -257,6 +267,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     { id: 'links',      label: 'Links' },
     { id: 'matchday',   label: '📅 Matchday' },
     { id: 'tokens',     label: '🪙 Tokens' },
+    { id: 'ko_tokens',  label: '🪙 KO Tokens' },
     { id: 'voortgang',  label: '✅ Voortgang' },
   ]
 
@@ -635,6 +646,75 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                 </div>
                 <p className="mt-3 text-[10px] text-[#444]">
                   Rood = te veel ingezet • Groen = nog ruimte over • {tokenUsage.filter(e => e.over > 0).length} deelnemer(s) over budget
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── KO Token diagnose ─────────────────────────────────────────────────── */}
+        {tab === 'ko_tokens' && (
+          <div>
+            {!koTokenUsage ? (
+              <div className="flex flex-col items-center gap-4 py-8">
+                <p className="text-[#555] text-sm">Laad KO-wedstrijden tokengebruik voor alle deelnemers.</p>
+                <button
+                  onClick={handleLoadKoTokens}
+                  disabled={loadingKoTokens}
+                  className="px-4 py-2 rounded-lg bg-[#FF6B00] text-white text-sm font-bold hover:bg-[#FF8C33] disabled:opacity-50 transition-colors"
+                >
+                  {loadingKoTokens ? 'Laden…' : '🪙 Laad KO token overzicht'}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-[#555] text-xs">
+                    Budget = 65 + oranje bonus. Gereserveerd = min. 1 per toekomstige wedstrijd.
+                  </p>
+                  <button
+                    onClick={handleLoadKoTokens}
+                    disabled={loadingKoTokens}
+                    className="text-[10px] px-2 py-1 rounded bg-[#1e1e1e] border border-[#333] text-[#888] hover:text-white transition-colors"
+                  >
+                    ↺ Herlaad
+                  </button>
+                </div>
+                <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
+                  <div className="grid grid-cols-[1fr_2.5rem_2.5rem_3rem_3rem_2.5rem_3rem] gap-1 px-3 py-2 text-[10px] text-[#444] uppercase" style={{ background: 'rgba(10,10,10,0.75)' }}>
+                    <span>Naam</span>
+                    <span className="text-right">Base</span>
+                    <span className="text-right">Bonus</span>
+                    <span className="text-right">Budget</span>
+                    <span className="text-right">Ingezet</span>
+                    <span className="text-right">Res.</span>
+                    <span className="text-right font-bold">Over</span>
+                  </div>
+                  {koTokenUsage.map((entry) => {
+                    const isNeg = entry.remaining < 0
+                    const isPos = entry.remaining > 0
+                    return (
+                      <div
+                        key={entry.initials}
+                        className="grid grid-cols-[1fr_2.5rem_2.5rem_3rem_3rem_2.5rem_3rem] gap-1 px-3 py-2 border-t border-[#1a1a1a] text-sm"
+                      >
+                        <span className="font-medium text-white">
+                          {entry.name} <span className="text-[#555] text-xs">{entry.initials}</span>
+                        </span>
+                        <span className="text-right text-[#888]">{entry.base}</span>
+                        <span className="text-right text-[#aaa]">{entry.oranjeBonus}</span>
+                        <span className="text-right text-[#ccc]">{entry.budget}</span>
+                        <span className="text-right text-[#aaa]">{entry.used}</span>
+                        <span className="text-right text-[#666]">{entry.reserved}</span>
+                        <span className={`text-right font-bold ${isNeg ? 'text-[#E74C3C]' : isPos ? 'text-[#2ECC71]' : 'text-[#555]'}`}>
+                          {entry.remaining}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <p className="mt-3 text-[10px] text-[#444]">
+                  Res. = gereserveerd voor wedstrijden zonder teams • Rood = te veel ingezet • {koTokenUsage.filter(e => e.remaining < 0).length} deelnemer(s) over budget
                 </p>
               </div>
             )}

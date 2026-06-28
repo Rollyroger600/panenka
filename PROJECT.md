@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-28c — Admin KO Tokens tab (Claude Code)
+
+**Nieuw admin tabblad "KO Tokens" — overzicht tokengebruik KO-wedstrijden per deelnemer**
+- **`app/actions/admin.ts`**: nieuwe server action `loadKoTokenUsage()` + type `KoTokenUsageEntry`. Berekent per deelnemer: base (65), oranje bonus, budget, ingezet (wedstrijden 73-104), gereserveerd (toekomstige wedstrijden zonder teams), remaining.
+- **`app/admin/AdminClient.tsx`**: nieuw tab "KO Tokens" met lazy-load patroon (zelfde als bestaand Tokens tab). Toont per deelnemer een overzicht met kolommen Base, Bonus, Budget, Ingezet, Res., Over. Rood/groen kleuring bij over/onder budget.
+
+---
+
 ### 2026-06-28b — KO token reservering + datumfix + fantasy stats race condition (Claude Code)
 
 **KO-wedstrijden tokenbudget: reservering voor toekomstige wedstrijden**

@@ -458,6 +458,58 @@ export async function loadAllTokenUsage(groupId: GroupId = 'og'): Promise<TokenU
   return entries.sort((a, b) => b.over - a.over)
 }
 
+// ── KO-wedstrijden token diagnose ─────────────────────────────────────────────
+
+export type KoTokenUsageEntry = {
+  name: string
+  initials: string
+  base: number
+  oranjeBonus: number
+  budget: number
+  used: number
+  reserved: number
+  remaining: number
+}
+
+const TOTAL_KO_MATCHES = 32
+
+export async function loadKoTokenUsage(groupId: GroupId = 'og'): Promise<KoTokenUsageEntry[]> {
+  const groupParticipants = PARTICIPANTS.filter(p => GROUP_MEMBERS[groupId].includes(p.initials))
+  const koMatchTeamsData = await kvGet<Record<number, { home: string; away: string; kickoff?: string }>>('ko_match_teams') ?? {}
+  const availableMatchCount = Object.keys(koMatchTeamsData).length
+  const reserved = TOTAL_KO_MATCHES - availableMatchCount
+
+  const scores = await kvGet<Record<string, Partial<ParticipantScore>>>(groupKey('scores', groupId))
+
+  const entries = await Promise.all(
+    groupParticipants.map(async (p) => {
+      const predictions = await kvGet<Record<number, Prediction>>(participantKey('predictions', p.initials))
+      const oranjeBonus = scores?.[p.initials.toLowerCase()]?.oranjeTokens ?? 0
+      const base = 65
+      const budget = base + oranjeBonus
+
+      const filledIds = new Set<number>()
+      let sum = 0
+      for (const [idStr, pred] of Object.entries(predictions ?? {})) {
+        const id = parseInt(idStr)
+        if (id < 73) continue
+        filledIds.add(id)
+        sum += pred.tokens ?? 1
+      }
+      const unfilledCount = Math.max(0, availableMatchCount - filledIds.size)
+      const used = sum + unfilledCount
+
+      return {
+        name: p.name, initials: p.initials,
+        base, oranjeBonus, budget,
+        used, reserved,
+        remaining: budget - used - reserved,
+      }
+    })
+  )
+  return entries.sort((a, b) => a.remaining - b.remaining)
+}
+
 // ── Voorspellingen van één deelnemer laden (voor matchday admin) ──────────────
 
 export async function loadParticipantPredictions(initials: string): Promise<Record<number, Prediction>> {
