@@ -273,13 +273,14 @@ export async function loadAllPlayerCounts(): Promise<Record<string, number>> {
 // ── Score berekening ──────────────────────────────────────────────────────
 
 export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Record<string, ParticipantScore>> {
-  const [results, koResults, oranjeResults, oranjeCorrect, beoordeling, fantasyStats] = await Promise.all([
+  const [results, koResults, oranjeResults, oranjeCorrect, beoordeling, fantasyStats, oranjeVragen] = await Promise.all([
     loadResults(),
     loadKoResults(),
     loadOranjeResults(),
     loadOranjeCorrectAdmin(groupId),
     loadOranjeBeoordeling(groupId),
     loadFantasyStats(),
+    loadOranjeVragenAdmin(groupId),
   ])
 
   const heeftNieuweSysteem = Object.keys(oranjeCorrect).length > 0 || Object.keys(beoordeling).length > 0
@@ -309,6 +310,7 @@ export async function computeAndSaveScores(groupId: GroupId = 'og'): Promise<Rec
         p.initials.toLowerCase(),
         beoordeling,
         groupId === 'asc' ? p.ascBonusTokens : undefined,
+        oranjeVragen,
       )
 
       const fantasy = scoreFantasy(fantasyData?.squad ?? {}, fantasyStats)

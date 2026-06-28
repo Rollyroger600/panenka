@@ -5,8 +5,8 @@ import { KNOCKOUT_ROUNDS } from './data/knockoutRounds'
 import { computePlayerQuote, normalizeUitslag } from './helpers'
 import type { Player } from './data/players'
 import type { Prediction, OranjeAnswer, KnockoutPicks } from '@/store/gameStore'
-import type { OranjeCorrectMap, OranjeAntwoordenMap, OranjeBeoordeling } from '@/lib/types/oranjeVragen'
-import { parseCorrectWaarden } from '@/lib/types/oranjeVragen'
+import type { OranjeCorrectMap, OranjeAntwoordenMap, OranjeBeoordeling, OranjeVragenMap } from '@/lib/types/oranjeVragen'
+import { parseCorrectWaarden, isAntwoordCorrect } from '@/lib/types/oranjeVragen'
 
 export type FantasyStats = Record<string, { goals: number; assists: number }>
 
@@ -57,6 +57,7 @@ function scoreOranjeNieuw(
   correct: OranjeCorrectMap,
   participantKey?: string,
   beoordeling?: OranjeBeoordeling,
+  vragen?: OranjeVragenMap,
 ): number {
   let punten = 0
   for (const matchId of NED_MATCH_IDS) {
@@ -70,14 +71,9 @@ function scoreOranjeNieuw(
       if (!gegeven) continue
       const correctWaarden = parseCorrectWaarden(matchCorrect[questionKey] ?? null)
       if (correctWaarden.length > 0) {
-        const isCorrect = correctWaarden.some((cw) => {
-          // percentage / exact_aantal: ±5% marge op elk correct antwoord
-          if (/^\d+$/.test(cw) && /^\d+$/.test(gegeven)) {
-            return Math.abs(parseInt(gegeven, 10) - parseInt(cw, 10)) <= 5
-          }
-          return gegeven === cw
-        })
-        if (isCorrect) punten += ORANJE_PTS_NIEUW
+        const vraag = vragen?.[matchId]?.[questionKey]
+        const effectiefType = vraag?.adminType ?? (vraag?.type !== 'anders' ? vraag?.type : null) ?? null
+        if (isAntwoordCorrect(gegeven, correctWaarden, effectiefType)) punten += ORANJE_PTS_NIEUW
       } else if (participantKey && matchBeoordeling[questionKey]?.[participantKey] === true) {
         punten += ORANJE_PTS_NIEUW
       }
@@ -92,8 +88,9 @@ function scoreOranjeTokens(
   correct: OranjeCorrectMap,
   participantKey?: string,
   beoordeling?: OranjeBeoordeling,
+  vragen?: OranjeVragenMap,
 ): number {
-  const correctCount = scoreOranjeNieuw(antwoorden, correct, participantKey, beoordeling) / ORANJE_PTS_NIEUW
+  const correctCount = scoreOranjeNieuw(antwoorden, correct, participantKey, beoordeling, vragen) / ORANJE_PTS_NIEUW
   return Math.ceil(correctCount * 0.5)
 }
 
@@ -111,6 +108,7 @@ export function scoreParticipant(
   participantKey?: string,
   beoordeling?: OranjeBeoordeling,
   ascBonusTokens?: Record<number, number>,
+  oranjeVragen?: OranjeVragenMap,
 ): ScoreBreakdown {
   // ── Poulefase (wedstrijden 1–72) ─────────────────────────────────────────
   let poulefase = 0
@@ -185,8 +183,8 @@ export function scoreParticipant(
   let oranje = 0
   let oranjeTokens = 0
   if (oranjeAntwoorden && (oranjeCorrect || beoordeling)) {
-    oranje = scoreOranjeNieuw(oranjeAntwoorden, oranjeCorrect ?? {}, participantKey, beoordeling)
-    oranjeTokens = scoreOranjeTokens(oranjeAntwoorden, oranjeCorrect ?? {}, participantKey, beoordeling)
+    oranje = scoreOranjeNieuw(oranjeAntwoorden, oranjeCorrect ?? {}, participantKey, beoordeling, oranjeVragen)
+    oranjeTokens = scoreOranjeTokens(oranjeAntwoorden, oranjeCorrect ?? {}, participantKey, beoordeling, oranjeVragen)
   } else {
     for (const matchId of NED_MATCH_IDS) {
       const pred = oranjeAnswers[matchId]

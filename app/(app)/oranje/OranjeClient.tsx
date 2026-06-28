@@ -17,7 +17,7 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import { MATCHES } from '@/lib/data/matches'
 import { DUAL_GROUP_INITIALS, GROUP_MEMBERS, getGroupForParticipant } from '@/lib/groups'
 import { PARTICIPANTS } from '@/lib/participants'
-import { parseCorrectWaarden } from '@/lib/types/oranjeVragen'
+import { parseCorrectWaarden, isAntwoordCorrect } from '@/lib/types/oranjeVragen'
 import type { GroupId } from '@/lib/groups'
 import type { OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap, OranjeBeoordeling } from '@/lib/types/oranjeVragen'
 
@@ -103,6 +103,7 @@ export function OranjeClient({ mijnInitials }: Props) {
     const matchCorrect = correctMap[id] ?? {}
     const matchAntwoorden = antwoorden[id] ?? {}
     const matchBeoordeling = beoordeling[id] ?? {}
+    const matchVragen = vragen[id] ?? {}
     const allKeys = new Set([...Object.keys(matchCorrect), ...Object.keys(matchBeoordeling)])
     let count = 0
     for (const key of allKeys) {
@@ -110,13 +111,9 @@ export function OranjeClient({ mijnInitials }: Props) {
       if (!gegeven) continue
       const correctWaarden = parseCorrectWaarden(matchCorrect[key] ?? null)
       if (correctWaarden.length > 0) {
-        const isCorrect = correctWaarden.some((cw) => {
-          if (/^\d+$/.test(cw) && /^\d+$/.test(gegeven)) {
-            return Math.abs(parseInt(gegeven, 10) - parseInt(cw, 10)) <= 5
-          }
-          return gegeven === cw
-        })
-        if (isCorrect) count++
+        const vraag = matchVragen[key]
+        const effectiefType = vraag?.adminType ?? (vraag?.type !== 'anders' ? vraag?.type : null) ?? null
+        if (isAntwoordCorrect(gegeven, correctWaarden, effectiefType)) count++
       } else if (matchBeoordeling[key]?.[participantKey] === true) {
         count++
       }
@@ -222,6 +219,7 @@ export function OranjeClient({ mijnInitials }: Props) {
                   vragen={vragen[activeMatch.id] ?? {}}
                   antwoorden={antwoorden}
                   correctMap={correctMap[activeMatch.id] ?? {}}
+                  beoordeling={beoordeling[activeMatch.id] ?? {}}
                   alleAntwoorden={alleAntwoorden}
                   groupParticipants={groupParticipants}
                   mijnInitials={mijnInitials}

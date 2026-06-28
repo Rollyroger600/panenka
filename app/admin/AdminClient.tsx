@@ -216,16 +216,18 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   }
 
   async function handleBeoordeling(matchId: number, questionKey: string, participantKey: string, correct: boolean | null) {
-    const next: OranjeBeoordeling = JSON.parse(JSON.stringify(oranjeBeoordeling))
-    if (!next[matchId]) next[matchId] = {}
-    if (!next[matchId][questionKey]) next[matchId][questionKey] = {}
-    if (correct === null) {
-      delete next[matchId][questionKey][participantKey]
-    } else {
-      next[matchId][questionKey][participantKey] = correct
-    }
-    setOranjeBeoordeling(next)
-    await saveOranjeBeoordeling(next, groupId)
+    setOranjeBeoordeling(prev => {
+      const next: OranjeBeoordeling = JSON.parse(JSON.stringify(prev))
+      if (!next[matchId]) next[matchId] = {}
+      if (!next[matchId][questionKey]) next[matchId][questionKey] = {}
+      if (correct === null) {
+        delete next[matchId][questionKey][participantKey]
+      } else {
+        next[matchId][questionKey][participantKey] = correct
+      }
+      saveOranjeBeoordeling(next, groupId)
+      return next
+    })
   }
 
   async function handleEditTekst(matchId: number, initials: string, tekst: string) {
@@ -246,12 +248,14 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
   }
 
   async function handleCorrectAntwoord(matchId: number, initials: string, waarde: string | null) {
-    const next: OranjeCorrectMap = {
-      ...oranjeCorrect,
-      [matchId]: { ...(oranjeCorrect[matchId] ?? {}), [initials.toLowerCase()]: waarde },
-    }
-    setOranjeCorrect(next)
-    await saveOranjeCorrect(next, groupId)
+    setOranjeCorrect(prev => {
+      const next: OranjeCorrectMap = {
+        ...prev,
+        [matchId]: { ...(prev[matchId] ?? {}), [initials.toLowerCase()]: waarde },
+      }
+      saveOranjeCorrect(next, groupId)
+      return next
+    })
   }
 
   const koMatchesWithTeams = Object.keys(koMatchTeams).length

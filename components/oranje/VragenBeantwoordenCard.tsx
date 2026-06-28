@@ -4,10 +4,10 @@ import { FlagImage } from '@/components/ui/FlagImage'
 import { abbrevCountry } from '@/lib/helpers'
 import { PARTICIPANTS } from '@/lib/participants'
 import { WK_PLAYERS } from '@/lib/data/players'
-import { parseCorrectWaarden } from '@/lib/types/oranjeVragen'
+import { parseCorrectWaarden, isAntwoordCorrect } from '@/lib/types/oranjeVragen'
 import type { Participant } from '@/lib/participants'
 import type { Match } from '@/lib/data/matches'
-import type { OranjeVraag, OranjeAntwoordenMap } from '@/lib/types/oranjeVragen'
+import type { OranjeVraag, OranjeAntwoordenMap, OranjeBeoordeling } from '@/lib/types/oranjeVragen'
 import { MINUUT_OPTIES } from '@/lib/types/oranjeVragen'
 import { getWKSquadStatus } from '@/lib/wkSquadCheck'
 
@@ -16,6 +16,7 @@ interface Props {
   vragen: Record<string, OranjeVraag>          // authorInitials → vraag
   antwoorden: OranjeAntwoordenMap              // mijn eigen antwoorden
   correctMap: Record<string, string | null>    // questionAuthorKey → correct antwoord
+  beoordeling: Record<string, Record<string, boolean>>  // questionAuthorKey → participantKey → isCorrect
   alleAntwoorden: Record<string, OranjeAntwoordenMap>  // initials → antwoordenMap
   groupParticipants: Participant[]
   mijnInitials: string
@@ -24,7 +25,7 @@ interface Props {
 }
 
 export function VragenBeantwoordenCard({
-  match, vragen, antwoorden, correctMap, alleAntwoorden, groupParticipants,
+  match, vragen, antwoorden, correctMap, beoordeling, alleAntwoorden, groupParticipants,
   mijnInitials, onAntwoord, readOnly,
 }: Props) {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
@@ -77,8 +78,15 @@ export function VragenBeantwoordenCard({
         const correctAntwoord = correctMap?.[key] ?? null
         const correctValues = parseCorrectWaarden(correctAntwoord)
         const heeftCorrectAntwoord = correctValues.length > 0
-        const isCorrect = heeftCorrectAntwoord && huidigAntwoord !== null && correctValues.includes(huidigAntwoord)
-        const isWrong = heeftCorrectAntwoord && huidigAntwoord !== null && !correctValues.includes(huidigAntwoord)
+        const participantKey = mijnInitials.toLowerCase()
+        const beoordelingVoorVraag = beoordeling?.[key]
+        const heeftBeoordeling = beoordelingVoorVraag?.[participantKey] !== undefined
+        const isCorrect = heeftCorrectAntwoord
+          ? huidigAntwoord !== null && isAntwoordCorrect(huidigAntwoord, correctValues, effectiefType ?? null)
+          : heeftBeoordeling && beoordelingVoorVraag[participantKey] === true
+        const isWrong = heeftCorrectAntwoord
+          ? huidigAntwoord !== null && !isAntwoordCorrect(huidigAntwoord, correctValues, effectiefType ?? null)
+          : heeftBeoordeling && beoordelingVoorVraag[participantKey] === false
 
         return (
           <div
@@ -142,8 +150,13 @@ export function VragenBeantwoordenCard({
                       .map((p) => {
                         const pKey = p.initials.toLowerCase()
                         const pAntwoord = alleAntwoorden[pKey]?.[match.id]?.[key] ?? null
-                        const pCorrect = heeftCorrectAntwoord && pAntwoord !== null && correctValues.includes(pAntwoord)
-                        const pWrong = heeftCorrectAntwoord && pAntwoord !== null && !correctValues.includes(pAntwoord)
+                        const pBeoordeeld = beoordelingVoorVraag?.[pKey] !== undefined
+                        const pCorrect = heeftCorrectAntwoord
+                          ? pAntwoord !== null && isAntwoordCorrect(pAntwoord, correctValues, effectiefType ?? null)
+                          : pBeoordeeld && beoordelingVoorVraag![pKey] === true
+                        const pWrong = heeftCorrectAntwoord
+                          ? pAntwoord !== null && !isAntwoordCorrect(pAntwoord, correctValues, effectiefType ?? null)
+                          : pBeoordeeld && beoordelingVoorVraag![pKey] === false
 
                         return (
                           <div key={pKey} className="flex items-center justify-between">

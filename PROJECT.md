@@ -845,6 +845,20 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-28d — Oranje vragen: type-aware antwoordvergelijking + beoordeling display (Claude Code)
+
+**Oranje antwoorden werden verkeerd beoordeeld — marge-logica hield geen rekening met vraagtype**
+- **`lib/types/oranjeVragen.ts`**: nieuwe gedeelde `isAntwoordCorrect(gegeven, correctValues, type)` helper. Past marge toe per type: `percentage` ±5, `aantal_marge` ±1, `decimaal` ±0.33, alle overige types exact match. Voorheen kreeg elk numeriek antwoord ±5 marge, waardoor bijv. `exact_aantal`-vragen altijd vinkjes gaven.
+- **`components/oranje/VragenBeantwoordenCard.tsx`**: gebruikt nu `isAntwoordCorrect` met het effectieve vraagtype. Toont ook beoordeling-resultaten (goed/fout) voor `open`-type vragen die via admin-beoordeling worden beoordeeld (voorheen ontbrak dit).
+- **`app/(app)/oranje/OranjeClient.tsx`**: header-teller ("X / Y correct") gebruikt nu dezelfde type-aware logica. Geeft `beoordeling` data door aan VragenBeantwoordenCard.
+- **`lib/scoring.ts`**: `scoreOranjeNieuw` en `scoreOranjeTokens` accepteren nu `oranjeVragen` parameter en gebruiken `isAntwoordCorrect` — score-berekening is nu consistent met de weergave.
+- **`app/actions/admin.ts`**: `computeAndSaveScores` laadt en geeft `oranjeVragen` door aan de scoring engine.
+
+**Race condition gefixt in admin correct-antwoorden**
+- **`app/admin/AdminClient.tsx`**: `handleCorrectAntwoord` en `handleBeoordeling` gebruiken nu de callback-variant van `setState` i.p.v. stale closure state. Voorheen kon snel achter elkaar antwoorden instellen eerdere antwoorden overschrijven.
+
+---
+
 ### 2026-06-28c — Admin KO Tokens tab (Claude Code)
 
 **Nieuw admin tabblad "KO Tokens" — overzicht tokengebruik KO-wedstrijden per deelnemer**

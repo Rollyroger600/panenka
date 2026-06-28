@@ -59,6 +59,31 @@ export function parseCorrectWaarden(s: string | null): string[] {
   return s.split('|').filter(Boolean)
 }
 
+export function isAntwoordCorrect(
+  gegeven: string,
+  correctValues: string[],
+  type: AntwoordType | null,
+): boolean {
+  return correctValues.some((cw) => {
+    if (type === 'percentage') {
+      const cNum = parseInt(cw, 10)
+      const gNum = parseInt(gegeven, 10)
+      if (!isNaN(cNum) && !isNaN(gNum)) return Math.abs(gNum - cNum) <= 5
+    }
+    if (type === 'aantal_marge') {
+      const cNum = parseInt(cw, 10)
+      const gNum = parseInt(gegeven, 10)
+      if (!isNaN(cNum) && !isNaN(gNum)) return Math.abs(gNum - cNum) <= 1
+    }
+    if (type === 'decimaal') {
+      const cNum = parseFloat(cw)
+      const gNum = parseFloat(gegeven)
+      if (!isNaN(cNum) && !isNaN(gNum)) return Math.abs(gNum - cNum) <= 0.33 + 1e-9
+    }
+    return gegeven === cw
+  })
+}
+
 export function getAntwoordTypeLabel(type: AntwoordType, opponent: string): string {
   switch (type) {
     case 'nl_opp':      return `Nederland / ${opponent}`
