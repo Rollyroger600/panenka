@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-29e — KO deadline override wedstrijd 76 voor RA (Claude Code)
+
+**Robert (RA) mag alsnog wedstrijd 76 invullen ondanks verstreken deadline**
+- **`hooks/useKoMatchDeadline.ts`**: `DEADLINE_OVERRIDES` map opnieuw toegevoegd met wedstrijd 76 → `['RA']`. `useKoMatchLocks` slaat de lock over als de deelnemer in de override-lijst staat.
+
+---
+
 ### 2026-06-29d — Admin matchday TBD fix + stand KO Wed subtab (Claude Code)
 
 **KO-wedstrijden correct tonen in admin matchday-tab + nieuw subtabblad op stand-pagina**

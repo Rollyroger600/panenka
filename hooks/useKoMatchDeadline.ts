@@ -5,6 +5,10 @@ import type { KoMatchTeams } from '@/app/actions/admin'
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000
 
+const DEADLINE_OVERRIDES: Record<number, string[]> = {
+  76: ['RA'],
+}
+
 export function isKoMatchLocked(kickoff: string | undefined): boolean {
   if (!kickoff) return false
   return Date.now() >= new Date(kickoff).getTime() - TWO_HOURS_MS
@@ -24,6 +28,10 @@ export function useKoMatchLocks(koMatchTeams: KoMatchTeams, participant?: string
       const matchId = Number(idStr)
       const kickoff = data.kickoff
       if (!kickoff) {
+        locks[matchId] = false
+        continue
+      }
+      if (participant && DEADLINE_OVERRIDES[matchId]?.includes(participant)) {
         locks[matchId] = false
         continue
       }
