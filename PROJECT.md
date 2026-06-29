@@ -998,6 +998,19 @@ The following decisions were made during implementation that deviate from or ext
 
 ---
 
+### 2026-06-29 — Pot updates MD18/19 + admin max bets verhoogd (Claude Code)
+
+#### Stand pagina — Pot tab OG
+- `app\(app)\stand\StandClient.tsx`: OG: Toto's en uitslagen matchday 19 (-10,00).
+
+#### Stand pagina — Pot tab ASC
+- `app\(app)\stand\StandClient.tsx`: ASC: Toto's en uitslagen matchday 18 (-5,00) en 19 (-5,00). Winst Matchday 16 (+11,14), 17 (+6,10) en 18 (+15,87).
+
+#### Admin — max weddenschappen verhoogd
+- `app\admin\AdminClient.tsx`: maximaal aantal custom weddenschappen per matchday verhoogd van 2 naar 10.
+
+---
+
 ### 2026-06-26 — Token fix PN + MD17 rotation fix + pot updates (Claude Code)
 
 #### Redis data fix — PN tokens wedstrijd 58/61

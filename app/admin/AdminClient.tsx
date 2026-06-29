@@ -980,7 +980,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
         <div className="rounded-xl border border-[#2a2a2a] overflow-hidden" style={{ background: 'rgba(22,22,22,0.82)' }}>
           <div className="px-3 py-2" style={{ background: 'rgba(10,10,10,0.75)' }}>
             <p className="font-heading text-sm font-bold text-white">Weddenschappen</p>
-            <p className="text-[10px] text-[#555] mt-0.5">Voer 1 of 2 weddenschappen in voor deze matchday.</p>
+            <p className="text-[10px] text-[#555] mt-0.5">Voer 1 tot 10 weddenschappen in voor deze matchday.</p>
           </div>
           <div className="divide-y divide-[#1e1e1e]">
             {customBets.map((bet, idx) => (
@@ -1061,7 +1061,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
               </div>
             ))}
           </div>
-          {customBets.length < 2 && (
+          {customBets.length < 10 && (
             <button
               onClick={() => setCustomBets((prev) => [...prev, { description: '', matchIds: [], inzet: '', quotering: '' }])}
               className="w-full py-2 text-xs text-[#FF6B00] hover:text-[#FF8C33] font-bold border-t border-[#1e1e1e]"
