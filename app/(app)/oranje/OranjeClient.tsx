@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useDeadline } from '@/hooks/useDeadline'
+import { useDeadline, KO_ORANJE_VRAAG_DEADLINE, KO_ORANJE_ANTWOORD_DEADLINE } from '@/hooks/useDeadline'
 import {
   loadOranjeVragen, loadOranjeVragenForGroup,
   loadOranjeAntwoorden, loadOranjeAntwoordenForGroup,
@@ -21,7 +21,7 @@ import { parseCorrectWaarden, isAntwoordCorrect } from '@/lib/types/oranjeVragen
 import type { GroupId } from '@/lib/groups'
 import type { OranjeVragenMap, OranjeAntwoordenMap, OranjeCorrectMap, OranjeBeoordeling } from '@/lib/types/oranjeVragen'
 
-const NED_MATCH_IDS = [10, 33, 58]
+const NED_MATCH_IDS = [10, 33, 58, 75]
 const NED_MATCHES = MATCHES.filter((m) => NED_MATCH_IDS.includes(m.id))
 
 interface Props {
@@ -29,10 +29,12 @@ interface Props {
 }
 
 export function OranjeClient({ mijnInitials }: Props) {
-  const { isPast, isVraagPast, isVraagGracePast } = useDeadline()
+  const { isPast, isVraagPast, isVraagGracePast, now } = useDeadline()
   const isDualGroup = DUAL_GROUP_INITIALS.includes(mijnInitials.toUpperCase())
   const [activeGroup, setActiveGroup] = useState<GroupId>('og')
-  const [activeMatchId, setActiveMatchId] = useState<number>(NED_MATCH_IDS[0])
+  const [activeMatchId, setActiveMatchId] = useState<number>(
+    new Date() < KO_ORANJE_ANTWOORD_DEADLINE ? 75 : NED_MATCH_IDS[0],
+  )
   const [isLoaded, setIsLoaded] = useState(false)
   const [vragen, setVragen] = useState<OranjeVragenMap>({})
   const [antwoorden, setAntwoorden] = useState<OranjeAntwoordenMap>({})
@@ -131,7 +133,10 @@ export function OranjeClient({ mijnInitials }: Props) {
 
   if (!isLoaded) return <SkeletonList count={3} />
 
+  const isKoVraagPast = now >= KO_ORANJE_VRAAG_DEADLINE
+  const isKoAntwoordPast = now >= KO_ORANJE_ANTWOORD_DEADLINE
   const isFase2 = isVraagPast && !inGracePeriod
+  const allMatchesDone = isPast && isKoAntwoordPast
 
   return (
     <>
@@ -146,7 +151,7 @@ export function OranjeClient({ mijnInitials }: Props) {
               {aantalIngediend} / 3 vragen ingediend · deadline {inGracePeriod ? '3 juni (verlengd)' : '31 mei'}
             </div>
           </>
-        ) : !isPast ? (
+        ) : !allMatchesDone ? (
           <>
             <p className="font-accent font-light text-white text-xs mb-2 text-center">
               Jouw oranje antwoorden
@@ -213,6 +218,39 @@ export function OranjeClient({ mijnInitials }: Props) {
             {/* Actieve wedstrijd */}
             {(() => {
               const activeMatch = NED_MATCHES.find((m) => m.id === activeMatchId)!
+              const isKoMatch = activeMatchId === 75
+
+              if (isKoMatch && !isKoVraagPast) {
+                const key = mijnInitials.toLowerCase()
+                const mijnVraag = vragen[activeMatch.id]?.[key] ?? null
+                const heeftGepubliceerdeVragen = Object.values(vragen[activeMatch.id] ?? {}).some(v => v.gepubliceerd)
+                return (
+                  <>
+                    <VraagIndienenCard
+                      match={activeMatch}
+                      bestaandeVraag={mijnVraag}
+                      isPast={false}
+                    />
+                    {heeftGepubliceerdeVragen && (
+                      <div className="mt-4">
+                        <VragenBeantwoordenCard
+                          match={activeMatch}
+                          vragen={vragen[activeMatch.id] ?? {}}
+                          antwoorden={antwoorden}
+                          correctMap={correctMap[activeMatch.id] ?? {}}
+                          beoordeling={beoordeling[activeMatch.id] ?? {}}
+                          alleAntwoorden={alleAntwoorden}
+                          groupParticipants={groupParticipants}
+                          mijnInitials={mijnInitials}
+                          onAntwoord={handleAntwoord}
+                          readOnly={false}
+                        />
+                      </div>
+                    )}
+                  </>
+                )
+              }
+
               return (
                 <VragenBeantwoordenCard
                   match={activeMatch}
@@ -224,7 +262,7 @@ export function OranjeClient({ mijnInitials }: Props) {
                   groupParticipants={groupParticipants}
                   mijnInitials={mijnInitials}
                   onAntwoord={handleAntwoord}
-                  readOnly={isPast}
+                  readOnly={isKoMatch ? isKoAntwoordPast : isPast}
                 />
               )
             })()}

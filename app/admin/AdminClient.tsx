@@ -39,6 +39,7 @@ const NED_MATCHES = [
   { id: 10, label: 'NED – JPN (14 jun)' },
   { id: 33, label: 'NED – ZWE (20 jun)' },
   { id: 58, label: 'TUN – NED (26 jun)' },
+  { id: 75, label: 'NED – MAR (30 jun)' },
 ]
 
 type Tab = 'matches' | 'knockout' | 'ko_matches' | 'vragen' | 'fantasy' | 'scores' | 'links' | 'matchday' | 'tokens' | 'ko_tokens' | 'voortgang'

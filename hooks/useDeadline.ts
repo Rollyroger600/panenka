@@ -8,6 +8,9 @@ const DEADLINE             = new Date('2026-06-09T21:59:00Z') // 23:59 CEST
 const VRAAG_DEADLINE       = new Date('2026-05-31T21:59:00Z') // 31 mei 23:59 CEST
 const VRAAG_GRACE_DEADLINE = new Date('2026-06-03T21:59:00Z') // 3 juni 23:59 CEST – voor wie niets had ingediend
 
+export const KO_ORANJE_VRAAG_DEADLINE    = new Date('2026-06-29T17:00:00Z') // 29 jun 19:00 CEST – indienen
+export const KO_ORANJE_ANTWOORD_DEADLINE = new Date('2026-06-30T01:00:00Z') // 30 jun 03:00 CEST – 2h voor aftrap
+
 export function useDeadline() {
   const [now, setNow] = useState(() => new Date())
   const participantInitials = useGameStore((s) => s.participantInitials)
@@ -32,5 +35,5 @@ export function useDeadline() {
   const hours   = Math.floor((msLeft % 86_400_000) / 3_600_000)
   const minutes = Math.floor((msLeft % 3_600_000) / 60_000)
 
-  return { isPast, isVraagPast, isVraagGracePast, days, hours, minutes, deadline: effectiveDeadline, vraagDeadline: VRAAG_DEADLINE }
+  return { isPast, isVraagPast, isVraagGracePast, days, hours, minutes, deadline: effectiveDeadline, vraagDeadline: VRAAG_DEADLINE, now }
 }

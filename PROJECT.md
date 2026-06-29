@@ -845,6 +845,18 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-29a — Oranje vragen 4e wedstrijd NED-MAR (Claude Code)
+
+**Oranje pagina uitgebreid met 4e wedstrijd: Nederland – Marokko (#75)**
+- **`lib/data/matches.ts`**: match 75 bijgewerkt met `home: 'Nederland', away: 'Marokko'`, datum 30 jun 03:00, `active: true`.
+- **`hooks/useDeadline.ts`**: nieuwe exports `KO_ORANJE_VRAAG_DEADLINE` (29 jun 19:00 CEST) en `KO_ORANJE_ANTWOORD_DEADLINE` (30 jun 01:00 CEST). `now` toegevoegd aan return value.
+- **`app/(app)/oranje/OranjeClient.tsx`**: NED_MATCH_IDS uitgebreid met 75. Default tab is NED-MAR zolang relevant. Per-match deadline logica: vóór 19:00 toont VraagIndienenCard + eventueel VragenBeantwoordenCard als admin al vragen heeft vrijgegeven. Na 19:00 alleen beantwoorden. Na 01:00 readOnly. Summary bar toont "ingevuld" zolang KO-match open is.
+- **`lib/scoring.ts`**: NED_MATCH_IDS uitgebreid met 75 — oranje tokens tellen mee in scoring.
+- **`app/(app)/overzicht/OverzichtClient.tsx`**: NED_MATCH_IDS uitgebreid met 75.
+- **`app/admin/AdminClient.tsx`**: NED-MAR toegevoegd aan admin oranje vragen panel.
+
+---
+
 ### 2026-06-28i — Admin ESPN import KO-aware + score picker fix (Claude Code)
 
 **Admin ESPN-import toont nu reguliere-tijd score voor KO-wedstrijden**

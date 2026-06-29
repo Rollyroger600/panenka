@@ -11,7 +11,7 @@ import { loadOranjeVragen, loadOranjeAntwoorden } from '@/app/actions/oranjeVrag
 import { SkeletonList } from '@/components/ui/Skeleton'
 import type { OranjeVragenMap, OranjeAntwoordenMap } from '@/lib/types/oranjeVragen'
 
-const NED_MATCH_IDS = [10, 33, 58]
+const NED_MATCH_IDS = [10, 33, 58, 75]
 
 interface Props {
   initials: string

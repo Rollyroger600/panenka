@@ -95,7 +95,7 @@ export const MATCHES: Match[] = [
   // Ronde van 32 — 16 wedstrijden — 28 jun – 3 jul
   { id: 73,  poule: 'KO', round: 1, date: '28 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
   { id: 74,  poule: 'KO', round: 1, date: '29 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
-  { id: 75,  poule: 'KO', round: 1, date: '29 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
+  { id: 75,  poule: 'KO', round: 1, date: '30 jun', time: '03:00', home: 'Nederland', away: 'Marokko', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: true },
   { id: 76,  poule: 'KO', round: 1, date: '29 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
   { id: 77,  poule: 'KO', round: 1, date: '30 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },
   { id: 78,  poule: 'KO', round: 1, date: '30 jun', home: 'TBD', away: 'TBD', stadium: 'TBD', phase: 'knockout', koRound: 'rv32', active: false },

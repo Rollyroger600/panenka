@@ -46,7 +46,7 @@ const QKEY_MAP: Record<string, keyof typeof KO_QUOTES[string]> = {
 
 const R32_IDS = ['w1', 'w2', 'w3'] as const
 
-const NED_MATCH_IDS = [10, 33, 58]
+const NED_MATCH_IDS = [10, 33, 58, 75]
 const ORANJE_KEYS = ['q1','q2','q3','q4','q5','q6','q7','q8','q9'] as const
 const ORANJE_PTS = 2   // legacy — not used in new scoring
 
