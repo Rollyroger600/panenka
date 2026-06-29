@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-29b — KO deadline override verwijderd + quoteringen bijgewerkt (Claude Code)
+
+**Tijdelijke deadline-lift voor wedstrijd 73 verwijderd, KO-quoteringen ververst**
+- **`hooks/useKoMatchDeadline.ts`**: `DEADLINE_OVERRIDES` map en bijbehorende participant-check verwijderd. RA, TdL en RH vallen weer onder de standaard deadline (2 uur voor aftrap).
+- **`lib/data/koMatchOdds.ts`**: quoteringen bijgewerkt voor wedstrijden #74–#88 via `scrape-ko-match-odds.mjs`. Wedstrijd #73 (al gespeeld) ongewijzigd behouden. Kickoff-tijden gesynct naar KV.
+
+---
+
 ### 2026-06-29a — Oranje vragen 4e wedstrijd NED-MAR (Claude Code)
 
 **Oranje pagina uitgebreid met 4e wedstrijd: Nederland – Marokko (#75)**
