@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-29c — Oranje vragen: antwoordtype "aantal met marge ±100.000" (Claude Code)
+
+**Nieuw antwoordtype voor grote getallen (bijv. stadionbezoekers, TV-kijkers)**
+- **`lib/types/oranjeVragen.ts`**: `aantal_marge_groot` toegevoegd aan `AntwoordType`, label "Aantal met marge ±100.000", scoring marge ±100.000 in `isAntwoordCorrect`.
+- **`components/oranje/VraagIndienenCard.tsx`**: type toegevoegd aan keuze-buttons.
+- **`components/oranje/VragenBeantwoordenCard.tsx`**: invoer-UI met −100k/+100k knoppen, vrij numeriek veld. Display formatteert met `toLocaleString('nl-NL')`.
+- **`app/admin/AdminClient.tsx`**: type toegevoegd aan admin override dropdown en correct-antwoord invoer.
+
+---
+
 ### 2026-06-29b — KO deadline override verwijderd + quoteringen bijgewerkt (Claude Code)
 
 **Tijdelijke deadline-lift voor wedstrijd 73 verwijderd, KO-quoteringen ververst**

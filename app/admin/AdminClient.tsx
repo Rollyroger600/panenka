@@ -519,7 +519,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
                                 className="bg-[#252525] border border-[#2a2a2a] text-[10px] text-white rounded-lg px-2 py-1 outline-none focus:border-[#FF6B00]"
                               >
                                 <option value="">→ Override type</option>
-                                {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'speler_beide', 'links_rechts', 'percentage', 'exact_aantal', 'exact_aantal_hoog', 'aantal_marge', 'decimaal', 'minuut', 'open'] as const).map((t) => (
+                                {(['ja_nee', 'nl_opp', 'speler_nl', 'speler_opp', 'speler_beide', 'links_rechts', 'percentage', 'exact_aantal', 'exact_aantal_hoog', 'aantal_marge', 'aantal_marge_groot', 'decimaal', 'minuut', 'open'] as const).map((t) => (
                                   <option key={t} value={t}>{ANTWOORD_TYPE_LABELS[t]}</option>
                                 ))}
                               </select>
@@ -1679,6 +1679,17 @@ function AdminCorrectInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, on
           className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-20 outline-none focus:border-[#FF6B00] text-center [appearance:textfield]"
         />
         <span className="text-xs text-[#555]">{type === 'aantal_marge' ? 'getal (deelnemers scoren bij ±1)' : 'exact getal'}</span>
+      </div>
+    )
+  }
+  if (type === 'aantal_marge_groot') {
+    return (
+      <div className="flex items-center gap-2">
+        <input type="number" min={0} step={100000} value={waarde ?? ''} placeholder="bijv. 1200000"
+          onChange={(e) => { const v = parseInt(e.target.value, 10); onChange(isNaN(v) ? null : String(Math.max(0, v))) }}
+          className="bg-[#252525] border border-[#2a2a2a] text-xs text-white rounded-lg px-2 py-1.5 w-28 outline-none focus:border-[#FF6B00] text-center [appearance:textfield]"
+        />
+        <span className="text-xs text-[#555]">getal (deelnemers scoren bij ±100.000)</span>
       </div>
     )
   }

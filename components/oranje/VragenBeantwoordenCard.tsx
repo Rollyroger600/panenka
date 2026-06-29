@@ -195,6 +195,10 @@ function formatAntwoord(
 ): string {
   if (type === 'percentage') return `${waarde}%`
   if (type === 'nl_opp') return waarde === 'NL' ? 'Nederland' : opponent
+  if (type === 'aantal_marge_groot') {
+    const n = parseInt(waarde, 10)
+    return isNaN(n) ? waarde : n.toLocaleString('nl-NL')
+  }
   return waarde
 }
 
@@ -365,6 +369,37 @@ function AntwoordInvoer({ type, waarde, opponent, nedPlayers, oppPlayers, onChan
           onClick={() => onChange(String(clamp((num ?? MIN - 1) + 1)))}
           className="px-3 py-1.5 bg-[#252525] text-[#888] rounded-lg text-sm font-bold hover:text-white transition-colors"
         >+</button>
+      </div>
+    )
+  }
+
+  if (type === 'aantal_marge_groot') {
+    const num = waarde !== null ? parseInt(waarde, 10) : null
+    const step = 100_000
+    function fmt(v: number) { return String(v) }
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onChange(num !== null ? fmt(Math.max(0, num - step)) : null)}
+          className="px-2 py-1.5 bg-[#252525] text-[#888] rounded-lg text-[11px] font-bold hover:text-white transition-colors shrink-0"
+        >−100k</button>
+        <input
+          type="number"
+          min={0}
+          step={step}
+          value={waarde ?? ''}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10)
+            onChange(isNaN(v) ? null : String(Math.max(0, v)))
+          }}
+          placeholder="bijv. 1.200.000"
+          className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-3 py-1.5 text-sm text-white text-center outline-none focus:border-[#FF6B00] [appearance:textfield]"
+        />
+        <span className="text-[10px] text-[#555] shrink-0">±100k</span>
+        <button
+          onClick={() => onChange(fmt(Math.max(0, (num ?? 0) + step)))}
+          className="px-2 py-1.5 bg-[#252525] text-[#888] rounded-lg text-[11px] font-bold hover:text-white transition-colors shrink-0"
+        >+100k</button>
       </div>
     )
   }

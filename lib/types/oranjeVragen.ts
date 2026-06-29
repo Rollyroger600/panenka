@@ -9,6 +9,7 @@ export type AntwoordType =
   | 'exact_aantal'
   | 'exact_aantal_hoog'
   | 'aantal_marge'
+  | 'aantal_marge_groot'
   | 'decimaal'
   | 'minuut'
   | 'open'
@@ -48,6 +49,7 @@ export const ANTWOORD_TYPE_LABELS: Record<AntwoordType, string> = {
   exact_aantal:      'Exact aantal (0–22)',
   exact_aantal_hoog: 'Exact aantal (22–32)',
   aantal_marge:      'Aantal met marge ±1 (0–22)',
+  aantal_marge_groot: 'Aantal met marge ±100.000',
   decimaal:    'Getal 2 decimalen (0.00–20.00, ±0.33)',
   minuut:      'Tijdvak (10 min.)',
   open:        'Open antwoord',
@@ -74,6 +76,11 @@ export function isAntwoordCorrect(
       const cNum = parseInt(cw, 10)
       const gNum = parseInt(gegeven, 10)
       if (!isNaN(cNum) && !isNaN(gNum)) return Math.abs(gNum - cNum) <= 1
+    }
+    if (type === 'aantal_marge_groot') {
+      const cNum = parseInt(cw, 10)
+      const gNum = parseInt(gegeven, 10)
+      if (!isNaN(cNum) && !isNaN(gNum)) return Math.abs(gNum - cNum) <= 100_000
     }
     if (type === 'decimaal') {
       const cNum = parseFloat(cw)
