@@ -589,7 +589,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
         {tab === 'links' && <LinksPanel />}
 
         {/* ── Matchday beheer ────────────────────────────────────────────────────── */}
-        {tab === 'matchday' && <MatchdayAdminTab groupId={groupId} />}
+        {tab === 'matchday' && <MatchdayAdminTab groupId={groupId} koMatchTeams={koMatchTeams} />}
 
         {/* ── Token diagnose ──────────────────────────────────────────────────────── */}
         {tab === 'tokens' && (
@@ -840,7 +840,7 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
 
 // ── MatchdayAdminTab ──────────────────────────────────────────────────────────
 
-function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
+function MatchdayAdminTab({ groupId, koMatchTeams }: { groupId: GroupId; koMatchTeams: KoMatchTeams }) {
   const [matchdayId, setMatchdayId] = useState(1)
   const [quotes, setQuotes] = useState<Array<{ matchId: number; totoOdds: string; uitslagOdds: string }>>([])
   const [potStand, setPotStand] = useState('')
@@ -1026,7 +1026,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
                               : 'bg-[#252525] border-[#2a2a2a] text-[#888] hover:border-[#444]'
                           }`}
                         >
-                          {m ? `${m.home} – ${m.away}` : `#${id}`}
+                          {m ? `${koMatchTeams[id]?.home ?? m.home} – ${koMatchTeams[id]?.away ?? m.away}` : `#${id}`}
                         </button>
                       )
                     })}
@@ -1111,7 +1111,7 @@ function MatchdayAdminTab({ groupId }: { groupId: GroupId }) {
                     <div className="flex items-center gap-2">
                       <span className="text-[#555] text-[10px] w-5">#{q.matchId}</span>
                       <span className="text-white text-sm font-bold">
-                        {match ? `${match.home} – ${match.away}` : `Wedstrijd ${q.matchId}`}
+                        {match ? `${koMatchTeams[q.matchId]?.home ?? match.home} – ${koMatchTeams[q.matchId]?.away ?? match.away}` : `Wedstrijd ${q.matchId}`}
                       </span>
                       {pred?.toto && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30">

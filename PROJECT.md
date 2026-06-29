@@ -845,6 +845,14 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-06-29d — Admin matchday TBD fix + stand KO Wed subtab (Claude Code)
+
+**KO-wedstrijden correct tonen in admin matchday-tab + nieuw subtabblad op stand-pagina**
+- **`app/admin/AdminClient.tsx`**: `MatchdayAdminTab` ontvangt nu `koMatchTeams` als prop. Wedstrijdnamen in custom bets en quoteringen-tabel resolven eerst uit `koMatchTeams` (Redis), fallback naar statische `MATCHES` data. Voorheen toonden KO-wedstrijden altijd "TBD".
+- **`app/(app)/stand/StandClient.tsx`**: subtabblad "KO Wed" toegevoegd aan de stand-pagina (tussen FXV en Landen). Toont `koWedstrijden` score (punten uit KO-wedstrijden #73-104) met `kofase` history voor de grafiek. Score was al berekend maar niet zichtbaar.
+
+---
+
 ### 2026-06-29c — Oranje vragen: antwoordtype "aantal met marge ±100.000" (Claude Code)
 
 **Nieuw antwoordtype voor grote getallen (bijv. stadionbezoekers, TV-kijkers)**

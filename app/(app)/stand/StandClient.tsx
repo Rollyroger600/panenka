@@ -15,12 +15,13 @@ import type { MatchdayScoreRow } from '@/lib/matchday'
 import type { PotPoint, ScoreHistoryPoint } from '@/lib/types/matchday'
 
 type Tab = 'stand' | 'inzet' | 'pot'
-type StandView = 'totaal' | 'poule' | 'fxv' | 'landen' | 'toto' | 'uitsl'
+type StandView = 'totaal' | 'poule' | 'fxv' | 'kowed' | 'landen' | 'toto' | 'uitsl'
 
 const STAND_VIEWS: { label: string; value: StandView; scoreKey: keyof ParticipantScore; scoreLabel: string; historyKey: keyof MatchdayScoreRow }[] = [
   { label: 'Totaal', value: 'totaal', scoreKey: 'total',         scoreLabel: 'Tot.',   historyKey: 'total'            },
   { label: 'Poule',  value: 'poule',  scoreKey: 'poulefase',     scoreLabel: 'Poule',  historyKey: 'poulefase'        },
   { label: 'FXV',    value: 'fxv',    scoreKey: 'fantasy',       scoreLabel: 'FXV',    historyKey: 'fantasy'          },
+  { label: 'KO Wed', value: 'kowed',  scoreKey: 'koWedstrijden', scoreLabel: 'KO',     historyKey: 'kofase'           },
   { label: 'Landen', value: 'landen', scoreKey: 'knockout',      scoreLabel: 'Landen', historyKey: 'doorgaandeLanden' },
   { label: 'TOTO',   value: 'toto',   scoreKey: 'totoCorrect',   scoreLabel: 'TOTO',   historyKey: 'totoGoed'         },
   { label: 'UITSL',  value: 'uitsl',  scoreKey: 'uitslagCorrect',scoreLabel: 'UITSL',  historyKey: 'uitslagGoed'      },
