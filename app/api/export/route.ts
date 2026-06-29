@@ -70,11 +70,12 @@ function normalizeScore(s: string): string {
 }
 
 // Toto '1'/'X'/'2' → teamnaam of '-'
-function totoLabel(toto: string, matchId: number): string {
-  const match = MATCH_BY_ID[matchId]
-  if (!match) return toto
-  if (toto === '1') return match.home
-  if (toto === '2') return match.away
+function totoLabel(toto: string, matchId: number, koTeams?: Record<number, { home: string; away: string }>): string {
+  const koTeam = koTeams?.[matchId]
+  const home = koTeam?.home ?? MATCH_BY_ID[matchId]?.home
+  const away = koTeam?.away ?? MATCH_BY_ID[matchId]?.away
+  if (toto === '1') return home ?? toto
+  if (toto === '2') return away ?? toto
   return '-'
 }
 
@@ -159,8 +160,13 @@ export async function GET(req: Request) {
   const fileData = await fs.readFile(filePath)
   const workbook = await XlsxPopulate.fromDataAsync(fileData)
 
-  // Load group-specific oranje vragen
-  const vragen = await kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId)) ?? {}
+  // Load group-specific oranje vragen + KO match teams from KV
+  const [vragen, koMatchTeams] = await Promise.all([
+    kvGet<OranjeVragenMap>(groupKey('oranje_vragen', groupId)),
+    kvGet<Record<number, { home: string; away: string; kickoff?: string }>>('ko_match_teams'),
+  ])
+  const vragenMap = vragen ?? {}
+  const koTeams = koMatchTeams ?? {}
 
   // Collect all participant data (predictions, knockout, fantasy, oranje answers)
   type ParticipantData = {
@@ -232,15 +238,21 @@ export async function GET(req: Request) {
 
       // KO match predictions (73-104)
       for (let matchId = 73; matchId <= 104; matchId++) {
+        const row = rowForKoMatch(matchId)
+        const teams = koTeams[matchId]
+        if (teams) {
+          cv(pouleSheet, `M${row}`, teams.home)
+          cv(pouleSheet, `O${row}`, teams.away)
+        }
+
         const pred = predictions[matchId]
         if (!pred) continue
-        const row = rowForKoMatch(matchId)
         const odds = KO_MATCH_ODDS[matchId]
 
         cv(pouleSheet, `B${row}`, pred.tokens ?? 1)
 
         if (pred.toto) {
-          cv(pouleSheet, `Q${row}`, totoLabel(pred.toto, matchId))
+          cv(pouleSheet, `Q${row}`, totoLabel(pred.toto, matchId, koTeams))
           if (odds) {
             const totoQuote = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
             cv(pouleSheet, `R${row}`, totoQuote)
@@ -312,7 +324,7 @@ export async function GET(req: Request) {
   const oranjeSheet = workbook.sheet('Oranje_Voorspelling')
   if (oranjeSheet) {
     for (const { matchId, headerRow, startRow } of ORANJE_SECTIONS) {
-      const matchVragen = vragen[matchId] ?? {}
+      const matchVragen = vragenMap[matchId] ?? {}
 
       // Participant initials as column headers
       groupParticipants.forEach((p, i) => {

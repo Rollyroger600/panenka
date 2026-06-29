@@ -4065,3 +4065,4 @@ Beginbedrag €280 + aftrekposten (welkomstbonus -1, matchday 01 toto/uitslag -5
 - **Poule sheet per deelnemer**: KO-wedstrijd voorspellingen (tokens, toto + quote, uitslag + quote) worden geschreven naar rijen 93-128 (kolommen B, Q, R, S, T) — dezelfde kolommen als de groepswedstrijden
 - **Wedstrijd-tabs 73-104**: Toto-quoteringen (G5-G7) en uitslagquoteringen (B/C kolommen) worden gevuld uit `KO_MATCH_ODDS`
 - **`rowForKoMatch()` helper**: Mapt matchId 73-104 naar Excel-rijen, rekening houdend met scheidingsrijen tussen KO-rondes (1/16, 1/8, 1/4, 1/2, TF, F)
+- **KO teamnamen uit KV**: `ko_match_teams` wordt opgehaald zodat toto-labels de echte teamnamen tonen (bijv. "Duitsland") i.p.v. "TBD" uit de statische MATCHES array. Thuisploeg/Uitploeg kolommen (M/O) worden ook ingevuld
