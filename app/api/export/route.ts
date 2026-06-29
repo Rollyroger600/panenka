@@ -8,6 +8,7 @@ import { GROUP_MEMBERS } from '@/lib/groups'
 import type { GroupId } from '@/lib/groups'
 import { MATCHES } from '@/lib/data/matches'
 import { MATCH_ODDS } from '@/lib/data/odds'
+import { KO_MATCH_ODDS } from '@/lib/data/koMatchOdds'
 import { KO_QUOTES } from '@/lib/data/knockoutQuotes'
 import type { CountryKOQuotes } from '@/lib/data/knockoutQuotes'
 import { KNOCKOUT_ROUNDS } from '@/lib/data/knockoutRounds'
@@ -52,6 +53,15 @@ function rowForMatch(matchId: number): number {
   if (matchId <= 24) return matchId + 9
   if (matchId <= 48) return matchId + 10
   return matchId + 11
+}
+
+// KO matches 73-104 → rows 93-128 with separator rows between rounds
+function rowForKoMatch(matchId: number): number {
+  if (matchId <= 88) return matchId + 20
+  if (matchId <= 96) return matchId + 21
+  if (matchId <= 100) return matchId + 22
+  if (matchId <= 102) return matchId + 23
+  return matchId + 24
 }
 
 // Normalize "2-1" or "2 - 1" to the format used in MATCH_ODDS keys: "2 - 1"
@@ -220,6 +230,33 @@ export async function GET(req: Request) {
         }
       }
 
+      // KO match predictions (73-104)
+      for (let matchId = 73; matchId <= 104; matchId++) {
+        const pred = predictions[matchId]
+        if (!pred) continue
+        const row = rowForKoMatch(matchId)
+        const odds = KO_MATCH_ODDS[matchId]
+
+        cv(pouleSheet, `B${row}`, pred.tokens ?? 1)
+
+        if (pred.toto) {
+          cv(pouleSheet, `Q${row}`, totoLabel(pred.toto, matchId))
+          if (odds) {
+            const totoQuote = pred.toto === '1' ? odds.home : pred.toto === 'X' ? odds.draw : odds.away
+            cv(pouleSheet, `R${row}`, totoQuote)
+          }
+        }
+
+        if (pred.uitslag) {
+          cv(pouleSheet, `S${row}`, pred.uitslag)
+          if (odds) {
+            const key = normalizeScore(pred.uitslag)
+            const scoreQuote = odds.scores[key]
+            if (scoreQuote != null) cv(pouleSheet, `T${row}`, scoreQuote)
+          }
+        }
+      }
+
       // Knockout picks
       for (const round of KNOCKOUT_ROUNDS) {
         const mapping = KO_MAPPING[round.id]
@@ -321,10 +358,10 @@ export async function GET(req: Request) {
   }
 
   // ── Wedstrijd-tabs (toto + uitslagen quoteringen) ────────────────────────────
-  for (let matchId = 1; matchId <= 72; matchId++) {
+  for (let matchId = 1; matchId <= 104; matchId++) {
     const matchSheet = workbook.sheet(String(matchId))
     if (!matchSheet) continue
-    const odds = MATCH_ODDS[matchId]
+    const odds = matchId <= 72 ? MATCH_ODDS[matchId] : KO_MATCH_ODDS[matchId]
     if (!odds) continue
 
     cv(matchSheet, 'G5', odds.home)

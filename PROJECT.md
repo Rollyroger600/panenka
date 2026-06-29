@@ -4051,3 +4051,17 @@ Beginbedrag €280 + aftrekposten (welkomstbonus -1, matchday 01 toto/uitslag -5
 **Fix:**
 - `ChatInput.tsx`: `document.body.appendChild(input)` vóór `.click()`, gevolgd door `document.body.removeChild(input)` in de `onchange`-handler.
 - `ChatPage.tsx`: `handleSendImage` gooit nu een `Error` als de upload-API een fout teruggeeft (i.p.v. stil `return`), zodat `uploading`-state correct reset en de fout zichtbaar wordt.
+
+---
+
+### 2026-06-29 — Export: KO-wedstrijden (73-104) toegevoegd (Claude Code)
+
+#### Admin export uitgebreid met KO-wedstrijden (`app/api/export/route.ts`)
+
+**Wat:** De Excel-export vanuit het admin scherm bevatte alleen groepswedstrijden (1-72). Nu worden ook KO-wedstrijden (73-104) geëxporteerd.
+
+**Wijzigingen:**
+
+- **Poule sheet per deelnemer**: KO-wedstrijd voorspellingen (tokens, toto + quote, uitslag + quote) worden geschreven naar rijen 93-128 (kolommen B, Q, R, S, T) — dezelfde kolommen als de groepswedstrijden
+- **Wedstrijd-tabs 73-104**: Toto-quoteringen (G5-G7) en uitslagquoteringen (B/C kolommen) worden gevuld uit `KO_MATCH_ODDS`
+- **`rowForKoMatch()` helper**: Mapt matchId 73-104 naar Excel-rijen, rekening houdend met scheidingsrijen tussen KO-rondes (1/16, 1/8, 1/4, 1/2, TF, F)
