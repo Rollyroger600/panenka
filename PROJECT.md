@@ -848,10 +848,10 @@ The following decisions were made during implementation that deviate from or ext
 ### 2026-07-01 — Pot tab MD20 bijgewerkt (Claude Code)
 
 #### Stand pagina — Pot tab OG
-- `app\(app)\stand\StandClient.tsx`: OG: Toto's en uitslagen matchday 20 (-5,00).
+- `app\(app)\stand\StandClient.tsx`: OG: Toto's en uitslagen matchday 20 (-5,00). Winst Matchday 20 (+11,41).
 
 #### Stand pagina — Pot tab ASC
-- `app\(app)\stand\StandClient.tsx`: ASC: Toto's en uitslagen matchday 20 (-15,00).
+- `app\(app)\stand\StandClient.tsx`: ASC: Toto's en uitslagen matchday 20 gecorrigeerd (-15,00→-10,00). Winst Matchday 20 (+45,63).
 
 ---
 
