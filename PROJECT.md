@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-01 — Pot tab MD20 bijgewerkt (Claude Code)
+
+#### Stand pagina — Pot tab OG
+- `app\(app)\stand\StandClient.tsx`: OG: Toto's en uitslagen matchday 20 (-5,00).
+
+#### Stand pagina — Pot tab ASC
+- `app\(app)\stand\StandClient.tsx`: ASC: Toto's en uitslagen matchday 20 (-15,00).
+
+---
+
 ### 2026-06-29e — KO deadline override wedstrijd 76 voor RA (Claude Code)
 
 **Robert (RA) mag alsnog wedstrijd 76 invullen ondanks verstreken deadline**
