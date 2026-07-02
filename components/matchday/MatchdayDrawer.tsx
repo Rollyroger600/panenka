@@ -30,6 +30,19 @@ export function MatchdayDrawer({ open, onClose, group, isDualGroup, initialMatch
   const [liveMatches, setLiveMatches] = useState<LiveMatchData[]>(mockLiveData ?? [])
   const [slideScale, setSlideScale] = useState(1)
 
+  // Statische fallback (getCurrentMatchday()) kent geen KO-kickofftijden uit KV, dus
+  // corrigeer met de server-berekende matchday zodra die binnen is.
+  useEffect(() => {
+    if (initialMatchday !== undefined) return
+    fetch('/api/matchday/current')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { matchdayId?: number } | null) => {
+        if (typeof json?.matchdayId === 'number') setMatchdayId(json.matchdayId)
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     const update = () => {
       const w = document.documentElement.clientWidth

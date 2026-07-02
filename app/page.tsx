@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { PARTICIPANTS } from '@/lib/participants'
+import { APP_PHASE } from '@/lib/config'
 import LoginButton from './LoginButton'
 
 const BASE_TOKENS = 335
@@ -13,7 +14,7 @@ export default async function LandingPage({
   const store = await cookies()
   const existingInitials = store.get('participant')?.value
   if (existingInitials && PARTICIPANTS.some(p => p.initials === existingInitials)) {
-    redirect('/poulefase')
+    redirect(APP_PHASE >= 3 ? '/knockout' : '/poulefase')
   }
 
   const { t: token } = await searchParams

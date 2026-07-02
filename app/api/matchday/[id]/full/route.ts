@@ -96,7 +96,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
       const koTeam = safeKoTeams[matchId]
       const match = koTeam
-        ? { ...staticMatch, home: koTeam.home, away: koTeam.away }
+        ? { ...staticMatch, home: koTeam.home, away: koTeam.away, ...(koTeam.stadium ? { stadium: koTeam.stadium } : {}) }
         : staticMatch
 
       const odds = (matchId > 72 ? KO_MATCH_ODDS[matchId] : MATCH_ODDS[matchId]) ?? null

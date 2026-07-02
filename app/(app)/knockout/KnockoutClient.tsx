@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useKnockoutPicks } from '@/hooks/useKnockoutPicks'
 import { usePredictions } from '@/hooks/usePredictions'
 import { useDeadline } from '@/hooks/useDeadline'
@@ -49,6 +49,17 @@ function groupKoMatches() {
   return rounds
 }
 
+// Eerstvolgende KO-wedstrijd: laagste matchId met bekende teams en nog geen uitslag
+function getNextKoMatch(
+  koMatchTeams: KoMatchTeams,
+  results: Record<number, MatchResult>,
+): typeof MATCHES[0] | null {
+  const upcoming = MATCHES
+    .filter((m) => m.phase === 'knockout' && koMatchTeams[m.id] && results[m.id] == null)
+    .sort((a, b) => a.id - b.id)
+  return upcoming[0] ?? null
+}
+
 function formatKickoffTime(kickoff: string): string {
   const d = new Date(kickoff)
   return d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
@@ -77,14 +88,27 @@ export function KnockoutClient({ koResults, results, koMatchTeams, oranjeTokens 
   const { remaining: koRemaining } = useKoMatchBudget(oranjeTokens, availableMatchCount)
   const locks = useKoMatchLocks(koMatchTeams, participantInitials)
 
+  const nextKoMatch = useMemo(() => getNextKoMatch(koMatchTeams, results), [koMatchTeams, results])
+  const initialMatchTab = nextKoMatch
+    ? Math.max(0, KO_MATCH_FILTERS.findIndex((f) => f.rounds.includes(nextKoMatch.koRound!)))
+    : 0
+
   const [mainTab, setMainTab] = useState<MainTab>('wedstrijden')
   const [landenTab, setLandenTab] = useState('ronde32')
-  const [matchTab, setMatchTab] = useState(0)
+  const [matchTab, setMatchTab] = useState(initialMatchTab)
+  const scrolledRef = useRef(false)
 
   const koRounds = useMemo(groupKoMatches, [])
   const activeLandenRound = NON32_ROUNDS.find((r) => r.uiTab === landenTab)
 
   const visibleKoMatches = KO_MATCH_FILTERS[matchTab].rounds.flatMap((r) => koRounds[r] ?? [])
+
+  useEffect(() => {
+    if (!predsLoaded || scrolledRef.current || mainTab !== 'wedstrijden' || !nextKoMatch) return
+    scrolledRef.current = true
+    const el = document.getElementById(`ko-match-${nextKoMatch.id}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [predsLoaded, mainTab, nextKoMatch])
 
   return (
     <div>
@@ -158,17 +182,18 @@ export function KnockoutClient({ koResults, results, koMatchTeams, oranjeTokens 
                 }
                 const isLocked = locks[match.id] ?? true
                 return (
-                  <KoMatchCard
-                    key={match.id}
-                    matchId={match.id}
-                    home={teams.home}
-                    away={teams.away}
-                    date={teams.kickoff ? formatKickoffDate(teams.kickoff) : match.date}
-                    time={teams.kickoff ? formatKickoffTime(teams.kickoff) : undefined}
-                    remainingBudget={koRemaining}
-                    readOnly={isLocked}
-                    result={results[match.id]}
-                  />
+                  <div key={match.id} id={`ko-match-${match.id}`}>
+                    <KoMatchCard
+                      matchId={match.id}
+                      home={teams.home}
+                      away={teams.away}
+                      date={teams.kickoff ? formatKickoffDate(teams.kickoff) : match.date}
+                      time={teams.kickoff ? formatKickoffTime(teams.kickoff) : undefined}
+                      remainingBudget={koRemaining}
+                      readOnly={isLocked}
+                      result={results[match.id]}
+                    />
+                  </div>
                 )
               })}
             </div>

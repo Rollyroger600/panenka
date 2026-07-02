@@ -4083,3 +4083,44 @@ Beginbedrag €280 + aftrekposten (welkomstbonus -1, matchday 01 toto/uitslag -5
 - **Wedstrijd-tabs 73-104**: Toto-quoteringen (G5-G7) en uitslagquoteringen (B/C kolommen) worden gevuld uit `KO_MATCH_ODDS`
 - **`rowForKoMatch()` helper**: Mapt matchId 73-104 naar Excel-rijen, rekening houdend met scheidingsrijen tussen KO-rondes (1/16, 1/8, 1/4, 1/2, TF, F)
 - **KO teamnamen uit KV**: `ko_match_teams` wordt opgehaald zodat toto-labels de echte teamnamen tonen (bijv. "Duitsland") i.p.v. "TBD" uit de statische MATCHES array. Thuisploeg/Uitploeg kolommen (M/O) worden ook ingevuld
+
+### 2026-07-02 — Matchday auto-detectie, TBD-fixes, admin layout, KO-landingspagina (Claude Code)
+
+#### Matchday slides bleven hangen op MD20 (`lib/data/matchdayMap.ts`, `app/api/matchday/current/route.ts`, `components/matchday/MatchdayDrawer.tsx`)
+
+**Wat:** `getCurrentMatchday()` keek alleen naar aftraptijden in de statische `MATCHES`-data, die voor KO-wedstrijden vrijwel nooit is ingevuld (teams staan daar als `TBD`). De echte aftraptijden staan in de `ko_match_teams` KV. Zonder tijd bleef de functie voor altijd op de eerste "onbekende" matchday steken, ook als die allang gespeeld was.
+
+**Wijzigingen:**
+
+- `getCurrentMatchday()` accepteert nu optionele `kickoffOverrides` (echte ISO-aftraptijden) die de statische data overschrijven
+- Nieuwe route `/api/matchday/current` laadt `ko_match_teams` uit KV en berekent de huidige matchday daarmee
+- `MatchdayDrawer` corrigeert de matchday bij het laden met deze route i.p.v. alleen de statische fallback
+
+#### TBD i.p.v. echte landen/stadion op meerdere plekken (`components/matchday/slides/InzetSlide.tsx`, `app/actions/admin.ts`, `app/admin/AdminClient.tsx`, `app/api/matchday/[id]/full/route.ts`)
+
+**Wat:** Naast de matchday-fix stonden er nog drie plekken die KO-teamnamen rechtstreeks uit de statische `MATCHES`-array lazen i.p.v. de live data uit KV, en er was nergens een stadionnaam voor KO-wedstrijden.
+
+**Wijzigingen:**
+
+- InzetSlide: custom-bet sectie gebruikt nu de live samengevoegde teamnamen i.p.v. de statische fallback
+- Chatbericht na het invoeren van een uitslag (`saveResult()`) haalt KO-teamnamen nu op uit `ko_match_teams` i.p.v. de statische data
+- Nieuw `stadium`-veld toegevoegd aan `ko_match_teams` (KV + type `KoMatchTeams`), met invoerveld in het admin KO-wedstrijden formulier, zodat het stadion per KO-wedstrijd handmatig ingevuld kan worden en meegenomen wordt in de matchday-slides
+- `handleSaveKoTeam` overschrijft niet langer de bestaande `kickoff` bij het bewerken van teamnamen
+
+#### Admin: knoppenrij per wedstrijd verdween op smalle schermen (`app/admin/AdminClient.tsx`)
+
+**Wat:** De knoppenrij (Toto 1/X/2, uitslag, ESPN-import, Update) in `MatchResultRow` had geen `flex-wrap`. Op smartphone-breedtes (getest 320-412px) werd de rij niet afgebroken, en omdat de kaart eromheen `overflow-hidden` heeft, verdwenen de ESPN- en Update-knop onzichtbaar buiten de kaartrand i.p.v. dat er een scrollbalk kwam.
+
+**Wijzigingen:**
+
+- Controls-rij heeft nu `flex-wrap` zodat knoppen naar een nieuwe regel gaan i.p.v. te verdwijnen
+
+#### KO-fase: landen op /knockout + auto-scroll naar eerstvolgende wedstrijd (`app/page.tsx`, `app/actions/auth.ts`, `app/(app)/knockout/KnockoutClient.tsx`)
+
+**Wat:** Bij het inloggen kwam de deelnemer altijd op `/poulefase` terecht, ook nu de groepsfase voorbij is (APP_PHASE 3). De KO-wedstrijden tab had bovendien geen auto-scroll naar de eerstvolgende wedstrijd, zoals de poulefase die al wel had.
+
+**Wijzigingen:**
+
+- Login (nieuw én bestaande sessie) redirect nu naar `/knockout` zodra `APP_PHASE >= 3`
+- `getNextKoMatch()` bepaalt de eerstvolgende KO-wedstrijd (laagste matchId met bekende teams en nog geen uitslag) en selecteert automatisch de juiste rondetab
+- Pagina scrollt smooth naar die wedstrijdkaart zodra de voorspellingen geladen zijn

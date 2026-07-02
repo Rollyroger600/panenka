@@ -47,7 +47,9 @@ export const InzetSlide = forwardRef<HTMLDivElement, Props>(
                 {resolvedMatchIds.length > 0 && (
                   <div className="flex flex-col gap-2 items-center">
                     {resolvedMatchIds.map((mid) => {
-                      const m = MATCHES.find((x) => x.id === mid)
+                      // matchData bevat de live samengevoegde teamnamen (incl. KO-teams uit KV);
+                      // de statische MATCHES-fallback heeft voor KO-wedstrijden nog 'TBD'.
+                      const m = matchData.find((d) => d.match.id === mid)?.match ?? MATCHES.find((x) => x.id === mid)
                       if (!m) return null
                       return (
                         <div key={mid} className="flex items-center gap-2">

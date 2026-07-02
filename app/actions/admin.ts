@@ -50,7 +50,12 @@ export async function saveResult(matchId: number, toto: '1' | 'X' | '2', uitslag
   // Post automatisch een chat-bericht bij een nieuwe eindstand
   if (isNew) {
     const match = MATCHES.find((m) => m.id === matchId)
-    const label = match ? `${match.home} – ${match.away}` : `Wedstrijd ${matchId}`
+    // KO-wedstrijden (matchId > 72) hebben pas een team ingevuld in de statische data
+    // zodra iemand dat handmatig doet — de echte teamnamen staan in de ko_match_teams KV.
+    const koTeam = matchId > 72 ? (await loadKoMatchTeams())[matchId] : undefined
+    const home = koTeam?.home ?? match?.home
+    const away = koTeam?.away ?? match?.away
+    const label = home && away ? `${home} – ${away}` : `Wedstrijd ${matchId}`
     const text = `⚽ **${label}**: ${uitslag}`
     const ts = Date.now()
     const botMsg: ChatMessage = {
@@ -153,7 +158,7 @@ export async function loadAlleOranjeAntwoorden(groupId: GroupId = 'og'): Promise
 
 // ── KO-wedstrijd teams (admin vult in zodra teams bekend zijn) ────────────
 
-export type KoMatchTeams = Record<number, { home: string; away: string; kickoff?: string }>
+export type KoMatchTeams = Record<number, { home: string; away: string; kickoff?: string; stadium?: string }>
 
 export async function loadKoMatchTeams(): Promise<KoMatchTeams> {
   return (await kvGet<KoMatchTeams>('ko_match_teams')) ?? {}

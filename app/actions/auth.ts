@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { PARTICIPANTS } from '@/lib/participants'
 import { getGroupForParticipant } from '@/lib/groups'
+import { APP_PHASE } from '@/lib/config'
 
 export async function selectParticipant(token: string) {
   const participant = PARTICIPANTS.find(p => p.token === token)
@@ -13,5 +14,5 @@ export async function selectParticipant(token: string) {
   store.set('participant', participant.initials, { path: '/', maxAge })
   store.set('participantName', participant.name, { path: '/', maxAge })
   store.set('group', getGroupForParticipant(participant.initials), { path: '/', maxAge })
-  redirect('/poulefase')
+  redirect(APP_PHASE >= 3 ? '/knockout' : '/poulefase')
 }

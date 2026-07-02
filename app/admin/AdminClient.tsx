@@ -106,9 +106,17 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
     setResults((r) => { const n = { ...r }; delete n[matchId]; return n })
   }
 
-  async function handleSaveKoTeam(matchId: number, home: string, away: string) {
+  async function handleSaveKoTeam(matchId: number, home: string, away: string, stadium: string) {
     setSavingKoTeam(matchId)
-    const updated = { ...koMatchTeams, [matchId]: { home: home.trim(), away: away.trim() } }
+    const updated = {
+      ...koMatchTeams,
+      [matchId]: {
+        ...koMatchTeams[matchId],
+        home: home.trim(),
+        away: away.trim(),
+        ...(stadium.trim() ? { stadium: stadium.trim() } : {}),
+      },
+    }
     setKoMatchTeams(updated)
     await saveKoMatchTeams(updated)
     setSavingKoTeam(null)
@@ -1210,7 +1218,7 @@ function KoMatchesTab({
   koMatchTeams: KoMatchTeams
   results: Record<number, import('@/lib/scoring').MatchResult>
   saving: number | null
-  onSaveTeam: (matchId: number, home: string, away: string) => Promise<void>
+  onSaveTeam: (matchId: number, home: string, away: string, stadium: string) => Promise<void>
   onDeleteTeam: (matchId: number) => Promise<void>
   onSaveResult: (matchId: number, toto: '1' | 'X' | '2', uitslag: string) => Promise<void>
   onDeleteResult: (matchId: number) => Promise<void>
@@ -1219,6 +1227,7 @@ function KoMatchesTab({
 }) {
   const [editHome, setEditHome] = useState<Record<number, string>>({})
   const [editAway, setEditAway] = useState<Record<number, string>>({})
+  const [editStadium, setEditStadium] = useState<Record<number, string>>({})
 
   const rounds = ['rv32', 'rv16', 'kf', 'hf', 'brons', 'finale'] as const
   const byRound = Object.fromEntries(
@@ -1242,6 +1251,7 @@ function KoMatchesTab({
                 const teams = koMatchTeams[m.id]
                 const home = editHome[m.id] ?? teams?.home ?? ''
                 const away = editAway[m.id] ?? teams?.away ?? ''
+                const stadium = editStadium[m.id] ?? teams?.stadium ?? ''
                 const hasTeams = !!teams
                 const result = results[m.id] ?? null
 
@@ -1268,9 +1278,10 @@ function KoMatchesTab({
                       <button
                         onClick={async () => {
                           if (!home.trim() || !away.trim()) return
-                          await onSaveTeam(m.id, home, away)
+                          await onSaveTeam(m.id, home, away, stadium)
                           setEditHome((prev) => { const n = { ...prev }; delete n[m.id]; return n })
                           setEditAway((prev) => { const n = { ...prev }; delete n[m.id]; return n })
+                          setEditStadium((prev) => { const n = { ...prev }; delete n[m.id]; return n })
                         }}
                         disabled={saving === m.id || !home.trim() || !away.trim()}
                         className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[#FF6B00] text-white disabled:opacity-40 whitespace-nowrap"
@@ -1285,6 +1296,14 @@ function KoMatchesTab({
                           ✕
                         </button>
                       )}
+                    </div>
+                    <div className="flex items-center gap-2 pl-8">
+                      <input
+                        value={stadium}
+                        onChange={(e) => setEditStadium((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                        placeholder="Stadion"
+                        className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-2 py-1 text-xs text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
+                      />
                     </div>
                     {hasTeams && (
                       <div className="ml-8">
@@ -1399,7 +1418,7 @@ function MatchResultRow({ match, result, saving, onSave, onDelete, onEspnImport 
       </div>
 
       {/* Controls row */}
-      <div className="px-3 py-2.5 flex items-center gap-2">
+      <div className="px-3 py-2.5 flex flex-wrap items-center gap-2">
 
         {/* Toto knoppen */}
         <div className="flex gap-1">

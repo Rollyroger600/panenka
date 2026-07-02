@@ -41,7 +41,11 @@ const MONTH_IDX: Record<string, number> = {
 
 // Bepaalt de huidige matchday op basis van het tijdstip.
 // Een matchday is "afgelopen" 120 min na de laatste aftrap (90 min + 30 min marge).
-export function getCurrentMatchday(): number {
+// kickoffOverrides: echte aftraptijden (ISO-strings) uit de `ko_match_teams` KV, per matchId.
+// Voor KO-wedstrijden staat in de statische MATCHES-data meestal geen tijd (teams TBD tot
+// vlak van tevoren) — zonder deze overrides blijft de functie hangen op de eerste matchday
+// zonder statische tijd, ook als die allang gespeeld is.
+export function getCurrentMatchday(kickoffOverrides?: Record<number, string>): number {
   const now = Date.now()
 
   for (let md = 1; md <= MATCHDAY_COUNT; md++) {
@@ -50,6 +54,12 @@ export function getCurrentMatchday(): number {
 
     let latestKickoff = 0
     for (const id of matchIds) {
+      const override = kickoffOverrides?.[id]
+      if (override) {
+        const t = new Date(override).getTime()
+        if (t > latestKickoff) latestKickoff = t
+        continue
+      }
       const m = MATCHES.find((x) => x.id === id)
       if (!m?.time) continue
       const [day, mon] = m.date.split(' ')
