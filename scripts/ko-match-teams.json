@@ -78,5 +78,35 @@
     "id": 88,
     "home": "Australië",
     "away": "Egypte"
+  },
+  {
+    "id": 89,
+    "home": "Paraguay",
+    "away": "Frankrijk"
+  },
+  {
+    "id": 90,
+    "home": "Canada",
+    "away": "Marokko"
+  },
+  {
+    "id": 91,
+    "home": "Brazilië",
+    "away": "Noorwegen"
+  },
+  {
+    "id": 92,
+    "home": "Mexico",
+    "away": "Engeland"
+  },
+  {
+    "id": 93,
+    "home": "Portugal",
+    "away": "Spanje"
+  },
+  {
+    "id": 94,
+    "home": "Verenigde Staten",
+    "away": "België"
   }
 ]

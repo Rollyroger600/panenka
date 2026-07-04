@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-04 — KO-wedstrijd quoteringen #89-94 opgehaald (Claude Code)
+
+**Achtste finale-quoteringen toegevoegd na admin-invoer van de teams**
+- **`scripts/ko-match-teams.json`**: wedstrijden #89-94 toegevoegd (teams overgenomen uit `ko_match_teams` KV, ingevuld via het adminscherm).
+- **`lib/data/koMatchOdds.ts`**: quoteringen + correcte-scoreverdeling opgehaald via `scripts/scrape-ko-match-odds.mjs` voor #89-94. Wedstrijden #73-88 ongewijzigd (niet meer beschikbaar als events op Kambi, bestaande data behouden via merge).
+- Kickoff-tijden voor #89-94 bijgewerkt in `ko_match_teams` KV.
+
+---
+
 ### 2026-07-01 — Pot tab MD20 bijgewerkt (Claude Code)
 
 #### Stand pagina — Pot tab OG
