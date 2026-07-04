@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-04b — Pot tab MD21+MD22 bijgewerkt (Claude Code)
+
+#### Stand pagina — Pot tab OG
+- `app\(app)\stand\StandClient.tsx`: OG: Toto's en uitslagen matchday 21 (-5,00). Winst Matchday 21 (+20,50). Toto's en uitslagen matchday 22 (-10,00).
+
+#### Stand pagina — Pot tab ASC
+- `app\(app)\stand\StandClient.tsx`: ASC: Toto's en uitslagen matchday 21 (-15,00). Winst Matchday 21 (+50,94). Toto's en uitslagen matchday 22 (-20,00).
+
+---
+
 ### 2026-07-04 — KO-wedstrijd quoteringen #89-94 opgehaald (Claude Code)
 
 **Achtste finale-quoteringen toegevoegd na admin-invoer van de teams**
