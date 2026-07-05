@@ -98,6 +98,16 @@ export const ESPN_MATCH_IDS: Record<number, number> = {
   87: 760501,  // Colombia vs Ghana
   88: 760499,  // Australië vs Egypte
 
-  // ─── Knock-out fase: Ronde van 16+ (89–104) ──────────────────────────────
+  // ─── Knock-out fase: Ronde van 16 (89–96) ────────────────────────────────
+  89: 760503,  // Paraguay vs Frankrijk
+  90: 760502,  // Canada vs Marokko
+  91: 760504,  // Brazilië vs Noorwegen
+  92: 760505,  // Mexico vs Engeland
+  93: 760506,  // Portugal vs Spanje
+  94: 760507,  // Verenigde Staten vs België
+  95: 760509,  // Argentinië vs Egypte
+  96: 760508,  // Zwitserland vs Colombia
+
+  // ─── Knock-out fase: Kwartfinale+ (97–104) ───────────────────────────────
   // Aanvullen zodra ESPN de wedstrijden publiceert
 }

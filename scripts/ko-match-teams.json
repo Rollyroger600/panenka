@@ -108,5 +108,15 @@
     "id": 94,
     "home": "Verenigde Staten",
     "away": "België"
+  },
+  {
+    "id": 95,
+    "home": "Argentinië",
+    "away": "Egypte"
+  },
+  {
+    "id": 96,
+    "home": "Zwitserland",
+    "away": "Colombia"
   }
 ]

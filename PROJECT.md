@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-05 — ESPN-IDs + KO-quoteringen Ronde van 16 aangevuld (Claude Code)
+
+**Live-slide toonde #89/#90 niet: ontbrekende ESPN event-IDs voor Ronde van 16**
+- **`lib/data/espnMatchIds.ts`**: ESPN event-IDs toegevoegd voor #89-96 (Ronde van 16). Was leeg sinds het toernooi in de KO-fase kwam, waardoor de live-slide voor #89 en #90 (gespeeld op 4 juli) geen live data kon tonen.
+- **`scripts/ko-match-teams.json`**: teams #95 (Argentinië-Egypte) en #96 (Zwitserland-Colombia) toegevoegd.
+- **`lib/data/koMatchOdds.ts`**: quoteringen + correcte-scoreverdeling opgehaald voor #95-96 (nieuw) en ververst voor #91-94 (nog niet gespeeld). #89-90 ongewijzigd (al gespeeld, niet meer op Kambi, bestaande data behouden).
+
+---
+
 ### 2026-07-04b — Pot tab MD21+MD22 bijgewerkt (Claude Code)
 
 #### Stand pagina — Pot tab OG
