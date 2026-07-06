@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-06b — KO-wedstrijd quoteringen aankomende wedstrijden opgehaald (Claude Code)
+
+**Quoteringen ververst voor #93-96, nieuwe kwartfinales #97 en #99 toegevoegd**
+- **`scripts/ko-match-teams.json`**: teams #97 (Frankrijk-Marokko) en #99 (Noorwegen-Engeland) toegevoegd, bekend geworden na afloop van #89-92.
+- **`lib/data/koMatchOdds.ts`**: quoteringen + correcte-scoreverdeling ververst voor #93-96 (nog niet gespeeld) en nieuw opgehaald voor #97 en #99. #98 en #100 nog niet bekend (afhankelijk van #93/#94 resp. #95/#96).
+- Kickoff-tijden voor #97 en #99 opgeslagen in `ko_match_teams` KV.
+
+---
+
 ### 2026-07-06 — Pot tab MD23 bijgewerkt (Claude Code)
 
 #### Stand pagina — Pot tab OG
