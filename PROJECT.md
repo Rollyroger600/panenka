@@ -845,6 +845,16 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-06 — Pot tab MD23 bijgewerkt (Claude Code)
+
+#### Stand pagina — Pot tab OG
+- `app\(app)\stand\StandClient.tsx`: OG: Toto's en uitslagen matchday 23 (-12,50). Winst Matchday 23 (+25,00).
+
+#### Stand pagina — Pot tab ASC
+- `app\(app)\stand\StandClient.tsx`: ASC: Toto's en uitslagen matchday 23 (-22,50). Winst Matchday 23 (+44,38). Datums matchday 21/22 gecorrigeerd.
+
+---
+
 ### 2026-07-05 — ESPN-IDs + KO-quoteringen Ronde van 16 aangevuld (Claude Code)
 
 **Live-slide toonde #89/#90 niet: ontbrekende ESPN event-IDs voor Ronde van 16**
