@@ -845,6 +845,20 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-09b — ASC-bonustokens Robert gecorrigeerd + ESPN-IDs kwartfinales (Claude Code)
+
+**ASC-bonustokens Robert: #97 → #98 verplaatst**
+- De eerder toegekende 2 bonustokens op #97 bleken niet correct; op verzoek verplaatst naar #98.
+- `lib/participants.ts`: RA's `ascBonusTokens` gewijzigd van `{ 10: 1, 33: 1, 58: 1, 97: 2, 99: 2 }` naar `{ 10: 1, 33: 1, 58: 1, 98: 2, 99: 2 }`.
+- Effect bij ASC-scoring: #97 blijft 1 token (geen bonus meer), #99 blijft 6 (4 + 2 bonus). #98 komt op 2 bonus + regulier ingezette tokens — Robert moet zelf nog tokens op #98 inzetten in de app (stond nog op `null`) om op het beoogde totaal van 3 uit te komen.
+
+**ESPN event-IDs kwartfinales #97-100 toegevoegd**
+- **`lib/data/espnMatchIds.ts`**: ontbrak volledig voor #97-104, waardoor `matchday/live` deze wedstrijden oversloeg en de admin ESPN-import een 404 gaf.
+- IDs opgezocht via ESPN scoreboard-endpoint voor 9-12 juli en toegevoegd: #97 Frankrijk-Marokko (760510), #98 Spanje-België (760511), #99 Noorwegen-Engeland (760512), #100 Argentinië-Zwitserland (760513).
+- #101-104 nog open (pas bekend na de halve finales).
+
+---
+
 ### 2026-07-09 — KO-kwartfinales #98/#100 + ASC-bonustokens Robert (Claude Code)
 
 **Quoteringen kwartfinales #98 en #100 opgehaald**

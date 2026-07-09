@@ -109,5 +109,9 @@ export const ESPN_MATCH_IDS: Record<number, number> = {
   96: 760508,  // Zwitserland vs Colombia
 
   // ─── Knock-out fase: Kwartfinale+ (97–104) ───────────────────────────────
-  // Aanvullen zodra ESPN de wedstrijden publiceert
+  97: 760510,  // Frankrijk vs Marokko
+  98: 760511,  // Spanje vs België
+  99: 760512,  // Noorwegen vs Engeland
+  100: 760513, // Argentinië vs Zwitserland
+  // 101–104 aanvullen zodra ESPN de wedstrijden publiceert
 }
