@@ -845,6 +845,25 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-09 — KO-kwartfinales #98/#100 + ASC-bonustokens Robert (Claude Code)
+
+**Quoteringen kwartfinales #98 en #100 opgehaald**
+- **`scripts/ko-match-teams.json`**: teams #98 (Spanje-België) en #100 (Argentinië-Zwitserland) toegevoegd, bekend geworden na afloop van R16 #93/#94 resp. #95/#96.
+- **`lib/data/koMatchOdds.ts`**: quoteringen + correcte-scoreverdeling opgehaald voor #98 en #100; #97 en #99 ververst.
+- Kickoff-tijden voor #98 en #100 opgeslagen in `ko_match_teams` KV.
+
+**ASC-bonustokens Robert uitgebreid met KO-wedstrijden #97 en #99**
+- Robert (RA, dual-group OG+ASC) had in de ASC-groep meer tokens verdiend voor de KO-wedstrijden dan in OG (13 t.o.v. 9) — omdat hij zijn voorspellingen maar op 1 plek invult, moest het verschil (4 tokens) via het bestaande ASC-bonusmechanisme verwerkt worden.
+- `lib/participants.ts`: RA's `ascBonusTokens` uitgebreid van `{ 10: 1, 33: 1, 58: 1 }` naar `{ 10: 1, 33: 1, 58: 1, 97: 2, 99: 2 }`.
+- Effect bij ASC-scoring: wedstrijd #97 telt 1 (ingevuld) + 2 (bonus) = 3 tokens; #99 telt 4 + 2 = 6 tokens. Bij OG-scoring blijft dit ongewijzigd op 1 resp. 4.
+- Wordt pas zichtbaar na de volgende admin score-run voor de ASC-groep (na afloop van de wedstrijden).
+
+**Overig**
+- `app/admin/AdminClient.tsx`: responsive layout-fix voor het teams-invulformulier in de KO-tab (thuis/uit-velden wrappen nu netjes op smalle schermen).
+- Excel-masterbestanden (OG + ASC) opnieuw geëxporteerd (260707).
+
+---
+
 ### 2026-07-06b — KO-wedstrijd quoteringen aankomende wedstrijden opgehaald (Claude Code)
 
 **Quoteringen ververst voor #93-96, nieuwe kwartfinales #97 en #99 toegevoegd**

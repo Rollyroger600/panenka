@@ -1260,21 +1260,21 @@ function KoMatchesTab({
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-[#444] w-6 text-right">{m.id}</span>
                       <span className="text-[10px] text-[#555]">{m.date}</span>
-                      <div className="flex-1 flex items-center gap-1.5">
-                        <input
-                          value={home}
-                          onChange={(e) => setEditHome((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                          placeholder="Thuis"
-                          className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-2 py-1 text-xs text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
-                        />
-                        <span className="text-[10px] text-[#444]">vs</span>
-                        <input
-                          value={away}
-                          onChange={(e) => setEditAway((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                          placeholder="Uit"
-                          className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-2 py-1 text-xs text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
-                        />
-                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <input
+                        value={home}
+                        onChange={(e) => setEditHome((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                        placeholder="Thuis"
+                        className="flex-1 min-w-[90px] bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-2 py-1 text-xs text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
+                      />
+                      <span className="text-[10px] text-[#444]">vs</span>
+                      <input
+                        value={away}
+                        onChange={(e) => setEditAway((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                        placeholder="Uit"
+                        className="flex-1 min-w-[90px] bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-2 py-1 text-xs text-white placeholder-[#444] outline-none focus:border-[#FF6B00]"
+                      />
                       <button
                         onClick={async () => {
                           if (!home.trim() || !away.trim()) return
@@ -1297,7 +1297,7 @@ function KoMatchesTab({
                         </button>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 pl-8">
+                    <div className="flex items-center gap-2">
                       <input
                         value={stadium}
                         onChange={(e) => setEditStadium((prev) => ({ ...prev, [m.id]: e.target.value }))}
