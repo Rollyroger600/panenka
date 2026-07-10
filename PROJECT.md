@@ -845,6 +845,19 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-10b — Matchday-slides tonen ASC-bonustokens niet mee (Claude Code)
+
+#### Tokenweergave op matchday-slides negeerde `ascBonusTokens` (`app/api/matchday/[id]/full/route.ts`, `app/api/matchday/live/route.ts`)
+
+**Wat:** De score-berekening (`lib/scoring.ts`, `lib/matchday.ts:249`) telt `ascBonusTokens` van dual-group deelnemers (Robert RA, Wouter WS) al langer correct mee bij ASC-scoring. De matchday-slides zelf (per-wedstrijd tokenkolom, zowel de pre-match slide als de live-slide) lieten dit na: ze toonden altijd alleen de basis-tokens (`pred.tokens ?? 1`), ongeacht welke groep was geselecteerd. Bij toggle op ASC zag je voor Robert dus 1 token bij wedstrijd #98 i.p.v. de bedoelde 3 (1 basis + 2 bonus).
+
+**Wijzigingen:**
+- `app/api/matchday/[id]/full/route.ts:131`: `tokens` telt nu `ascBonusTokens[matchId]` op wanneer `group === 'asc'`
+- `app/api/matchday/live/route.ts:577`: zelfde fix — dit veld voedt ook de live "potentiële punten"-weergave, die voor Robert/Wouter in ASC dus ook te laag stond
+- Generieke fix per wedstrijd (geen hardcoded matchId), dekt daarmee ook #10, #33, #58 en #99 voor Robert
+
+---
+
 ### 2026-07-10 — KO-wedstrijd quoteringen #98-100 ververst (Claude Code)
 
 **Quoteringen ververst via `scripts/scrape-ko-match-odds.mjs`**

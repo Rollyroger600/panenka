@@ -574,7 +574,7 @@ export async function GET(req: NextRequest) {
 
     const participantRows: LiveParticipantRow[] = groupParticipants.map((p) => {
       const pred   = predsByInitials[p.initials]?.[matchId]
-      const tokens = pred?.tokens ?? 1
+      const tokens = (pred?.tokens ?? 1) + (group === 'asc' ? (p.ascBonusTokens?.[matchId] ?? 0) : 0)
       const toto   = pred?.toto   ?? null
       const uitslag = pred?.uitslag ? normalizeUitslag(pred.uitslag) : null
 

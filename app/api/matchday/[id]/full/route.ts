@@ -128,7 +128,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         return {
           initials: p.initials,
           name: p.name,
-          tokens: pred?.tokens ?? 1,
+          tokens: (pred?.tokens ?? 1) + (group === 'asc' ? (p.ascBonusTokens?.[matchId] ?? 0) : 0),
           toto: pred?.toto ?? null,
           uitslag: pred?.uitslag ? normalizeUitslag(pred.uitslag) : null,
           uitslagQuote: pred?.uitslag && odds ? (odds.scores[normalizeUitslag(pred.uitslag)] ?? null) : null,
