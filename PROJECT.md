@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-10 — KO-wedstrijd quoteringen #98-100 ververst (Claude Code)
+
+**Quoteringen ververst via `scripts/scrape-ko-match-odds.mjs`**
+- **`lib/data/koMatchOdds.ts`**: quoteringen + correcte-scoreverdeling ververst voor #98 (Spanje-België), #99 (Noorwegen-Engeland) en #100 (Argentinië-Zwitserland) — kleine verschuivingen door marktbeweging.
+- #97 (Frankrijk-Marokko) niet meer beschikbaar als event op Kambi (kickoff was 9 juli); bestaande data behouden.
+- Kickoff-tijden voor #98-100 bijgewerkt in `ko_match_teams` KV.
+
+---
+
 ### 2026-07-09b — ASC-bonustokens Robert gecorrigeerd + ESPN-IDs kwartfinales (Claude Code)
 
 **ASC-bonustokens Robert: #97 → #98 verplaatst**
