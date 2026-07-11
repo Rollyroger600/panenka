@@ -845,6 +845,12 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-11 — Volgorde weddenschappen aanpasbaar in admin matchday-tab (Claude Code)
+
+**`app/admin/AdminClient.tsx`**: bij het invullen van de custom weddenschappen (OG MD15+/ASC MD19+) staan nu ▲/▼-knoppen naast elke weddenschap om de volgorde te wijzigen. De array-volgorde bepaalt direct de weergave op de "Inzet"-matchdayslide (`components/matchday/slides/InzetSlide.tsx`), dus reorderen in admin geeft betere zichtbaarheid in de app.
+
+---
+
 ### 2026-07-10b — Matchday-slides tonen ASC-bonustokens niet mee (Claude Code)
 
 #### Tokenweergave op matchday-slides negeerde `ascBonusTokens` (`app/api/matchday/[id]/full/route.ts`, `app/api/matchday/live/route.ts`)

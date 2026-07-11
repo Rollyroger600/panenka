@@ -995,6 +995,32 @@ function MatchdayAdminTab({ groupId, koMatchTeams }: { groupId: GroupId; koMatch
               <div key={idx} className="px-3 py-3 flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-[#FF6B00] text-xs font-bold">#{idx + 1}</span>
+                  <button
+                    type="button"
+                    disabled={idx === 0}
+                    onClick={() => setCustomBets((prev) => {
+                      const next = [...prev]
+                      ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
+                      return next
+                    })}
+                    className="text-[#888] hover:text-[#FF6B00] disabled:opacity-30 disabled:hover:text-[#888] text-xs px-1"
+                    title="Omhoog"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    disabled={idx === customBets.length - 1}
+                    onClick={() => setCustomBets((prev) => {
+                      const next = [...prev]
+                      ;[next[idx], next[idx + 1]] = [next[idx + 1], next[idx]]
+                      return next
+                    })}
+                    className="text-[#888] hover:text-[#FF6B00] disabled:opacity-30 disabled:hover:text-[#888] text-xs px-1"
+                    title="Omlaag"
+                  >
+                    ▼
+                  </button>
                   {customBets.length > 1 && (
                     <button
                       onClick={() => setCustomBets((prev) => prev.filter((_, i) => i !== idx))}
