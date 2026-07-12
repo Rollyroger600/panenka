@@ -113,5 +113,7 @@ export const ESPN_MATCH_IDS: Record<number, number> = {
   98: 760511,  // Spanje vs België
   99: 760512,  // Noorwegen vs Engeland
   100: 760513, // Argentinië vs Zwitserland
-  // 101–104 aanvullen zodra ESPN de wedstrijden publiceert
+  101: 760514, // Frankrijk vs Spanje
+  102: 760515, // Engeland vs Argentinië
+  // 103–104 (finale) aanvullen zodra ESPN de wedstrijd publiceert
 }

@@ -138,5 +138,15 @@
     "id": 100,
     "home": "Argentinië",
     "away": "Zwitserland"
+  },
+  {
+    "id": 101,
+    "home": "Frankrijk",
+    "away": "Spanje"
+  },
+  {
+    "id": 102,
+    "home": "Engeland",
+    "away": "Argentinië"
   }
 ]
