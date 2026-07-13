@@ -52,6 +52,8 @@ interface PotRegel {
 const POT_REGELS: Record<string, PotRegel[]> = {
   og: [
     // Nieuwste bovenaan
+    { datum: '2026-07-12', omschrijving: 'Winst Matchday 25', bedrag: 12.69 },
+    { datum: '2026-07-07', omschrijving: "Toto's en uitslagen matchday 25", bedrag: -22.00 },
     { datum: '2026-07-06', omschrijving: "Toto's en uitslagen matchday 24", bedrag: -15.00 },
     { datum: '2026-07-06', omschrijving: 'Winst Matchday 23', bedrag: 25.00 },
     { datum: '2026-07-03', omschrijving: "Toto's en uitslagen matchday 23", bedrag: -12.50 },
@@ -91,6 +93,7 @@ const POT_REGELS: Record<string, PotRegel[]> = {
   ],
   asc: [
     // Nieuwste bovenaan
+    { datum: '2026-07-07', omschrijving: "Toto's en uitslagen matchday 25", bedrag: -24.50 },
     { datum: '2026-07-06', omschrijving: "Toto's en uitslagen matchday 24", bedrag: -17.00 },
     { datum: '2026-07-06', omschrijving: "Winst Matchday 23", bedrag: 44.38 },
     { datum: '2026-07-03', omschrijving: "Toto's en uitslagen matchday 23", bedrag: -22.50 },
