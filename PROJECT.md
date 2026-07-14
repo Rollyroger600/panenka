@@ -845,15 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
-### 2026-07-12 — Halve finales #101/#102 klaargezet: quoteringen + ESPN-IDs (Claude Code)
+### 2026-07-14 — Halve finales #101/#102 quoteringen ververst + fantasy-fix Mark (Claude Code)
 
 **Quoteringen ververst via `scripts/scrape-ko-match-odds.mjs`**
-- `scripts/ko-match-teams.json`: teams voor #101 (Frankrijk-Spanje) en #102 (Engeland-Argentinië) toegevoegd — stonden al in `ko_match_teams` KV (admin) maar ontbraken nog in dit bestand, waardoor het scrape-script ze oversloeg.
-- `lib/data/koMatchOdds.ts`: toto (1/X/2) én volledige correcte-scoreverdeling opgehaald en toegevoegd voor beide wedstrijden (27 resp. 23 score-odds).
-- Kickoff-tijden voor #101 (14 juli) en #102 (15 juli) gemerged in `ko_match_teams` KV.
+- `lib/data/koMatchOdds.ts`: toto- en scoreverdeling opnieuw opgehaald voor #101 (Frankrijk-Spanje, 27 scores) en #102 (Engeland-Argentinië, 23 scores). Kickoff-tijden bijgewerkt in `ko_match_teams` KV.
 
-**ESPN event-IDs halve finales toegevoegd**
-- `lib/data/espnMatchIds.ts`: #101 → 760514, #102 → 760515, opgezocht via ESPN scoreboard-endpoint op de kickoff-data. Nodig voor live scores/goals op de matchday-slides (`app/api/matchday/live/route.ts`, `app/api/admin/espn-import/route.ts`). #103-104 (finale) nog open.
+**Fantasy-fix: verkeerde Luis Suárez in team van Mark (MB, ASC)**
+- `lib/data/players.ts` bevat twee spelers met naam "L. Suárez": id 245158 (Luis Javier Suárez Charris, Colombia, Sporting CP) en id 176580 (Luis Alberto Suárez Díaz, Uruguay, Inter Miami). In KV-key `fantasy:mb` stond bij slot `p9` per ongeluk id 176580 (Uruguay) in plaats van de bedoelde 245158 (Colombia), waardoor de app het verkeerde landenlogo toonde en doelpunten van de Colombiaanse Suárez niet meetelden voor Mark's fantasy-score. Rechtstreeks gecorrigeerd in Redis (`fantasy:mb` → `squad.p9`).
 
 ---
 
