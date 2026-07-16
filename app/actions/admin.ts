@@ -164,8 +164,33 @@ export async function loadKoMatchTeams(): Promise<KoMatchTeams> {
   return (await kvGet<KoMatchTeams>('ko_match_teams')) ?? {}
 }
 
-export async function saveKoMatchTeams(data: KoMatchTeams): Promise<void> {
-  await kvSet('ko_match_teams', data)
+// Merge-safe: leest de actuele KV-state opnieuw en wijzigt alleen het opgegeven matchId,
+// zodat een sinds page-load verstreken concurrente wijziging (bv. een script dat kickoff/stadium
+// zet, of een tweede admin-tab) niet wordt overschreven door de mogelijk verouderde client-state.
+export async function saveKoMatchTeam(
+  matchId: number,
+  fields: { home: string; away: string; stadium?: string }
+): Promise<KoMatchTeams> {
+  const existing = await loadKoMatchTeams()
+  const updated: KoMatchTeams = {
+    ...existing,
+    [matchId]: {
+      ...existing[matchId],
+      home: fields.home,
+      away: fields.away,
+      ...(fields.stadium ? { stadium: fields.stadium } : {}),
+    },
+  }
+  await kvSet('ko_match_teams', updated)
+  return updated
+}
+
+export async function deleteKoMatchTeam(matchId: number): Promise<KoMatchTeams> {
+  const existing = await loadKoMatchTeams()
+  const updated = { ...existing }
+  delete updated[matchId]
+  await kvSet('ko_match_teams', updated)
+  return updated
 }
 
 // ── Fantasy statistieken ──────────────────────────────────────────────────

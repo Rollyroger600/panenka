@@ -845,6 +845,21 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-16b — Troostfinale/finale #103-104 klaargezet + KO-teams opslaan merge-safe (Claude Code)
+
+**Quoteringen + teams #103 (troostfinale) en #104 (finale) opgehaald**
+- **`scripts/ko-match-teams.json`**: teams toegevoegd — #103 Frankrijk-Engeland, #104 Spanje-Argentinië (bekend na afloop van de halve finales #101/#102).
+- **`lib/data/koMatchOdds.ts`**: quoteringen + correcte-scoreverdeling opgehaald via `scripts/scrape-ko-match-odds.mjs` — #103 (34 scores), #104 (25 scores).
+- **`ko_match_teams` KV**: kickoff-tijden en stadions gezet voor live match slides — #103 Miami Stadium, 18 jul 21:00 UTC; #104 New York New Jersey Stadium, 19 jul 19:00 UTC (geverifieerd tegen ESPN's scoreboard-API).
+- **`lib/data/espnMatchIds.ts`**: ESPN event-ID's toegevoegd (#103 → 760516, #104 → 760517) voor de live goal-feed en admin ESPN-import.
+
+**Structurele fix: `saveKoMatchTeams` overschreef altijd de hele KV-blob**
+- Tijdens het klaarzetten van #103/#104 verdween de net gezette kickoff-tijd kortstondig, vermoedelijk doordat een admin-save vanuit een client-tab met verouderde `koMatchTeams`-state de hele KV-waarde overschreef (dezelfde bugklasse als de #102-fix hierboven, nu voor KO-teams i.p.v. predictions).
+- **`app/actions/admin.ts`**: `saveKoMatchTeams(fullMap)` vervangen door `saveKoMatchTeam(matchId, fields)` en `deleteKoMatchTeam(matchId)` — beide lezen de KV opnieuw bij het opslaan en wijzigen alleen het opgegeven matchId, en geven de bijgewerkte volledige map terug.
+- **`app/admin/AdminClient.tsx`**: `handleSaveKoTeam`/`handleDeleteKoTeam` gebruiken nu deze scoped actions en syncen hun lokale `koMatchTeams`-state met de teruggegeven (server-autoritatieve) map, in plaats van een eigen kopie te construeren.
+
+---
+
 ### 2026-07-16 — Fix voorspelling Robert #102 + deadline-vergrendeling nu ook server-side (Claude Code)
 
 **Databug: Robert's uitslag-pick op #102 per ongeluk overschreven na de deadline**
@@ -1935,7 +1950,7 @@ De 32 KO-wedstrijden (matchId 73–104) krijgen een eigen toto/uitslag-systeem n
 - `hooks/useTokenBudget.ts` — groepsfase (1–72) en KO-wedstrijden (73–104) gesplitst. Nieuw: `useKoMatchBudget(oranjeTokens)` — 50 basis tokens + Oranje bonus.
 
 **Admin**
-- `app/actions/admin.ts` — `loadKoMatchTeams` / `saveKoMatchTeams` (KV-key `ko_match_teams`). `computeAndSaveScores` berekent en slaat `koWedstrijden` en `oranjeTokens` op.
+- `app/actions/admin.ts` — `loadKoMatchTeams` / `saveKoMatchTeam` / `deleteKoMatchTeam` (KV-key `ko_match_teams`, merge-safe: leest de KV opnieuw en wijzigt alleen het opgegeven matchId). `computeAndSaveScores` berekent en slaat `koWedstrijden` en `oranjeTokens` op.
 - `app/actions/predictions.ts` — `loadKoMatchTeamsPublic` en `loadMyOranjeTokens` toegevoegd.
 - `app/admin/page.tsx` + `AdminClient.tsx` — nieuw tabblad "KO Wedstrijden": per ronde (rv32→finale) teams invoeren en uitslagen na 90 min registreren. Scorestabel toont `koWedstrijden` en Oranje-tokens.
 

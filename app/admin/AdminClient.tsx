@@ -8,7 +8,7 @@ import { MATCH_ODDS } from '@/lib/data/odds'
 import { KO_MATCH_ODDS } from '@/lib/data/koMatchOdds'
 import { abbrevCountry } from '@/lib/helpers'
 import {
-  saveResult, deleteResult, saveKoResults, saveKoMatchTeams,
+  saveResult, deleteResult, saveKoResults, saveKoMatchTeam, deleteKoMatchTeam,
   saveOranjeResults, computeAndSaveScores,
   updateOranjeVraag, saveOranjeCorrect, saveOranjeBeoordeling,
   mergeFantasyStat, removeFantasyStat, mergeEspnStats,
@@ -108,25 +108,18 @@ export function AdminClient({ groupId, initialResults, initialKoResults, initial
 
   async function handleSaveKoTeam(matchId: number, home: string, away: string, stadium: string) {
     setSavingKoTeam(matchId)
-    const updated = {
-      ...koMatchTeams,
-      [matchId]: {
-        ...koMatchTeams[matchId],
-        home: home.trim(),
-        away: away.trim(),
-        ...(stadium.trim() ? { stadium: stadium.trim() } : {}),
-      },
-    }
+    const updated = await saveKoMatchTeam(matchId, {
+      home: home.trim(),
+      away: away.trim(),
+      ...(stadium.trim() ? { stadium: stadium.trim() } : {}),
+    })
     setKoMatchTeams(updated)
-    await saveKoMatchTeams(updated)
     setSavingKoTeam(null)
   }
 
   async function handleDeleteKoTeam(matchId: number) {
-    const updated = { ...koMatchTeams }
-    delete updated[matchId]
+    const updated = await deleteKoMatchTeam(matchId)
     setKoMatchTeams(updated)
-    await saveKoMatchTeams(updated)
   }
 
   async function toggleKoCountry(roundId: string, country: string, max: number) {
