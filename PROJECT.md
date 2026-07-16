@@ -845,6 +845,13 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-16c — Pot tab MD26 bijgewerkt (Claude Code)
+
+#### Stand pagina — Pot tab OG en ASC
+- `app/(app)/stand/StandClient.tsx`: Toto's en uitslagen matchday 26 toegevoegd (OG -20,00 · ASC -20,00).
+
+---
+
 ### 2026-07-16b — Troostfinale/finale #103-104 klaargezet + KO-teams opslaan merge-safe (Claude Code)
 
 **Quoteringen + teams #103 (troostfinale) en #104 (finale) opgehaald**
