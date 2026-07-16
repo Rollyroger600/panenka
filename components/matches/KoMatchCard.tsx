@@ -208,13 +208,14 @@ export function KoMatchCard({ matchId, home, away, date, time, remainingBudget, 
       </div>
 
       {/* Score picker */}
-      {openPanel === 'score' && (
+      {!readOnly && openPanel === 'score' && (
         <div className="px-3 pb-3">
           <ScorePicker
             matchId={matchId}
             toto={pred.toto}
             selected={pred.uitslag}
             onSelect={(uitslag) => {
+              if (readOnly) return
               setPrediction(matchId, { uitslag })
               setOpenPanel(null)
             }}

@@ -845,6 +845,19 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-16 — Fix voorspelling Robert #102 + deadline-vergrendeling nu ook server-side (Claude Code)
+
+**Databug: Robert's uitslag-pick op #102 per ongeluk overschreven na de deadline**
+- Robert's browsertab stond nog open met het uitslagen-venster uitgeklapt op het moment dat de deadline voor #102 (Engeland-Argentinië) al verstreken was. Een klik in dat venster ging via `setPrediction` alsnog door naar de server, waardoor zijn bevestigde inzet (`toto: 2, uitslag: "1 - 3"`) per ongeluk werd overschreven naar `uitslag: "1 - 2"`.
+- Rechtstreeks herstelt in Redis (`predictions:ra` → match `102`.`uitslag` terug naar `"1 - 3"`; toto en tokens waren ongewijzigd).
+
+**Structurele fix: client-guard én server-side deadline-check**
+- **`components/matches/KoMatchCard.tsx`**: het uitslagen-venster (`ScorePicker`) werd altijd gerenderd zodra `openPanel === 'score'`, zonder rekening te houden met `readOnly`. Als het venster al open stond vóór de vergrendeling inging, bleef het na de deadline gewoon functioneel. Render-conditie en `onSelect`-handler checken nu ook `readOnly`.
+- **`lib/koMatchDeadline.ts`** (nieuw): de pure deadline-logica (`isKoMatchLocked`, `isKoMatchIdLocked` — kickoff minus 2 uur) is uit `hooks/useKoMatchDeadline.ts` getrokken naar een losse module zonder React-afhankelijkheid, zodat ze ook in server actions te gebruiken is. `hooks/useKoMatchDeadline.ts` importeert er nu van.
+- **`app/actions/predictions.ts`**: `savePredictions` accepteerde voorheen blind elke inkomende `Record<number, Prediction>` van de client, zonder enige deadline-check — de eigenlijke oorzaak van de bug (een UI-fix alleen is nooit waterdicht). De action leest nu bij elke save de bestaande Redis-waarde plus `ko_match_teams`, en negeert voor elke wedstrijd die inmiddels vergrendeld is (per-match deadline voor #73-104, de globale poulefase-deadline — met `deadlineOverride` — voor #1-72) de inkomende wijziging, met behoud van de laatst opgeslagen waarde. Geldt voortaan voor alle deelnemers en alle wedstrijden, niet alleen dit incident.
+
+---
+
 ### 2026-07-14 — Halve finales #101/#102 quoteringen ververst + fantasy-fix Mark (Claude Code)
 
 **Quoteringen ververst via `scripts/scrape-ko-match-odds.mjs`**

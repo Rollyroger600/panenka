@@ -2,15 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import type { KoMatchTeams } from '@/app/actions/admin'
-
-const TWO_HOURS_MS = 2 * 60 * 60 * 1000
+import { isKoMatchLocked } from '@/lib/koMatchDeadline'
 
 const DEADLINE_OVERRIDES: Record<number, string[]> = {}
 
-export function isKoMatchLocked(kickoff: string | undefined): boolean {
-  if (!kickoff) return false
-  return Date.now() >= new Date(kickoff).getTime() - TWO_HOURS_MS
-}
+export { isKoMatchLocked }
 
 export function useKoMatchLocks(koMatchTeams: KoMatchTeams, participant?: string): Record<number, boolean> {
   const [now, setNow] = useState(() => Date.now())
@@ -33,7 +29,7 @@ export function useKoMatchLocks(koMatchTeams: KoMatchTeams, participant?: string
         locks[matchId] = false
         continue
       }
-      locks[matchId] = now >= new Date(kickoff).getTime() - TWO_HOURS_MS
+      locks[matchId] = isKoMatchLocked(kickoff, now)
     }
     return locks
   }, [koMatchTeams, now, participant])
