@@ -20,6 +20,9 @@ out/
 # Old/archive files
 OLD/
 
+# Robert's persoonlijke poule-analyse (bevat ieders picks — niet voor git)
+local-analyse/
+
 # Build artifacts & temp files
 tsconfig.tsbuildinfo
 *_tmp.json
