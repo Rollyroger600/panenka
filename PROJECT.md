@@ -845,6 +845,15 @@ The following decisions were made during implementation that deviate from or ext
 
 ## Changelog
 
+### 2026-07-21 — Inzet tab: weddenschappen-uitslagen bijgewerkt (Claude Code)
+
+#### Stand pagina — Inzet tab OG en ASC
+- **`app/(app)/stand/StandClient.tsx`**: uitslagen van de toernooi-weddenschappen ingevuld. OG #2 t/m #6 (Frankrijk, Brazilië, Nederland, Kane, Haaland winnaar/topscoorder) verloren. ASC #2 (Spanje winnaar WK) gewonnen; #3 t/m #8 verloren.
+- Rendering uitgebreid: naast het bestaande oranje vinkje (✓) voor gewonnen weddenschappen toont een verloren weddenschap nu een rood kruisje (✗) met rode randkleur, in plaats van enkel de neutrale (nog-niet-beslist) styling.
+- Pot-tab ASC: winst van de Spanje-weddenschap (+€ 27,50) en de matchday 27 toto/uitslagen-regels (OG -€ 4,50, ASC -€ 2,50) toegevoegd aan de balans.
+
+---
+
 ### 2026-07-16c — Pot tab MD26 bijgewerkt (Claude Code)
 
 #### Stand pagina — Pot tab OG en ASC

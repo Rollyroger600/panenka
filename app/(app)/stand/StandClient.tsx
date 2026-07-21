@@ -52,6 +52,7 @@ interface PotRegel {
 const POT_REGELS: Record<string, PotRegel[]> = {
   og: [
     // Nieuwste bovenaan
+    { datum: '2026-07-18', omschrijving: "Toto's en uitslagen matchday 27", bedrag: -4.50 },
     { datum: '2026-07-13', omschrijving: "Toto's en uitslagen matchday 26", bedrag: -20.00 },
     { datum: '2026-07-12', omschrijving: 'Winst Matchday 25', bedrag: 12.69 },
     { datum: '2026-07-07', omschrijving: "Toto's en uitslagen matchday 25", bedrag: -22.00 },
@@ -94,6 +95,8 @@ const POT_REGELS: Record<string, PotRegel[]> = {
   ],
   asc: [
     // Nieuwste bovenaan
+    { datum: '2026-07-20', omschrijving: 'Winst Toernooi weddenschappen', bedrag: 27.50 },
+    { datum: '2026-07-18', omschrijving: "Toto's en uitslagen matchday 27", bedrag: -2.50 },
     { datum: '2026-07-13', omschrijving: "Toto's en uitslagen matchday 26", bedrag: -20.00 },
     { datum: '2026-07-07', omschrijving: "Toto's en uitslagen matchday 25", bedrag: -24.50 },
     { datum: '2026-07-06', omschrijving: "Toto's en uitslagen matchday 24", bedrag: -17.00 },
@@ -142,22 +145,22 @@ const POT_REGELS: Record<string, PotRegel[]> = {
 const WEDDENSCHAPPEN: Record<string, Weddenschap[]> = {
   og: [
     { weddenschap: 'Brazilië scoort tegen Marokko', inzet: '€ 1,00', quotering: 100, maxWinst: '€ 100,00', gewonnen: true },
-    { weddenschap: 'Frankrijk winnaar WK', inzet: '€ 5,00', quotering: 6, maxWinst: '€ 30,00' },
-    { weddenschap: 'Brazilië winnaar WK', inzet: '€ 5,00', quotering: 10, maxWinst: '€ 50,00' },
-    { weddenschap: 'Nederland winnaar WK', inzet: '€ 5,00', quotering: 19, maxWinst: '€ 95,00' },
-    { weddenschap: 'Kane Topscoorder WK', inzet: '€ 3,00', quotering: 7, maxWinst: '€ 21,00' },
-    { weddenschap: 'Haaland Topscoorder WK', inzet: '€ 2,00', quotering: 15, maxWinst: '€ 30,00' },
+    { weddenschap: 'Frankrijk winnaar WK', inzet: '€ 5,00', quotering: 6, maxWinst: '€ 30,00', gewonnen: false },
+    { weddenschap: 'Brazilië winnaar WK', inzet: '€ 5,00', quotering: 10, maxWinst: '€ 50,00', gewonnen: false },
+    { weddenschap: 'Nederland winnaar WK', inzet: '€ 5,00', quotering: 19, maxWinst: '€ 95,00', gewonnen: false },
+    { weddenschap: 'Kane Topscoorder WK', inzet: '€ 3,00', quotering: 7, maxWinst: '€ 21,00', gewonnen: false },
+    { weddenschap: 'Haaland Topscoorder WK', inzet: '€ 2,00', quotering: 15, maxWinst: '€ 30,00', gewonnen: false },
   ],
   asc: [
     { weddenschap: 'Duitsland wint van Curacao', inzet: '€ 1,00', quotering: 100, maxWinst: '€ 100,00', gewonnen: true },
-    { weddenschap: 'Spanje winnaar WK', inzet: '€ 5,00', quotering: 5.5, maxWinst: '€ 27,50' },
-    { weddenschap: 'Frankrijk winnaar WK', inzet: '€ 5,00', quotering: 6, maxWinst: '€ 30,00' },
-    { weddenschap: 'Nederland winnaar WK', inzet: '€ 1,00', quotering: 19, maxWinst: '€ 19,00' },
-    { weddenschap: 'Kane topscoorder WK', inzet: '€ 3,00', quotering: 7, maxWinst: '€ 21,00' },
-    { weddenschap: 'Messi topscoorder WK', inzet: '€ 2,00', quotering: 13, maxWinst: '€ 26,00' },
-    { weddenschap: 'Ødegaard assist koning WK', inzet: '€ 1,00', quotering: 51, maxWinst: '€ 51,00' },
-    { weddenschap: 'Ferran assist koning WK', inzet: '€ 1,00', quotering: 41, maxWinst: '€ 41,00' },
-    { weddenschap: 'Spanje wint WK en Oyarzabal topscoorder', inzet: '€ 1,00', quotering: 34, maxWinst: '€ 34,00' },
+    { weddenschap: 'Spanje winnaar WK', inzet: '€ 5,00', quotering: 5.5, maxWinst: '€ 27,50', gewonnen: true },
+    { weddenschap: 'Frankrijk winnaar WK', inzet: '€ 5,00', quotering: 6, maxWinst: '€ 30,00', gewonnen: false },
+    { weddenschap: 'Nederland winnaar WK', inzet: '€ 1,00', quotering: 19, maxWinst: '€ 19,00', gewonnen: false },
+    { weddenschap: 'Kane topscoorder WK', inzet: '€ 3,00', quotering: 7, maxWinst: '€ 21,00', gewonnen: false },
+    { weddenschap: 'Messi topscoorder WK', inzet: '€ 2,00', quotering: 13, maxWinst: '€ 26,00', gewonnen: false },
+    { weddenschap: 'Ødegaard assist koning WK', inzet: '€ 1,00', quotering: 51, maxWinst: '€ 51,00', gewonnen: false },
+    { weddenschap: 'Ferran assist koning WK', inzet: '€ 1,00', quotering: 41, maxWinst: '€ 41,00', gewonnen: false },
+    { weddenschap: 'Spanje wint WK en Oyarzabal topscoorder', inzet: '€ 1,00', quotering: 34, maxWinst: '€ 34,00', gewonnen: false },
   ],
 }
 
@@ -377,13 +380,14 @@ export function StandClient({ mijnInitials, defaultGroup }: Props) {
                 <div className="text-[#888] text-sm">Geen weddenschappen voor deze groep</div>
               </div>
             ) : (WEDDENSCHAPPEN[activeGroup] ?? []).map((w, i) => (
-              <div key={i} className={`rounded-xl bg-[#161616] border p-4 ${w.gewonnen ? 'border-[#FF6B00]' : 'border-[#2a2a2a]'}`}>
+              <div key={i} className={`rounded-xl bg-[#161616] border p-4 ${w.gewonnen === true ? 'border-[#FF6B00]' : w.gewonnen === false ? 'border-red-500/40' : 'border-[#2a2a2a]'}`}>
                 <div className="flex items-start gap-3">
                   <span className="font-heading font-bold text-[#FF6B00] text-sm mt-0.5 shrink-0">#{i + 1}</span>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="font-heading font-semibold text-white text-sm">{w.weddenschap}</span>
-                      {w.gewonnen && <span className="text-[#FF6B00] text-sm font-bold">✓</span>}
+                      {w.gewonnen === true && <span className="text-[#FF6B00] text-sm font-bold">✓</span>}
+                      {w.gewonnen === false && <span className="text-red-500 text-sm font-bold">✗</span>}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="flex flex-col">
